@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Tracker</title>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<style>
+:root{
+  --bg:#f8f9fa;--bg2:#ffffff;--bg3:#f1f3f5;
+  --text:#1a1a1a;--text2:#6b7280;--text3:#9ca3af;
+  --border:#e5e7eb;--border2:#d1d5db;
+  --blue:#185FA5;--blue2:#0C447C;--blue-bg:#EFF6FF;
+  --green:#3B6D11;--green-bg:#F0FDF4;
+  --red:#A32D2D;--red-bg:#FEF2F2;
+  --amber:#BA7517;--amber-bg:#FFFBEB;
+  --radius:8px;--radius2:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:var(--text);background:var(--bg);min-height:100vh}
+
+/* LOGIN */
+.login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.login-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:2rem;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(0,0,0,.06)}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem}
+.login-logo-icon{width:40px;height:40px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.login-logo-icon svg{width:22px;height:22px}
+.login-title{font-size:18px;font-weight:600}
+.login-sub{font-size:13px;color:var(--text2)}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.form-group input{width:100%;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--radius);font-size:14px;color:var(--text);background:var(--bg2);transition:border .2s,box-shadow .2s}
+.form-group input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.12)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;border:1px solid var(--border2);border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;background:var(--bg2);color:var(--text);transition:all .15s;white-space:nowrap}
+.btn:hover{background:var(--bg3);border-color:var(--border)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-primary:hover{background:var(--blue2);border-color:var(--blue2)}
+.btn-success{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-success:hover{background:#27500A;border-color:#27500A}
+.btn-danger{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-full{width:100%}
+.btn-icon{padding:5px 8px;font-size:13px;color:var(--text2)}
+.btn-icon:hover{color:var(--red)}
+.login-divider{text-align:center;font-size:12px;color:var(--text3);margin:14px 0;position:relative}
+.login-divider::before,.login-divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:var(--border)}
+.login-divider::before{left:0}.login-divider::after{right:0}
+.google-btn{background:#fff;border:1px solid var(--border2);color:var(--text);width:100%;padding:10px;border-radius:var(--radius);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:500;transition:all .15s}
+.google-btn:hover{background:var(--bg3);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.alert{padding:10px 14px;border-radius:var(--radius);font-size:13px;margin-bottom:12px}
+.alert-red{background:var(--red-bg);color:var(--red);border:1px solid #fca5a5}
+.alert-blue{background:var(--blue-bg);color:var(--blue);border:1px solid #bfdbfe}
+
+/* APP LAYOUT */
+.app{display:flex;flex-direction:column;min-height:100vh}
+.header{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.header-left{display:flex;align-items:center;gap:12px}
+.header-logo{display:flex;align-items:center;gap:8px}
+.header-logo-icon{width:28px;height:28px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.header-logo-icon svg{width:16px;height:16px}
+.logo-text{font-size:15px;font-weight:600}
+.user-pill{font-size:12px;color:var(--text2);background:var(--bg3);padding:3px 10px;border-radius:20px;border:1px solid var(--border)}
+.save-status{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px}
+.save-status.saved{color:var(--green)}
+.tabs-bar{display:flex;gap:2px;padding:8px 16px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0}
+.tabs-bar::-webkit-scrollbar{display:none}
+.tab-btn{padding:6px 14px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;color:var(--text2);border:none;background:transparent;transition:all .15s}
+.tab-btn:hover{background:var(--bg3);color:var(--text)}
+.tab-btn.active{background:var(--blue);color:#fff}
+.main{padding:20px;flex:1;max-width:1200px;width:100%;margin:0 auto}
+
+/* CARDS */
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.metric-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:14px 16px}
+.metric-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.metric-value{font-size:18px;font-weight:600;color:var(--text)}
+.metric-sub{font-size:11px;color:var(--text3);margin-top:3px}
+
+/* TABLE */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.section-title{font-size:15px;font-weight:600}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius2);background:var(--bg2);margin-bottom:16px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:var(--bg3);padding:9px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);white-space:nowrap}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--text);white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--bg3)}
+.tr-total td{font-weight:600;background:var(--bg3)!important;border-top:2px solid var(--border2)}
+.cell-input{padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;width:100px;color:var(--text);background:var(--bg2)}
+.cell-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(24,95,165,.1)}
+
+/* COLORS */
+.pos{color:var(--green);font-weight:500}
+.neg{color:var(--red);font-weight:500}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-blue{background:var(--blue-bg);color:var(--blue)}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.badge-red{background:var(--red-bg);color:var(--red)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+.modal-box{background:var(--bg2);border-radius:var(--radius2);padding:1.5rem;width:100%;max-width:500px;border:1px solid var(--border);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:1.25rem}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border)}
+
+/* DONUT */
+.dashboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:600px){.dashboard-grid{grid-template-columns:1fr}}
+.donut-container{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:16px}
+.donut-title{font-size:13px;font-weight:600;margin-bottom:12px}
+.donut-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:12px;margin-bottom:6px}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* GOALS */
+.goal-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:14px 16px;margin-bottom:10px}
+.progress-bar{height:6px;background:var(--bg3);border-radius:3px;margin-top:8px;overflow:hidden}
+.progress-fill{height:6px;border-radius:3px;background:var(--blue);transition:width .3s}
+
+/* KURS BAR */
+.kurs-bar{display:inline-flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:8px 14px;margin-bottom:14px}
+.kurs-label{font-size:12px;color:var(--text2)}
+.kurs-value{font-size:15px;font-weight:600;color:var(--blue)}
+
+/* SETUP FIREBASE PROMPT */
+.setup-card{background:var(--amber-bg);border:1px solid #fcd34d;border-radius:var(--radius2);padding:1.25rem;margin-bottom:16px}
+.setup-title{font-size:14px;font-weight:600;color:var(--amber);margin-bottom:8px}
+.setup-step{font-size:13px;color:var(--text);margin-bottom:6px;padding-left:16px;position:relative}
+.setup-step::before{content:attr(data-n);position:absolute;left:0;font-weight:600;color:var(--amber)}
+.setup-code{background:#fff;border:1px solid #fcd34d;border-radius:6px;padding:8px 12px;font-family:monospace;font-size:12px;color:var(--text);margin:6px 0;word-break:break-all}
+
+/* SPINNER */
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .6s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+  .main{padding:12px}
+  .metric-grid{grid-template-columns:repeat(2,1fr)}
+  .header{padding:0 12px}
+}
+</style>
+</head>
+<body>
+
+<div id="root"><div class="spinner"></div></div>
+
+<script>
+// ============================================================
+// 🔧 KONFIGURASI FIREBASE — ISI DENGAN DATA ANDA
+// Panduan: lihat README.md atau instruksi di bawah halaman
+// ============================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyDLDhMkQBpBUUXeZJjKTKmeQcFaX-fQibA",
+  authDomain: "indra-portfolio-15506.firebaseapp.com",
+  projectId: "indra-portfolio-15506",
+  storageBucket: "indra-portfolio-15506.firebasestorage.app",
+  messagingSenderId: "1086726414564",
+  appId: "1:1086726414564:web:a0763e95f3df19fff68cf1",
+  measurementId: "G-TG3EW89DQX"
+};
+
+const IS_CONFIGURED = !!(
+  firebaseConfig &&
+  firebaseConfig.apiKey &&
+  firebaseConfig.projectId
+);
+
+
+// ── DATA DEFAULT ──────────────────────────────────────────
+const DEFAULT_DATA = {
+  kurs: 17800,
+  saham: [
+    {tgl:'2024-03-27',kode:'ASII',lot:6,beli:6376.21,now:4640,ket:''},
+    {tgl:'2024-03-27',kode:'BMRI',lot:15,beli:4747.77,now:3970,ket:''},
+    {tgl:'2024-03-27',kode:'ADRO',lot:7,beli:2387.86,now:2250,ket:''},
+    {tgl:'2024-03-27',kode:'TLKM',lot:7,beli:3270.61,now:2500,ket:''},
+    {tgl:'2024-03-27',kode:'BBCA',lot:11,beli:7622.73,now:5925,ket:''},
+    {tgl:'2024-03-27',kode:'TAPG',lot:6,beli:2113.16,now:1460,ket:''},
+    {tgl:'2024-03-27',kode:'ADMR',lot:3,beli:1932.89,now:1440,ket:''},
+    {tgl:'2024-03-27',kode:'DEWA',lot:6,beli:560.84,now:322,ket:''},
+    {tgl:'2024-03-27',kode:'PPRE',lot:61,beli:286.42,now:101,ket:''},
+  ],
+  divBei: [
+    {tgl:'2024-01-05',saham:'BMRI',bruto:40000,ket:'Re invest'},
+    {tgl:'2024-01-06',saham:'ADRO',bruto:87084,ket:'Re invest'},
+    {tgl:'2024-03-30',saham:'BCAA',bruto:309100,ket:'Re invest'},
+    {tgl:'2024-04-26',saham:'ADMR',bruto:15186,ket:'Re invest'},
+    {tgl:'2024-04-29',saham:'ADRO',bruto:35478,ket:'Re invest'},
+    {tgl:'2024-05-16',saham:'ASII',bruto:175200,ket:'Re invest'},
+    {tgl:'2024-05-16',saham:'BMRI',bruto:565435,ket:'Re invest'},
+    {tgl:'2024-06-10',saham:'TAPG',bruto:54600,ket:'Re invest'},
+  ],
+  etf: [
+    {tgl:'2024-03-13',kode:'QQQ',unit:0.5744,beli:612.21,now:717.83},
+    {tgl:'2024-03-13',kode:'VTI',unit:1.4051,beli:339.63,now:364.51},
+    {tgl:'2024-03-13',kode:'VEA',unit:3.4905,beli:65.73,now:70.66},
+    {tgl:'2024-03-13',kode:'SPHD',unit:2.0939,beli:48.64,now:50.55},
+    {tgl:'2024-03-13',kode:'EWY',unit:0.1505,beli:198.35,now:199.67},
+    {tgl:'2024-03-13',kode:'MU',unit:0.0382,beli:1092.87,now:1092.72},
+    {tgl:'2024-03-13',kode:'JEPQ',unit:1.1044,beli:56.77,now:60.16},
+    {tgl:'2024-03-13',kode:'TSM',unit:0.2358,beli:442.95,now:438.23},
+  ],
+  divEtf: [
+    {tgl:'2024-03-15',kode:'SPHD',bruto:0.16,ket:'Re Invest'},
+    {tgl:'2024-03-26',kode:'VEA',bruto:1.19,ket:'Re Invest'},
+    {tgl:'2024-04-17',kode:'JEPQ',bruto:0.62,ket:'Re Invest'},
+    {tgl:'2024-05-16',kode:'VEA',bruto:1.11,ket:'Re Invest'},
+  ],
+  emas: [
+    {tgl:'2024-01-15',lokasi:'DANA',gram:0.0533,beli:1876004,now:2603631},
+    {tgl:'2024-01-23',lokasi:'DANA',gram:0.154,beli:1948497,now:2603631},
+    {tgl:'2024-02-05',lokasi:'DANA',gram:0.2951,beli:2033369,now:2603631},
+    {tgl:'2024-02-11',lokasi:'TRINGS',gram:0.4794,beli:2086000,now:2688063},
+    {tgl:'2024-06-16',lokasi:'DANA',gram:0.1018,beli:2946290,now:2603631},
+  ],
+  btc: [
+    {tgl:'2024-01-01',jumlah:0.00001,beli:700000000,now:900000000,ket:''},
+  ],
+  dana: [
+    {item:'RDPU Majoris',masuk:12521503,now:12682199},
+    {item:'Super Bank',masuk:8685824,now:8798171},
+    {item:'RDPU TRIM Kas',masuk:5500000,now:5571620},
+    {item:'RDPU Sucor',masuk:6200000,now:6208649},
+  ],
+  goals: [
+    {nama:'Rumah',target:114477220,deadline:'2028',terkumpul:11447672},
+    {nama:'THR Zia & Ryuu',target:2000000,deadline:'2025',terkumpul:2008735},
+    {nama:'Umroh',target:100000000,deadline:'2028',terkumpul:0},
+    {nama:'Balik ke INDO',target:50000000,deadline:'2027',terkumpul:0},
+  ],
+};
+
+// ── STATE ─────────────────────────────────────────────────
+let APP = {
+  user: null,
+  data: null,
+  tab: 'dash',
+  modal: null,
+  saving: false,
+  saveTimer: null,
+  db: null,
+  auth: null,
+  error: null,
+};
+
+// ── FIREBASE INIT ─────────────────────────────────────────
+if (IS_CONFIGURED) {
+  try {
+    firebase.initializeApp(firebaseConfig);
+    APP.auth = firebase.auth();
+    APP.db = firebase.firestore();
+    APP.auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        APP.user = user;
+        APP.data = await loadFromFirestore(user.uid);
+      } else {
+        APP.user = null;
+        APP.data = null;
+      }
+      render();
+    });
+  } catch(e) {
+    APP.error = e.message;
+    render();
+  }
+} else {
+  render();
+}
+
+// ── FIRESTORE ─────────────────────────────────────────────
+async function loadFromFirestore(uid) {
+  try {
+    const doc = await APP.db.collection('portfolios').doc(uid).get();
+    if (doc.exists) return doc.data();
+  } catch(e) { console.error(e); }
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+
+function scheduleSave() {
+  if (!IS_CONFIGURED || !APP.user || !APP.data) return;
+  clearTimeout(APP.saveTimer);
+  APP.saving = true;
+  renderSaveStatus();
+  APP.saveTimer = setTimeout(async () => {
+    try {
+      await APP.db.collection('portfolios').doc(APP.user.uid).set(APP.data);
+    } catch(e) { console.error(e); }
+    APP.saving = false;
+    renderSaveStatus();
+  }, 800);
+}
+
+function renderSaveStatus() {
+  const el = document.getElementById('save-status');
+  if (!el) return;
+  el.className = 'save-status' + (APP.saving ? '' : ' saved');
+  el.innerHTML = APP.saving ? '⏳ Menyimpan...' : '✓ Tersimpan';
+}
+
+// ── AUTH ──────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-err');
+  errEl.style.display = 'none';
+  try {
+    await APP.auth.signInWithEmailAndPassword(email, pass);
+  } catch(e) {
+    if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
+      try {
+        await APP.auth.createUserWithEmailAndPassword(email, pass);
+      } catch(e2) {
+        errEl.textContent = e2.message;
+        errEl.style.display = 'block';
+      }
+    } else {
+      errEl.textContent = e.message;
+      errEl.style.display = 'block';
+    }
+  }
+}
+
+async function doGoogleLogin() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try { await APP.auth.signInWithPopup(provider); } catch(e) { alert(e.message); }
+}
+
+function doLogout() {
+  if (IS_CONFIGURED) APP.auth.signOut();
+  else { APP.user = null; APP.data = null; render(); }
+}
+
+// ── FORMATTERS ────────────────────────────────────────────
+const R = n => Math.round(n || 0);
+const F = (n, d=0) => (isNaN(n)||n==null) ? '-' : new Intl.NumberFormat('id-ID',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
+const Rp = n => (n==null||isNaN(n)) ? '-' : 'Rp ' + F(n);
+const Usd = (n, d=2) => '$' + F(n, d);
+const Pct = n => n==null ? '-' : (n>=0?'+':'') + F(n*100,2) + '%';
+const Cls = n => n > 0 ? 'pos' : n < 0 ? 'neg' : '';
+
+// ── CALCULATIONS ──────────────────────────────────────────
+function cSaham() {
+  return (APP.data.saham||[]).map(s => {
+    const m=s.lot*100*s.beli, v=s.lot*100*s.now, pl=v-m;
+    return {...s, m, v, pl, pct: m ? pl/m : 0};
+  });
+}
+function cEtf() {
+  const k = APP.data.kurs||17800;
+  return (APP.data.etf||[]).map(e => {
+    const mu=e.unit*e.beli, vu=e.unit*e.now, vi=vu*k, mi=mu*k, pl=vi-mi;
+    return {...e, mu, vu, vi, mi, pl, pct: mi ? pl/mi : 0};
+  });
+}
+function cEmas() {
+  return (APP.data.emas||[]).map(e => {
+    const m=e.gram*e.beli, v=e.gram*e.now, pl=v-m;
+    return {...e, m, v, pl};
+  });
+}
+function cBtc() {
+  return (APP.data.btc||[]).map(b => {
+    const m=b.jumlah*b.beli, v=b.jumlah*b.now, pl=v-m;
+    return {...b, m, v, pl};
+  });
+}
+const tSaham = () => cSaham().reduce((a,r)=>a+r.v, 0);
+const tEtf   = () => cEtf().reduce((a,r)=>a+r.vi, 0);
+const tEmas  = () => cEmas().reduce((a,r)=>a+r.v, 0);
+const tBtc   = () => cBtc().reduce((a,r)=>a+r.v, 0);
+const tDana  = () => (APP.data.dana||[]).reduce((a,r)=>a+(r.now||r.masuk), 0);
+const tDivBei= () => (APP.data.divBei||[]).reduce((a,r)=>a+r.bruto, 0);
+const tDivEtf= () => (APP.data.divEtf||[]).reduce((a,r)=>a+r.bruto*(APP.data.kurs||17800), 0);
+
+// ── VIEWS ─────────────────────────────────────────────────
+function vSetupBanner() {
+  if (IS_CONFIGURED) return '';
+  return `<div class="setup-card">
+    <div class="setup-title">⚠️ Perlu konfigurasi Firebase sebelum deploy</div>
+    <p style="font-size:13px;margin-bottom:10px;color:var(--text)">Untuk menyimpan data secara permanen, ikuti langkah berikut:</p>
+    <div class="setup-step" data-n="1."> Buka <a href="https://console.firebase.google.com" target="_blank" style="color:var(--blue)">console.firebase.google.com</a> → buat project baru</div>
+    <div class="setup-step" data-n="2."> Klik <b>Authentication</b> → <b>Get Started</b> → aktifkan <b>Email/Password</b> dan <b>Google</b></div>
+    <div class="setup-step" data-n="3."> Klik <b>Firestore Database</b> → <b>Create database</b> → pilih mode <b>production</b></div>
+    <div class="setup-step" data-n="4."> Klik ikon ⚙️ → <b>Project settings</b> → scroll ke <b>Your apps</b> → klik <b>&lt;/&gt;</b> → copy config</div>
+    <div class="setup-step" data-n="5."> Buka file <b>index.html</b> ini → cari bagian <b>FIREBASE_CONFIG</b> di baris 50 → paste config Anda</div>
+    <div class="setup-step" data-n="6."> Di Firestore → <b>Rules</b> → ganti dengan rules berikut lalu klik <b>Publish</b>:</div>
+    <div class="setup-code">rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /portfolios/{userId} {\n      allow read, write: if request.auth != null && request.auth.uid == userId;\n    }\n  }\n}</div>
+  </div>`;
+}
+
+function vLogin() {
+  if (!IS_CONFIGURED) {
+    return `<div class="login-page"><div class="login-card">
+      <div class="login-logo">
+        <div class="login-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div><div class="login-title">Portfolio Tracker</div><div class="login-sub">Perlu setup Firebase dulu</div></div>
+      </div>
+      ${vSetupBanner()}
+    </div></div>`;
+  }
+  return `<div class="login-page"><div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+      <div><div class="login-title">Portfolio Tracker</div><div class="login-sub">Masuk untuk sinkronisasi semua device</div></div>
+    </div>
+    <div id="login-err" class="alert alert-red" style="display:none"></div>
+    <div class="form-group"><label>Email</label><input id="login-email" type="email" placeholder="nama@email.com"></div>
+    <div class="form-group"><label>Password</label><input id="login-pass" type="password" placeholder="min 6 karakter" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">Masuk / Daftar</button>
+    <div class="login-divider">atau</div>
+    <button class="google-btn" onclick="doGoogleLogin()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.29-8.16 2.29-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Masuk dengan Google
+    </button>
+    <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:12px">Email baru? Otomatis daftar saat klik masuk</p>
+  </div></div>`;
+}
+
+function vDash() {
+  const ts=tSaham(), te=tEtf(), tem=tEmas(), tb=tBtc(), td=tDana();
+  const tot = ts+te+tem+tb;
+  const items = [['Saham BEI',ts,'#185FA5'],['ETF LN',te,'#3B6D11'],['Emas',tem,'#BA7517'],['Bitcoin',tb,'#A32D2D']];
+  const CIRC = 2*Math.PI*38;
+  let donut=''; let cum=0;
+  items.filter(x=>x[1]>0).forEach(([l,v,c])=>{
+    const p=v/tot, d=p*CIRC, off=cum*CIRC;
+    donut+=`<circle cx="48" cy="48" r="38" fill="none" stroke="${c}" stroke-width="18" stroke-dasharray="${d.toFixed(2)} ${(CIRC-d).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 48 48)"/>`;
+    cum+=p;
+  });
+
+  return `
+  ${vSetupBanner()}
+  <div class="kurs-bar">
+    <span class="kurs-label">Kurs USD/IDR</span>
+    <span class="kurs-value">Rp ${F(APP.data.kurs)}</span>
+    <button class="btn btn-sm" onclick="openModal('kurs')">✏️ Update</button>
+  </div>
+  <div class="metric-grid">
+    <div class="metric-card"><div class="metric-label">Total Investasi</div><div class="metric-value">${Rp(R(tot))}</div><div class="metric-sub">4 aset aktif</div></div>
+    <div class="metric-card"><div class="metric-label">Dana Darurat</div><div class="metric-value">${Rp(R(td))}</div><div class="metric-sub">Liquid</div></div>
+    <div class="metric-card"><div class="metric-label">Grand Total</div><div class="metric-value">${Rp(R(tot+td))}</div><div class="metric-sub">Semua aset</div></div>
+    <div class="metric-card"><div class="metric-label">Dividen BEI (YTD)</div><div class="metric-value pos">${Rp(R(tDivBei()))}</div></div>
+    <div class="metric-card"><div class="metric-label">Dividen ETF (YTD)</div><div class="metric-value pos">${Rp(R(tDivEtf()))}</div></div>
+  </div>
+  <div class="dashboard-grid">
+    <div class="donut-container">
+      <div class="donut-title">Alokasi Portofolio</div>
+      <div class="donut-wrap">
+        <svg width="96" height="96" viewBox="0 0 96 96">
+          <circle cx="48" cy="48" r="38" fill="none" stroke="#e5e7eb" stroke-width="18"/>
+          ${donut}
+          <text x="48" y="44" text-anchor="middle" font-size="9" fill="#6b7280">Total</text>
+          <text x="48" y="57" text-anchor="middle" font-size="9" font-weight="600" fill="#1a1a1a">${(tot/1e6).toFixed(1)}Jt</text>
+        </svg>
+        <div>${items.map(([l,v,c])=>`<div class="legend-item"><div class="legend-dot" style="background:${c}"></div><span style="flex:1">${l}</span><span style="font-weight:600;margin-left:8px">${tot>0?F(v/tot*100,1)+'%':'-'}</span></div>`).join('')}</div>
+      </div>
+    </div>
+    <div class="donut-container">
+      <div class="donut-title">Nilai per Aset</div>
+      ${items.map(([l,v,c])=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px"><div class="legend-dot" style="background:${c}"></div><span style="font-size:13px">${l}</span></div>
+        <span style="font-size:13px;font-weight:600">${Rp(R(v))}</span>
+      </div>`).join('')}
+      <div style="display:flex;justify-content:space-between;padding-top:8px"><span style="font-weight:600;font-size:13px">Total</span><span style="font-weight:700;font-size:14px;color:var(--blue)">${Rp(R(tot))}</span></div>
+    </div>
+  </div>
+  <div class="section-header"><span class="section-title">Saham (preview)</span><button class="btn btn-sm" onclick="APP.tab='saham';render()">Lihat semua →</button></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Kode</th><th>Lot</th><th>Modal</th><th>Nilai</th><th>P&L</th><th>%</th></tr></thead>
+    <tbody>${cSaham().slice(0,5).map(s=>`<tr><td><b>${s.kode}</b></td><td>${s.lot}</td><td>${Rp(R(s.m))}</td><td>${Rp(R(s.v))}</td><td class="${Cls(s.pl)}">${Rp(R(s.pl))}</td><td class="${Cls(s.pct)}">${Pct(s.pct)}</td></tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function vSaham() {
+  const rows=cSaham(), tM=rows.reduce((a,r)=>a+r.m,0), tV=rows.reduce((a,r)=>a+r.v,0), tPL=tV-tM;
+  return `
+  <div class="section-header"><span class="section-title">📈 Saham BEI</span><button class="btn btn-success btn-sm" onclick="openModal('saham')">+ Tambah</button></div>
+  <div class="metric-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="metric-card"><div class="metric-label">Modal</div><div class="metric-value" style="font-size:15px">${Rp(R(tM))}</div></div>
+    <div class="metric-card"><div class="metric-label">Nilai Kini</div><div class="metric-value" style="font-size:15px">${Rp(R(tV))}</div></div>
+    <div class="metric-card"><div class="metric-label">P&L</div><div class="metric-value ${Cls(tPL)}" style="font-size:15px">${Rp(R(tPL))}</div></div>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tanggal</th><th>Kode</th><th>Lot</th><th>Hrg Beli</th><th>Modal</th><th>Hrg Kini</th><th>Nilai Market</th><th>P&L</th><th>%</th><th></th></tr></thead>
+    <tbody>${rows.map((s,i)=>`<tr>
+      <td>${s.tgl}</td><td><b>${s.kode}</b></td><td>${s.lot}</td><td>${F(s.beli)}</td><td>${Rp(R(s.m))}</td>
+      <td><input class="cell-input" type="number" value="${s.now}" onchange="upd('saham',${i},'now',+this.value)"></td>
+      <td>${Rp(R(s.v))}</td><td class="${Cls(s.pl)}">${Rp(R(s.pl))}</td><td class="${Cls(s.pct)}">${Pct(s.pct)}</td>
+      <td><button class="btn btn-icon" onclick="del('saham',${i})">🗑</button></td>
+    </tr>`).join('')}</tbody>
+    <tfoot><tr class="tr-total"><td colspan="4">TOTAL</td><td>${Rp(R(tM))}</td><td></td><td>${Rp(R(tV))}</td><td class="${Cls(tPL)}">${Rp(R(tPL))}</td><td class="${Cls(tPL)}">${Pct(tM?tPL/tM:0)}</td><td></td></tr></tfoot>
+  </table></div>`;
+}
+
+function vEtf() {
+  const rows=cEtf(), k=APP.data.kurs, tM=rows.reduce((a,r)=>a+r.mi,0), tV=rows.reduce((a,r)=>a+r.vi,0), tPL=tV-tM;
+  return `
+  <div class="section-header"><span class="section-title">🌍 ETF Luar Negeri</span><button class="btn btn-success btn-sm" onclick="openModal('etf')">+ Tambah</button></div>
+  <div class="metric-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="metric-card"><div class="metric-label">Modal (IDR)</div><div class="metric-value" style="font-size:15px">${Rp(R(tM))}</div></div>
+    <div class="metric-card"><div class="metric-label">Nilai Kini (IDR)</div><div class="metric-value" style="font-size:15px">${Rp(R(tV))}</div></div>
+    <div class="metric-card"><div class="metric-label">P&L (IDR)</div><div class="metric-value ${Cls(tPL)}" style="font-size:15px">${Rp(R(tPL))}</div></div>
+  </div>
+  <div class="alert alert-blue" style="margin-bottom:12px">Kurs aktif: <b>1 USD = Rp ${F(k)}</b> — ubah di Dashboard</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tanggal</th><th>ETF</th><th>Unit</th><th>Beli (USD)</th><th>Kini (USD)</th><th>Nilai (USD)</th><th>Nilai (IDR)</th><th>P&L (IDR)</th><th>%</th><th></th></tr></thead>
+    <tbody>${rows.map((e,i)=>`<tr>
+      <td>${e.tgl}</td><td><b>${e.kode}</b></td><td>${F(e.unit,4)}</td><td>${Usd(e.beli)}</td>
+      <td><input class="cell-input" type="number" step="0.01" value="${e.now}" onchange="upd('etf',${i},'now',+this.value)"></td>
+      <td>${Usd(e.vu,2)}</td><td>${Rp(R(e.vi))}</td><td class="${Cls(e.pl)}">${Rp(R(e.pl))}</td><td class="${Cls(e.pct)}">${Pct(e.pct)}</td>
+      <td><button class="btn btn-icon" onclick="del('etf',${i})">🗑</button></td>
+    </tr>`).join('')}</tbody>
+    <tfoot><tr class="tr-total"><td colspan="5">TOTAL</td><td>${Usd(rows.reduce((a,r)=>a+r.vu,0),2)}</td><td>${Rp(R(tV))}</td><td class="${Cls(tPL)}">${Rp(R(tPL))}</td><td class="${Cls(tPL)}">${Pct(tM?tPL/tM:0)}</td><td></td></tr></tfoot>
+  </table></div>`;
+}
+
+function vEmas() {
+  const rows=cEmas(), tM=rows.reduce((a,r)=>a+r.m,0), tV=rows.reduce((a,r)=>a+r.v,0), tPL=tV-tM;
+  return `
+  <div class="section-header"><span class="section-title">🥇 Emas Digital</span><button class="btn btn-success btn-sm" onclick="openModal('emas')">+ Tambah</button></div>
+  <div class="metric-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="metric-card"><div class="metric-label">Modal</div><div class="metric-value" style="font-size:15px">${Rp(R(tM))}</div></div>
+    <div class="metric-card"><div class="metric-label">Nilai Kini</div><div class="metric-value" style="font-size:15px">${Rp(R(tV))}</div></div>
+    <div class="metric-card"><div class="metric-label">P&L</div><div class="metric-value ${Cls(tPL)}" style="font-size:15px">${Rp(R(tPL))}</div></div>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tanggal</th><th>Lokasi</th><th>Gram</th><th>Beli/gr</th><th>Modal</th><th>Kini/gr</th><th>Nilai</th><th>P&L</th><th></th></tr></thead>
+    <tbody>${rows.map((e,i)=>`<tr>
+      <td>${e.tgl}</td><td>${e.lokasi}</td><td>${F(e.gram,4)}</td><td>${Rp(e.beli)}</td><td>${Rp(R(e.m))}</td>
+      <td><input class="cell-input" type="number" value="${e.now}" onchange="upd('emas',${i},'now',+this.value)"></td>
+      <td>${Rp(R(e.v))}</td><td class="${Cls(e.pl)}">${Rp(R(e.pl))}</td>
+      <td><button class="btn btn-icon" onclick="del('emas',${i})">🗑</button></td>
+    </tr>`).join('')}</tbody>
+    <tfoot><tr class="tr-total"><td colspan="4">TOTAL</td><td>${Rp(R(tM))}</td><td></td><td>${Rp(R(tV))}</td><td class="${Cls(tPL)}">${Rp(R(tPL))}</td><td></td></tr></tfoot>
+  </table></div>`;
+}
+
+function vBtc() {
+  const rows=cBtc(), tM=rows.reduce((a,r)=>a+r.m,0), tV=rows.reduce((a,r)=>a+r.v,0), tPL=tV-tM;
+  return `
+  <div class="section-header"><span class="section-title">₿ Bitcoin</span><button class="btn btn-success btn-sm" onclick="openModal('btc')">+ Tambah</button></div>
+  <div class="metric-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="metric-card"><div class="metric-label">Modal</div><div class="metric-value" style="font-size:15px">${Rp(R(tM))}</div></div>
+    <div class="metric-card"><div class="metric-label">Nilai Kini</div><div class="metric-value" style="font-size:15px">${Rp(R(tV))}</div></div>
+    <div class="metric-card"><div class="metric-label">P&L</div><div class="metric-value ${Cls(tPL)}" style="font-size:15px">${Rp(R(tPL))}</div></div>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tanggal</th><th>Jumlah BTC</th><th>Hrg Beli (Rp)</th><th>Modal</th><th>Hrg Kini (Rp)</th><th>Nilai</th><th>P&L</th><th></th></tr></thead>
+    <tbody>${rows.map((b,i)=>`<tr>
+      <td>${b.tgl}</td><td>${F(b.jumlah,8)}</td><td>${Rp(b.beli)}</td><td>${Rp(R(b.m))}</td>
+      <td><input class="cell-input" type="number" value="${b.now}" onchange="upd('btc',${i},'now',+this.value)"></td>
+      <td>${Rp(R(b.v))}</td><td class="${Cls(b.pl)}">${Rp(R(b.pl))}</td>
+      <td><button class="btn btn-icon" onclick="del('btc',${i})">🗑</button></td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function vDiv() {
+  const bei=APP.data.divBei||[], etf=APP.data.divEtf||[], k=APP.data.kurs;
+  const tBei=tDivBei(), tEtf=tDivEtf();
+  return `
+  <div class="metric-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:16px">
+    <div class="metric-card"><div class="metric-label">Total Dividen BEI</div><div class="metric-value pos">${Rp(R(tBei))}</div><div class="metric-sub">bruto</div></div>
+    <div class="metric-card"><div class="metric-label">Total Dividen ETF</div><div class="metric-value pos">${Rp(R(tEtf))}</div><div class="metric-sub">dalam IDR</div></div>
+  </div>
+  <div class="section-header"><span class="section-title">Dividen BEI</span><button class="btn btn-success btn-sm" onclick="openModal('divBei')">+ Tambah</button></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tanggal</th><th>Saham</th><th>Bruto</th><th>Pajak 10%</th><th>Bersih</th><th>Keterangan</th><th></th></tr></thead>
+    <tbody>${bei.map((d,i)=>`<tr><td>${d.tgl}</td><td><b>${d.saham}</b></td><td>${Rp(d.bruto)}</td><td>${Rp(R(d.bruto*.1))}</td><td>${Rp(R(d.bruto*.9))}</td><td>${d.ket}</td><td><button class="btn btn-icon" onclick="del('divBei',${i})">🗑</button></td></tr>`).join('')}</tbody>
+    <tfoot><tr class="tr-total"><td colspan="2">TOTAL</td><td>${Rp(R(tBei))}</td><td>${Rp(R(tBei*.1))}</td><td>${Rp(R(tBei*.9))}</td><td colspan="2"></td></tr></tfoot>
+  </table></div>
+  <div class="section-header" style="margin-top:16px"><span class="section-title">Dividen ETF</span><button class="btn btn-success btn-sm" onclick="openModal('divEtf')">+ Tambah</button></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tanggal</th><th>ETF</th><th>Bruto USD</th><th>Bruto IDR</th><th>Pajak 30%</th><th>Bersih IDR</th><th>Keterangan</th><th></th></tr></thead>
+    <tbody>${etf.map((d,i)=>`<tr><td>${d.tgl}</td><td><b>${d.kode}</b></td><td>${Usd(d.bruto,2)}</td><td>${Rp(R(d.bruto*k))}</td><td>${Rp(R(d.bruto*k*.3))}</td><td>${Rp(R(d.bruto*k*.7))}</td><td>${d.ket}</td><td><button class="btn btn-icon" onclick="del('divEtf',${i})">🗑</button></td></tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function vDana() {
+  const dd=APP.data.dana||[], gl=APP.data.goals||[];
+  const tM=dd.reduce((a,r)=>a+r.masuk,0), tV=tDana();
+  return `
+  <div class="section-header"><span class="section-title">🛡 Dana Darurat</span><button class="btn btn-success btn-sm" onclick="openModal('dana')">+ Tambah</button></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Item</th><th>Modal Masuk</th><th>Nilai Sekarang</th><th>Keuntungan</th><th></th></tr></thead>
+    <tbody>${dd.map((d,i)=>`<tr>
+      <td>${d.item}</td><td>${Rp(d.masuk)}</td>
+      <td><input class="cell-input" style="width:130px" type="number" value="${d.now||d.masuk}" onchange="upd('dana',${i},'now',+this.value)"></td>
+      <td class="${Cls((d.now||d.masuk)-d.masuk)}">${Rp(R((d.now||d.masuk)-d.masuk))}</td>
+      <td><button class="btn btn-icon" onclick="del('dana',${i})">🗑</button></td>
+    </tr>`).join('')}</tbody>
+    <tfoot><tr class="tr-total"><td>TOTAL</td><td>${Rp(R(tM))}</td><td>${Rp(R(tV))}</td><td class="${Cls(tV-tM)}">${Rp(R(tV-tM))}</td><td></td></tr></tfoot>
+  </table></div>
+  <div class="section-header" style="margin-top:16px"><span class="section-title">🎯 Goals Keuangan</span><button class="btn btn-success btn-sm" onclick="openModal('goals')">+ Tambah</button></div>
+  ${gl.map((g,i)=>{
+    const p = g.target > 0 ? Math.min(100, g.terkumpul/g.target*100) : 0;
+    return `<div class="goal-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong>${g.nama}</strong>
+        <div style="display:flex;gap:8px;align-items:center"><span class="badge badge-blue">${g.deadline}</span><button class="btn btn-icon" onclick="del('goals',${i})">🗑</button></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2)">
+        <span>Terkumpul: <b style="color:var(--text)">${Rp(g.terkumpul)}</b></span>
+        <span>Target: <b style="color:var(--text)">${Rp(g.target)}</b></span>
+        <span class="${p>=100?'pos':''}">${F(p,1)}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${p}%;background:${p>=100?'var(--green)':'var(--blue)'}"></div></div>
+    </div>`;
+  }).join('')}`;
+}
+
+function vSpt() {
+  const rows = [
+    {kat:'HARTA',item:'Saham BEI (31 Des)',modal:cSaham().reduce((a,r)=>a+r.m,0),nilai:tSaham()},
+    {kat:'HARTA ASING',item:'ETF LN (31 Des)',modal:cEtf().reduce((a,r)=>a+r.mi,0),nilai:tEtf()},
+    {kat:'HARTA',item:'Emas Digital',modal:cEmas().reduce((a,r)=>a+r.m,0),nilai:tEmas()},
+    {kat:'HARTA',item:'Bitcoin',modal:cBtc().reduce((a,r)=>a+r.m,0),nilai:tBtc()},
+    {kat:'DANA DARURAT',item:'Reksadana + Bank Digital',modal:(APP.data.dana||[]).reduce((a,r)=>a+r.masuk,0),nilai:tDana()},
+    {kat:'PENGHASILAN FINAL',item:'Dividen BEI (bruto)',modal:tDivBei(),nilai:tDivBei()},
+    {kat:'PENGHASILAN LN',item:'Dividen ETF (bruto)',modal:tDivEtf(),nilai:tDivEtf()},
+    {kat:'GOALS',item:'Tujuan Keuangan',modal:(APP.data.goals||[]).reduce((a,g)=>a+g.terkumpul,0),nilai:(APP.data.goals||[]).reduce((a,g)=>a+g.terkumpul,0)},
+  ];
+  const tM=rows.reduce((a,r)=>a+r.modal,0), tN=rows.reduce((a,r)=>a+r.nilai,0);
+  return `
+  <div class="section-title" style="margin-bottom:14px">📋 SPT Summary — Rekap Pajak</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Kategori</th><th>Item</th><th>Modal (Rp)</th><th>Nilai (Rp)</th><th>P&L Belum Realisasi</th></tr></thead>
+    <tbody>${rows.map(r=>{const pl=r.nilai-r.modal;return`<tr><td><span class="badge badge-blue">${r.kat}</span></td><td>${r.item}</td><td>${Rp(R(r.modal))}</td><td>${Rp(R(r.nilai))}</td><td class="${Cls(pl)}">${Rp(R(pl))}</td></tr>`;}).join('')}</tbody>
+    <tfoot><tr class="tr-total"><td colspan="2">TOTAL ALL</td><td>${Rp(R(tM))}</td><td>${Rp(R(tN))}</td><td class="${Cls(tN-tM)}">${Rp(R(tN-tM))}</td></tr></tfoot>
+  </table></div>`;
+}
+
+// ── MODAL DEFINITIONS ─────────────────────────────────────
+const MODAL_DEF = {
+  kurs:   {t:'Update Kurs USD/IDR', f:[{id:'kurs',l:'1 USD = Rp',type:'number'}]},
+  saham:  {t:'Tambah Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text',ph:'BBCA'},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
+  etf:    {t:'Tambah ETF', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode ETF',type:'text',ph:'QQQ'},{id:'unit',l:'Unit',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli (USD)',type:'number',step:'0.01'},{id:'now',l:'Harga Kini (USD)',type:'number',step:'0.01'}]},
+  emas:   {t:'Tambah Emas', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'lokasi',l:'Lokasi',type:'text',ph:'DANA/TRINGS'},{id:'gram',l:'Gram',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli/gr',type:'number'},{id:'now',l:'Harga Kini/gr',type:'number'}]},
+  btc:    {t:'Tambah Bitcoin', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'jumlah',l:'Jumlah BTC',type:'number',step:'0.00000001'},{id:'beli',l:'Harga Beli (Rp)',type:'number'},{id:'now',l:'Harga Kini (Rp)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
+  divBei: {t:'Tambah Dividen BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'saham',l:'Kode Saham',type:'text'},{id:'bruto',l:'Dividen Bruto (Rp)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
+  divEtf: {t:'Tambah Dividen ETF', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode ETF',type:'text'},{id:'bruto',l:'Bruto (USD)',type:'number',step:'0.01'},{id:'ket',l:'Keterangan',type:'text'}]},
+  dana:   {t:'Tambah Dana Darurat', f:[{id:'item',l:'Nama Instrumen',type:'text',ph:'RDPU Majoris...'},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
+  goals:  {t:'Tambah Goal', f:[{id:'nama',l:'Nama Tujuan',type:'text'},{id:'target',l:'Target Dana',type:'number'},{id:'deadline',l:'Deadline (Tahun)',type:'text',ph:'2028'},{id:'terkumpul',l:'Dana Terkumpul',type:'number'}]},
+};
+
+function openModal(type) { APP.modal=type; render(); }
+function closeModal() { APP.modal=null; render(); }
+
+function vModal() {
+  if (!APP.modal) return '';
+  const m = MODAL_DEF[APP.modal];
+  return `<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-title">${m.t}</div>
+    <div class="form-grid">${m.f.map(f=>`<div class="form-group"><label>${f.l}</label><input id="mf_${f.id}" type="${f.type}" placeholder="${f.ph||''}" ${f.step?'step='+f.step:''} ${APP.modal==='kurs'&&f.id==='kurs'?'value='+APP.data.kurs:''}></div>`).join('')}</div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="saveModal()">💾 Simpan</button>
+    </div>
+  </div></div>`;
+}
+
+function saveModal() {
+  const type = APP.modal;
+  const m = MODAL_DEF[type];
+  if (type === 'kurs') {
+    const v = +document.getElementById('mf_kurs').value;
+    if (v > 0) { APP.data.kurs = v; scheduleSave(); }
+    return closeModal();
+  }
+  const obj = {};
+  m.f.forEach(f => {
+    const el = document.getElementById('mf_'+f.id);
+    if (!el) return;
+    obj[f.id] = f.type==='number' ? (parseFloat(el.value)||0) : el.value;
+  });
+  if (!APP.data[type]) APP.data[type] = [];
+  APP.data[type].push(obj);
+  scheduleSave();
+  closeModal();
+}
+
+// ── DATA OPS ──────────────────────────────────────────────
+function upd(arr, i, field, val) {
+  APP.data[arr][i][field] = val;
+  scheduleSave();
+  // re-render only the cell calculation parts
+  render();
+}
+function del(arr, i) {
+  if (!confirm('Hapus data ini?')) return;
+  APP.data[arr].splice(i, 1);
+  scheduleSave();
+  render();
+}
+
+// ── EXPORT ────────────────────────────────────────────────
+function doExport() {
+  const k = APP.data.kurs;
+  let c = 'Portfolio Tracker Export\nKurs USD/IDR: '+k+'\n\n';
+  c += 'SAHAM BEI\nKode,Lot,Hrg Beli,Modal,Hrg Kini,Nilai,P&L,% P&L\n';
+  cSaham().forEach(s => c+=`${s.kode},${s.lot},${s.beli},${R(s.m)},${s.now},${R(s.v)},${R(s.pl)},${(s.pct*100).toFixed(2)}%\n`);
+  c += '\nETF LN\nKode,Unit,Beli USD,Kini USD,Nilai USD,Nilai IDR,P&L IDR\n';
+  cEtf().forEach(e => c+=`${e.kode},${e.unit},${e.beli},${e.now},${e.vu.toFixed(2)},${R(e.vi)},${R(e.pl)}\n`);
+  c += '\nEMAS\nLokasi,Gram,Beli/gr,Modal,Kini/gr,Nilai,P&L\n';
+  cEmas().forEach(e => c+=`${e.lokasi},${e.gram},${e.beli},${R(e.m)},${e.now},${R(e.v)},${R(e.pl)}\n`);
+  c += '\nSUMMARY\nAset,Nilai IDR\nSaham BEI,'+R(tSaham())+'\nETF LN,'+R(tEtf())+'\nEmas,'+R(tEmas())+'\nBitcoin,'+R(tBtc())+'\nDana Darurat,'+R(tDana())+'\nTotal,'+R(tSaham()+tEtf()+tEmas()+tBtc())+'\n';
+  const blob = new Blob(['\uFEFF'+c], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Portfolio_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+// ── MAIN RENDER ───────────────────────────────────────────
+const TABS = [
+  {id:'dash',l:'🏠 Dashboard'},{id:'saham',l:'📈 Saham BEI'},{id:'etf',l:'🌍 ETF LN'},
+  {id:'emas',l:'🥇 Emas'},{id:'btc',l:'₿ Bitcoin'},{id:'div',l:'💰 Dividen'},
+  {id:'dana',l:'🛡 Dana & Goals'},{id:'spt',l:'📋 SPT'},
+];
+
+const VIEWS = {dash:vDash, saham:vSaham, etf:vEtf, emas:vEmas, btc:vBtc, div:vDiv, dana:vDana, spt:vSpt};
+
+function render() {
+  const root = document.getElementById('root');
+  if (!root) return;
+  if (!IS_CONFIGURED || !APP.user) { root.innerHTML = vLogin(); return; }
+  const content = (VIEWS[APP.tab] || vDash)();
+  root.innerHTML = `
+  <div class="app">
+    <div class="header">
+      <div class="header-left">
+        <div class="header-logo">
+          <div class="header-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+          <span class="logo-text">Portfolio Tracker</span>
+        </div>
+        <span class="user-pill">${APP.user.email}</span>
+        <span id="save-status" class="save-status saved">✓ Tersimpan</span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" onclick="doExport()">⬇ Export CSV</button>
+        <button class="btn btn-sm" onclick="doLogout()">Keluar</button>
+      </div>
+    </div>
+    <div class="tabs-bar">${TABS.map(t=>`<button class="tab-btn${APP.tab===t.id?' active':''}" onclick="APP.tab='${t.id}';render()">${t.l}</button>`).join('')}</div>
+    <div class="main">${content}</div>
+  </div>
+  ${vModal()}`;
+}
+</script>
+</body>
+</html>
