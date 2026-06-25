@@ -48,6 +48,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .btn-full{width:100%}
 .btn-icon{padding:5px 8px;font-size:13px;color:var(--text2)}
 .btn-icon:hover{color:var(--red)}
+.btn-icon-edit{padding:5px 8px;font-size:13px;color:var(--text2)}
+.btn-icon-edit:hover{color:var(--blue)}
+.row-actions{display:flex;gap:2px;align-items:center}
 .login-divider{text-align:center;font-size:12px;color:var(--text3);margin:14px 0;position:relative}
 .login-divider::before,.login-divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:var(--border)}
 .login-divider::before{left:0}.login-divider::after{right:0}
@@ -244,6 +247,8 @@ let APP = {
   data: null,
   tab: 'dash',
   modal: null,
+  editArr: null,
+  editIdx: null,
   saving: false,
   saveTimer: null,
   db: null,
@@ -495,7 +500,7 @@ function vSaham() {
       <td>${s.tgl}</td><td><b>${s.kode}</b></td><td>${s.lot}</td><td>${F(s.beli)}</td><td>${Rp(R(s.m))}</td>
       <td><input class="cell-input" type="number" value="${s.now}" onchange="upd('saham',${i},'now',+this.value)"></td>
       <td>${Rp(R(s.v))}</td><td class="${Cls(s.pl)}">${Rp(R(s.pl))}</td><td class="${Cls(s.pct)}">${Pct(s.pct)}</td>
-      <td><button class="btn btn-icon" onclick="del('saham',${i})">🗑</button></td>
+      <td><div class="row-actions"><button class="btn btn-icon-edit" title="Edit" onclick="openEdit('saham',${i})">✏️</button><button class="btn btn-icon" onclick="del('saham',${i})">🗑</button></div></td>
     </tr>`).join('')}</tbody>
     <tfoot><tr class="tr-total"><td colspan="4">TOTAL</td><td>${Rp(R(tM))}</td><td></td><td>${Rp(R(tV))}</td><td class="${Cls(tPL)}">${Rp(R(tPL))}</td><td class="${Cls(tPL)}">${Pct(tM?tPL/tM:0)}</td><td></td></tr></tfoot>
   </table></div>`;
@@ -517,7 +522,7 @@ function vEtf() {
       <td>${e.tgl}</td><td><b>${e.kode}</b></td><td>${F(e.unit,4)}</td><td>${Usd(e.beli)}</td>
       <td><input class="cell-input" type="number" step="0.01" value="${e.now}" onchange="upd('etf',${i},'now',+this.value)"></td>
       <td>${Usd(e.vu,2)}</td><td>${Rp(R(e.vi))}</td><td class="${Cls(e.pl)}">${Rp(R(e.pl))}</td><td class="${Cls(e.pct)}">${Pct(e.pct)}</td>
-      <td><button class="btn btn-icon" onclick="del('etf',${i})">🗑</button></td>
+      <td><div class="row-actions"><button class="btn btn-icon-edit" title="Edit" onclick="openEdit('etf',${i})">✏️</button><button class="btn btn-icon" onclick="del('etf',${i})">🗑</button></div></td>
     </tr>`).join('')}</tbody>
     <tfoot><tr class="tr-total"><td colspan="5">TOTAL</td><td>${Usd(rows.reduce((a,r)=>a+r.vu,0),2)}</td><td>${Rp(R(tV))}</td><td class="${Cls(tPL)}">${Rp(R(tPL))}</td><td class="${Cls(tPL)}">${Pct(tM?tPL/tM:0)}</td><td></td></tr></tfoot>
   </table></div>`;
@@ -596,7 +601,7 @@ function vDana() {
       <td>${d.item}</td><td>${Rp(d.masuk)}</td>
       <td><input class="cell-input" style="width:130px" type="number" value="${d.now||d.masuk}" onchange="upd('dana',${i},'now',+this.value)"></td>
       <td class="${Cls((d.now||d.masuk)-d.masuk)}">${Rp(R((d.now||d.masuk)-d.masuk))}</td>
-      <td><button class="btn btn-icon" onclick="del('dana',${i})">🗑</button></td>
+      <td><div class="row-actions"><button class="btn btn-icon-edit" title="Edit" onclick="openEdit('dana',${i})">✏️</button><button class="btn btn-icon" onclick="del('dana',${i})">🗑</button></div></td>
     </tr>`).join('')}</tbody>
     <tfoot><tr class="tr-total"><td>TOTAL</td><td>${Rp(R(tM))}</td><td>${Rp(R(tV))}</td><td class="${Cls(tV-tM)}">${Rp(R(tV-tM))}</td><td></td></tr></tfoot>
   </table></div>
@@ -606,7 +611,7 @@ function vDana() {
     return `<div class="goal-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <strong>${g.nama}</strong>
-        <div style="display:flex;gap:8px;align-items:center"><span class="badge badge-blue">${g.deadline}</span><button class="btn btn-icon" onclick="del('goals',${i})">🗑</button></div>
+        <div style="display:flex;gap:8px;align-items:center"><span class="badge badge-blue">${g.deadline}</span><button class="btn btn-icon-edit" title="Edit" onclick="openEdit('goals',${i})">✏️</button><button class="btn btn-icon" onclick="del('goals',${i})">🗑</button></div>
       </div>
       <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2)">
         <span>Terkumpul: <b style="color:var(--text)">${Rp(g.terkumpul)}</b></span>
@@ -654,6 +659,55 @@ const MODAL_DEF = {
 
 function openModal(type) { APP.modal=type; render(); }
 function closeModal() { APP.modal=null; render(); }
+
+// ── EDIT MODAL ────────────────────────────────────────────
+const EDIT_DEF = {
+  saham:  {t:'Edit Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text'},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
+  etf:    {t:'Edit ETF LN', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode ETF',type:'text'},{id:'unit',l:'Unit',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli (USD)',type:'number',step:'0.01'},{id:'now',l:'Harga Kini (USD)',type:'number',step:'0.01'}]},
+  dana:   {t:'Edit Dana Darurat', f:[{id:'item',l:'Nama Instrumen',type:'text'},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
+  goals:  {t:'Edit Goal Keuangan', f:[{id:'nama',l:'Nama Tujuan',type:'text'},{id:'target',l:'Target Dana',type:'number'},{id:'deadline',l:'Deadline (Tahun)',type:'text'},{id:'terkumpul',l:'Dana Terkumpul',type:'number'}]},
+};
+
+function openEdit(arr, idx) {
+  APP.editArr = arr;
+  APP.editIdx = idx;
+  render();
+}
+function closeEdit() {
+  APP.editArr = null;
+  APP.editIdx = null;
+  render();
+}
+function saveEdit() {
+  const arr = APP.editArr, idx = APP.editIdx;
+  const m = EDIT_DEF[arr];
+  if (!m) return closeEdit();
+  const obj = {...APP.data[arr][idx]};
+  m.f.forEach(f => {
+    const el = document.getElementById('ef_'+f.id);
+    if (!el) return;
+    obj[f.id] = f.type==='number' ? (parseFloat(el.value)||0) : el.value;
+  });
+  APP.data[arr][idx] = obj;
+  scheduleSave();
+  closeEdit();
+}
+function vEditModal() {
+  if (APP.editArr === null || APP.editIdx === null) return '';
+  const arr = APP.editArr, idx = APP.editIdx;
+  const m = EDIT_DEF[arr];
+  if (!m) return '';
+  const row = APP.data[arr][idx];
+  return `<div class="modal-overlay" onclick="if(event.target===this)closeEdit()">
+  <div class="modal-box">
+    <div class="modal-title">${m.t}</div>
+    <div class="form-grid">${m.f.map(f=>`<div class="form-group"><label>${f.l}</label><input id="ef_${f.id}" type="${f.type}" placeholder="${f.ph||''}" ${f.step?'step='+f.step:''} value="${row[f.id]!==undefined?row[f.id]:''}"></div>`).join('')}</div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeEdit()">Batal</button>
+      <button class="btn btn-primary" onclick="saveEdit()">💾 Simpan</button>
+    </div>
+  </div></div>`;
+}
 
 function vModal() {
   if (!APP.modal) return '';
@@ -754,7 +808,8 @@ function render() {
     <div class="tabs-bar">${TABS.map(t=>`<button class="tab-btn${APP.tab===t.id?' active':''}" onclick="APP.tab='${t.id}';render()">${t.l}</button>`).join('')}</div>
     <div class="main">${content}</div>
   </div>
-  ${vModal()}`;
+  ${vModal()}
+  ${vEditModal()}`;
 }
 </script>
 </body>
