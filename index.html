@@ -441,6 +441,63 @@ function vDash() {
     cum+=p;
   });
 
+  // ── Dividen chart data ─────────────────────────────────
+  const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+  const curYear = new Date().getFullYear();
+
+  function monthlyDiv(arr, amtKey, multiply) {
+    const map = Array(12).fill(0);
+    (arr||[]).forEach(d => {
+      const dt = new Date(d.tgl);
+      if (dt.getFullYear() !== curYear) return;
+      const m = dt.getMonth();
+      map[m] += (d[amtKey]||0) * (multiply||1);
+    });
+    return map;
+  }
+
+  const divBeiMonthly = monthlyDiv(APP.data.divBei, 'bruto', 1);
+  const divEtfMonthly = monthlyDiv(APP.data.divEtf, 'bruto', APP.data.kurs||17800);
+
+  function barChart(monthly, title, color) {
+    const max = Math.max(...monthly, 1);
+    const W = 560, H = 160, PAD_L = 70, PAD_R = 16, PAD_TOP = 28, PAD_BOT = 36;
+    const chartW = W - PAD_L - PAD_R;
+    const chartH = H - PAD_TOP - PAD_BOT;
+    const barW = Math.floor(chartW / 12 * 0.55);
+    const gap = chartW / 12;
+
+    // y-axis labels (3 ticks)
+    const ticks = [0, Math.round(max/2), max];
+    const yLines = ticks.map(t => {
+      const y = PAD_TOP + chartH - (t/max)*chartH;
+      return `<line x1="${PAD_L}" y1="${y}" x2="${W-PAD_R}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>
+              <text x="${PAD_L-6}" y="${y+4}" text-anchor="end" font-size="9" fill="#9ca3af">${t>=1000?F(t/1000,0)+'rb':F(t)}</text>`;
+    }).join('');
+
+    const bars = monthly.map((v, i) => {
+      const x = PAD_L + gap*i + gap/2 - barW/2;
+      const bh = max > 0 ? (v/max)*chartH : 0;
+      const y = PAD_TOP + chartH - bh;
+      const label = v > 0 ? `<text x="${x+barW/2}" y="${y-4}" text-anchor="middle" font-size="8" fill="${color}" font-weight="600">${v>=1000?F(v/1000,1)+'rb':F(v)}</text>` : '';
+      return `<rect x="${x}" y="${y}" width="${barW}" height="${bh}" rx="2" fill="${color}" opacity="0.85"/>
+              ${label}
+              <text x="${PAD_L+gap*i+gap/2}" y="${PAD_TOP+chartH+14}" text-anchor="middle" font-size="9" fill="#6b7280">${MONTHS[i]}</text>`;
+    }).join('');
+
+    return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:14px 16px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">${title} ${curYear}</div>
+      <div style="overflow-x:auto">
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:320px;display:block">
+        ${yLines}
+        ${bars}
+        <line x1="${PAD_L}" y1="${PAD_TOP}" x2="${PAD_L}" y2="${PAD_TOP+chartH}" stroke="#d1d5db" stroke-width="1"/>
+        <line x1="${PAD_L}" y1="${PAD_TOP+chartH}" x2="${W-PAD_R}" y2="${PAD_TOP+chartH}" stroke="#d1d5db" stroke-width="1"/>
+      </svg>
+      </div>
+    </div>`;
+  }
+
   return `
   ${vSetupBanner()}
   <div class="kurs-bar">
@@ -478,6 +535,8 @@ function vDash() {
       <div style="display:flex;justify-content:space-between;padding-top:8px"><span style="font-weight:600;font-size:13px">Total</span><span style="font-weight:700;font-size:14px;color:var(--blue)">${Rp(R(tot))}</span></div>
     </div>
   </div>
+  ${barChart(divBeiMonthly, '📈 Dividen BEI', '#185FA5')}
+  ${barChart(divEtfMonthly, '🌍 Dividen ETF (IDR)', '#3B6D11')}
   <div class="section-header"><span class="section-title">Saham (preview)</span><button class="btn btn-sm" onclick="APP.tab='saham';render()">Lihat semua →</button></div>
   <div class="table-wrap"><table>
     <thead><tr><th>Kode</th><th>Lot</th><th>Modal</th><th>Nilai</th><th>P&L</th><th>%</th></tr></thead>
