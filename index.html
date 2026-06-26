@@ -827,13 +827,59 @@ function del(arr, i) {
 function doExport() {
   const k = APP.data.kurs;
   let c = 'Portfolio Tracker Export\nKurs USD/IDR: '+k+'\n\n';
-  c += 'SAHAM BEI\nKode,Lot,Hrg Beli,Modal,Hrg Kini,Nilai,P&L,% P&L\n';
-  cSaham().forEach(s => c+=`${s.kode},${s.lot},${s.beli},${R(s.m)},${s.now},${R(s.v)},${R(s.pl)},${(s.pct*100).toFixed(2)}%\n`);
-  c += '\nETF LN\nKode,Unit,Beli USD,Kini USD,Nilai USD,Nilai IDR,P&L IDR\n';
-  cEtf().forEach(e => c+=`${e.kode},${e.unit},${e.beli},${e.now},${e.vu.toFixed(2)},${R(e.vi)},${R(e.pl)}\n`);
-  c += '\nEMAS\nLokasi,Gram,Beli/gr,Modal,Kini/gr,Nilai,P&L\n';
-  cEmas().forEach(e => c+=`${e.lokasi},${e.gram},${e.beli},${R(e.m)},${e.now},${R(e.v)},${R(e.pl)}\n`);
-  c += '\nSUMMARY\nAset,Nilai IDR\nSaham BEI,'+R(tSaham())+'\nETF LN,'+R(tEtf())+'\nEmas,'+R(tEmas())+'\nBitcoin,'+R(tBtc())+'\nDana Darurat,'+R(tDana())+'\nTotal,'+R(tSaham()+tEtf()+tEmas()+tBtc())+'\n';
+
+  // SAHAM BEI
+  c += 'SAHAM BEI\nTanggal,Kode,Lot,Hrg Beli,Modal,Hrg Kini,Nilai Market,P&L,% P&L\n';
+  cSaham().forEach(s => c+=`${s.tgl},${s.kode},${s.lot},${s.beli},${R(s.m)},${s.now},${R(s.v)},${R(s.pl)},${(s.pct*100).toFixed(2)}%\n`);
+
+  // ETF LN
+  c += '\nETF LN\nTanggal,Kode,Unit,Beli USD,Kini USD,Nilai USD,Nilai IDR,P&L IDR\n';
+  cEtf().forEach(e => c+=`${e.tgl},${e.kode},${e.unit},${e.beli},${e.now},${e.vu.toFixed(2)},${R(e.vi)},${R(e.pl)}\n`);
+
+  // EMAS
+  c += '\nEMAS\nTanggal,Lokasi,Gram,Beli/gr,Modal,Kini/gr,Nilai,P&L\n';
+  cEmas().forEach(e => c+=`${e.tgl||''},${e.lokasi},${e.gram},${e.beli},${R(e.m)},${e.now},${R(e.v)},${R(e.pl)}\n`);
+
+  // BITCOIN
+  c += '\nBITCOIN\nTanggal,Amount (BTC),Harga Beli (IDR),Modal,Harga Kini (IDR),Nilai,P&L\n';
+  (APP.data.btc||[]).forEach(b => {
+    const modal = (b.amount||0)*(b.beli||0);
+    const nilai = (b.amount||0)*(b.now||0);
+    c+=`${b.tgl||''},${b.amount||0},${b.beli||0},${R(modal)},${b.now||0},${R(nilai)},${R(nilai-modal)}\n`;
+  });
+
+  // DIVIDEN BEI
+  c += '\nDIVIDEN BEI\nTanggal,Kode,Lot,Bruto,Pajak,Neto\n';
+  (APP.data.divBei||[]).forEach(d => c+=`${d.tgl},${d.kode||''},${d.lot||''},${d.bruto||0},${d.pajak||0},${d.neto||0}\n`);
+
+  // DIVIDEN ETF
+  c += '\nDIVIDEN ETF\nTanggal,ETF,Unit,Bruto (USD),Neto (USD),Neto (IDR)\n';
+  (APP.data.divEtf||[]).forEach(d => {
+    const netoIdr = (d.neto||d.bruto||0)*(APP.data.kurs||17800);
+    c+=`${d.tgl},${d.kode||''},${d.unit||''},${d.bruto||0},${d.neto||d.bruto||0},${R(netoIdr)}\n`;
+  });
+
+  // DANA DARURAT
+  c += '\nDANA DARURAT\nItem,Modal Masuk,Nilai Sekarang,Keuntungan\n';
+  (APP.data.dana||[]).forEach(d => {
+    const now = d.now||d.masuk||0;
+    c+=`${d.item},${d.masuk||0},${now},${R(now-(d.masuk||0))}\n`;
+  });
+  const totDana = tDana(), modDana = (APP.data.dana||[]).reduce((a,d)=>a+(d.masuk||0),0);
+  c+=`TOTAL,${R(modDana)},${R(totDana)},${R(totDana-modDana)}\n`;
+
+  // GOALS KEUANGAN
+  c += '\nGOALS KEUANGAN\nNama,Target,Terkumpul,Progress (%),Deadline\n';
+  (APP.data.goals||[]).forEach(g => {
+    const pct = g.target > 0 ? ((g.terkumpul||0)/g.target*100).toFixed(1) : '0.0';
+    c+=`${g.nama},${g.target||0},${g.terkumpul||0},${pct}%,${g.deadline||''}\n`;
+  });
+
+  // SUMMARY
+  c += '\nSUMMARY\nAset,Nilai IDR\n';
+  c += `Saham BEI,${R(tSaham())}\nETF LN,${R(tEtf())}\nEmas,${R(tEmas())}\nBitcoin,${R(tBtc())}\nDana Darurat,${R(tDana())}\nTotal Investasi,${R(tSaham()+tEtf()+tEmas()+tBtc())}\nGrand Total,${R(tSaham()+tEtf()+tEmas()+tBtc()+tDana())}\n`;
+  c += `\nDividen BEI (YTD),${R(tDivBei())}\nDividen ETF (YTD),${R(tDivEtf())}\n`;
+
   const blob = new Blob(['\uFEFF'+c], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
