@@ -561,36 +561,38 @@ function vSaham() {
     <div class="metric-card"><div class="metric-label">P&L</div><div class="metric-value ${Cls(tPL)}" style="font-size:15px">${Rp(R(tPL))}</div></div>
   </div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Tanggal</th><th>Kode</th><th>Lot</th><th>Hrg Beli</th><th>Modal</th><th>Hrg Kini</th><th>Nilai Market</th><th>P&L</th><th>%</th><th>Wajar Bawah</th><th>Wajar Atas</th><th>Status Wajar</th><th></th></tr></thead>
+    <thead><tr><th>Tgl</th><th>Kode</th><th>Lot</th><th>Hrg Beli</th><th>Modal</th><th>Hrg Kini</th><th>Nilai</th><th>P&L</th><th>%</th><th>Wajar (Bwh-Atas)</th><th>Status</th><th></th></tr></thead>
     <tbody>${rows.map((s,i)=>{
       const wb = s.wajarBawah||0, wa = s.wajarAtas||0;
       const beli = s.beli||0;
-      let statusEl = '<span style="color:var(--text2);font-size:12px">—</span>';
+      let statusEl = '<span style="color:var(--text2);font-size:11px">—</span>';
       if (wb > 0 && wa > 0) {
         if (beli < wb) {
-          // beli di bawah harga wajar bawah = diskon bagus
           const selisih = wb - beli;
-          statusEl = `<span style="color:var(--green);font-size:12px;font-weight:600">✅ Diskon<br><small>-${F(selisih)}</small></span>`;
+          statusEl = `<span style="color:var(--green);font-size:11px;font-weight:600">✅ Diskon<br><small>-${F(selisih)}</small></span>`;
         } else if (beli >= wb && beli <= wa) {
-          // beli dalam rentang wajar
           const selisih = beli - wb;
-          statusEl = `<span style="color:var(--text);font-size:12px;font-weight:600">⚖️ Wajar<br><small>+${F(selisih)}</small></span>`;
+          statusEl = `<span style="color:#b45309;font-size:11px;font-weight:600">⚖️ Wajar<br><small>+${F(selisih)}</small></span>`;
         } else {
-          // beli di atas harga wajar atas = mahal
           const selisih = beli - wa;
-          statusEl = `<span style="color:var(--red);font-size:12px;font-weight:600">⚠️ Di atas<br><small>+${F(selisih)}</small></span>`;
+          statusEl = `<span style="color:var(--red);font-size:11px;font-weight:600">⚠️ Mahal<br><small>+${F(selisih)}</small></span>`;
         }
       }
       return `<tr>
-      <td>${s.tgl}</td><td><b>${s.kode}</b></td><td>${s.lot}</td><td>${F(s.beli)}</td><td>${Rp(R(s.m))}</td>
-      <td><input class="cell-input" type="number" value="${s.now}" onchange="upd('saham',${i},'now',+this.value)"></td>
-      <td>${Rp(R(s.v))}</td><td class="${Cls(s.pl)}">${Rp(R(s.pl))}</td><td class="${Cls(s.pct)}">${Pct(s.pct)}</td>
-      <td><input class="cell-input" type="number" placeholder="0" value="${wb||''}" onchange="upd('saham',${i},'wajarBawah',+this.value)"></td>
-      <td><input class="cell-input" type="number" placeholder="0" value="${wa||''}" onchange="upd('saham',${i},'wajarAtas',+this.value)"></td>
+      <td style="font-size:11px">${s.tgl}</td><td><b>${s.kode}</b></td><td>${s.lot}</td><td>${F(s.beli)}</td><td style="font-size:11px">${Rp(R(s.m))}</td>
+      <td><input class="cell-input" type="number" value="${s.now}" onchange="upd('saham',${i},'now',+this.value)" style="width:70px"></td>
+      <td style="font-size:11px">${Rp(R(s.v))}</td><td class="${Cls(s.pl)}" style="font-size:11px">${Rp(R(s.pl))}</td><td class="${Cls(s.pct)}" style="font-size:11px">${Pct(s.pct)}</td>
+      <td>
+        <div style="display:flex;gap:2px;align-items:center">
+          <input class="cell-input" type="number" placeholder="Bwh" value="${wb||''}" onchange="upd('saham',${i},'wajarBawah',+this.value)" style="width:55px;font-size:10px">
+          <span style="font-size:10px;color:var(--text2)">-</span>
+          <input class="cell-input" type="number" placeholder="Atas" value="${wa||''}" onchange="upd('saham',${i},'wajarAtas',+this.value)" style="width:55px;font-size:10px">
+        </div>
+      </td>
       <td style="text-align:center">${statusEl}</td>
       <td><div class="row-actions"><button class="btn btn-icon-edit" title="Edit" onclick="openEdit('saham',${i})">✏️</button><button class="btn btn-icon" onclick="del('saham',${i})">🗑</button></div></td>
     </tr>`;}).join('')}</tbody>
-    <tfoot><tr class="tr-total"><td colspan="4">TOTAL</td><td>${Rp(R(tM))}</td><td></td><td>${Rp(R(tV))}</td><td class="${Cls(tPL)}">${Rp(R(tPL))}</td><td class="${Cls(tPL)}">${Pct(tM?tPL/tM:0)}</td><td colspan="4"></td></tr></tfoot>
+    <tfoot><tr class="tr-total"><td colspan="4">TOTAL</td><td style="font-size:11px">${Rp(R(tM))}</td><td></td><td style="font-size:11px">${Rp(R(tV))}</td><td class="${Cls(tPL)}" style="font-size:11px">${Rp(R(tPL))}</td><td class="${Cls(tPL)}" style="font-size:11px">${Pct(tM?tPL/tM:0)}</td><td colspan="3"></td></tr></tfoot>
   </table></div>`;
 }
 
