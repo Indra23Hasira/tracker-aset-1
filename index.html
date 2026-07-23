@@ -532,7 +532,7 @@ function vSaham() {
           statusEl = `<span style="color:var(--green);font-size:11px;font-weight:600">✅ Diskon<br><small>-${F(selisih)}</small></span>`;
         } else if (beli >= wb && beli <= wa) {
           const selisih = beli - wb;
-          statusEl = `<span style="color:#b45309;font-size:11px;font-weight:600">⚖️ Wajar<br><small>+${F(selisih)}</small></span>`;
+          statusEl = `<span style="font-size:11px;font-weight:600">⚖️ Wajar<br><small>+${F(selisih)}</small></span>`;
         } else {
           const selisih = beli - wa;
           statusEl = `<span style="color:var(--red);font-size:11px;font-weight:600">⚠️ Mahal<br><small>+${F(selisih)}</small></span>`;
