@@ -575,7 +575,13 @@ function vSaham() {
 function vEtf() {
   const rows=cEtf(), k=APP.data.kurs, tM=rows.reduce((a,r)=>a+r.mi,0), tV=rows.reduce((a,r)=>a+r.vi,0), tPL=tV-tM;
   return `
-  <div class="section-header"><span class="section-title">🌍 ETF Luar Negeri</span><button class="btn btn-success btn-sm" onclick="openModal('etf')">+ Tambah</button></div>
+  <div class="section-header"><span class="section-title">🌍 ETF Luar Negeri</span>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sm" id="btnUpdateEtf" onclick="updateHargaEtf()" style="background:#0369a1;color:#fff;border:none">🔄 Update Harga</button>
+      <button class="btn btn-success btn-sm" onclick="openModal('etf')">+ Tambah</button>
+    </div>
+  </div>
+  <div id="updateStatusEtf" style="display:none;font-size:11px;color:var(--text2);padding:4px 0;margin-bottom:4px"></div>
   <div class="metric-grid" style="grid-template-columns:repeat(3,1fr)">
     <div class="metric-card"><div class="metric-label">Modal (IDR)</div><div class="metric-value" style="font-size:15px">${Rp(R(tM))}</div></div>
     <div class="metric-card"><div class="metric-label">Nilai Kini (IDR)</div><div class="metric-value" style="font-size:15px">${Rp(R(tV))}</div></div>
@@ -908,6 +914,71 @@ async function updateHargaOtomatis() {
   const b = document.getElementById('btnUpdateHarga');
   if (b) { b.disabled = false; b.textContent = '🔄 Update Harga'; }
 }
+
+async function updateHargaEtf() {
+  const etf = APP.data.etf;
+  if (!etf || etf.length === 0) return;
+
+  const btn = document.getElementById('btnUpdateEtf');
+  const statusEl = document.getElementById('updateStatusEtf');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Mengambil...'; }
+  if (statusEl) { statusEl.style.display = 'block'; statusEl.textContent = '⏳ Mengambil harga ETF...'; }
+
+  const kodes = [...new Set(etf.map(e => e.kode.toUpperCase()))];
+  let berhasil = 0, gagal = [];
+  const batchSize = 4;
+
+  for (let i = 0; i < kodes.length; i += batchSize) {
+    const batch = kodes.slice(i, i + batchSize);
+    const results = await Promise.allSettled(batch.map(async kode => {
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${kode}?interval=1d&range=1d`;
+      const proxies = [
+        `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+        `https://corsproxy.io/?${encodeURIComponent(url)}`,
+      ];
+      for (const proxy of proxies) {
+        try {
+          const res = await fetch(proxy, {signal: AbortSignal.timeout(8000)});
+          const data = await res.json();
+          const raw = typeof data.contents === 'string' ? data.contents : JSON.stringify(data);
+          const parsed = JSON.parse(raw);
+          const price = parsed?.chart?.result?.[0]?.meta?.regularMarketPrice;
+          if (price && price > 0) return {kode, price};
+        } catch(e) { continue; }
+      }
+      return null;
+    }));
+
+    results.forEach((r, idx) => {
+      const kode = batch[idx];
+      const val = r.status === 'fulfilled' ? r.value : null;
+      if (val && val.price) {
+        etf.forEach((e, ei) => {
+          if (e.kode.toUpperCase() === kode) APP.data.etf[ei].now = parseFloat(val.price.toFixed(2));
+        });
+        berhasil++;
+        if (statusEl) statusEl.textContent = `⏳ ${kode}: $${val.price.toFixed(2)} (${berhasil}/${kodes.length})`;
+      } else {
+        gagal.push(kode);
+      }
+    });
+    if (i + batchSize < kodes.length) await new Promise(r => setTimeout(r, 600));
+  }
+
+  scheduleSave();
+  render();
+
+  const el = document.getElementById('updateStatusEtf');
+  if (el) {
+    let msg = `✅ ${berhasil}/${kodes.length} ETF berhasil diupdate`;
+    if (gagal.length > 0) msg += ` | ⚠️ Gagal: ${gagal.join(', ')}`;
+    msg += ` — ${new Date().toLocaleTimeString('id-ID')}`;
+    el.textContent = msg;
+  }
+  const b = document.getElementById('btnUpdateEtf');
+  if (b) { b.disabled = false; b.textContent = '🔄 Update Harga'; }
+}
+
 function doExport() {
   const k = APP.data.kurs;
   let c = 'Portfolio Tracker Export\nKurs USD/IDR: '+k+'\n\n';
