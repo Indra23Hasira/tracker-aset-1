@@ -840,6 +840,27 @@ function del(arr, i) {
 }
 
 // ── AUTO UPDATE HARGA SAHAM ───────────────────────────────
+async function fetchHargaSaham(kode) {
+  const symbol = kode + '.JK';
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
+  // Coba 2 proxy berbeda
+  const proxies = [
+    `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  ];
+  for (const proxy of proxies) {
+    try {
+      const res = await fetch(proxy, {signal: AbortSignal.timeout(8000)});
+      const data = await res.json();
+      const raw = typeof data.contents === 'string' ? data.contents : JSON.stringify(data);
+      const parsed = JSON.parse(raw);
+      const price = parsed?.chart?.result?.[0]?.meta?.regularMarketPrice;
+      if (price && price > 0) return Math.round(price);
+    } catch(e) { continue; }
+  }
+  return null;
+}
+
 async function updateHargaOtomatis() {
   const saham = APP.data.saham;
   if (!saham || saham.length === 0) return;
@@ -851,31 +872,28 @@ async function updateHargaOtomatis() {
 
   const kodes = [...new Set(saham.map(s => s.kode.toUpperCase()))];
 
-  // Fetch semua saham paralel sekaligus
-  const results = await Promise.allSettled(kodes.map(async kode => {
-    const symbol = kode + '.JK';
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
-    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    const res = await fetch(proxy, {signal: AbortSignal.timeout(8000)});
-    const data = await res.json();
-    const parsed = JSON.parse(data.contents);
-    const price = parsed?.chart?.result?.[0]?.meta?.regularMarketPrice;
-    if (!price || price <= 0) throw new Error('no price');
-    return {kode, price: Math.round(price)};
-  }));
-
+  // Batch per 4 supaya tidak overload proxy
   let berhasil = 0, gagal = [];
-  results.forEach((r, idx) => {
-    if (r.status === 'fulfilled') {
-      const {kode, price} = r.value;
-      saham.forEach((s, i) => {
-        if (s.kode.toUpperCase() === kode) APP.data.saham[i].now = price;
-      });
-      berhasil++;
-    } else {
-      gagal.push(kodes[idx]);
-    }
-  });
+  const batchSize = 4;
+  for (let i = 0; i < kodes.length; i += batchSize) {
+    const batch = kodes.slice(i, i + batchSize);
+    const results = await Promise.allSettled(batch.map(k => fetchHargaSaham(k)));
+    results.forEach((r, idx) => {
+      const kode = batch[idx];
+      const price = r.status === 'fulfilled' ? r.value : null;
+      if (price) {
+        saham.forEach((s, si) => {
+          if (s.kode.toUpperCase() === kode) APP.data.saham[si].now = price;
+        });
+        berhasil++;
+        if (statusEl) statusEl.textContent = `⏳ ${kode}: Rp ${F(price)} (${berhasil}/${kodes.length})`;
+      } else {
+        gagal.push(kode);
+      }
+    });
+    // Jeda antar batch
+    if (i + batchSize < kodes.length) await new Promise(r => setTimeout(r, 600));
+  }
 
   scheduleSave();
   render();
@@ -886,7 +904,6 @@ async function updateHargaOtomatis() {
     if (gagal.length > 0) msg += ` | ⚠️ Gagal: ${gagal.join(', ')}`;
     msg += ` — ${new Date().toLocaleTimeString('id-ID')}`;
     el.textContent = msg;
-    el.style.display = 'block';
   }
   const b = document.getElementById('btnUpdateHarga');
   if (b) { b.disabled = false; b.textContent = '🔄 Update Harga'; }
