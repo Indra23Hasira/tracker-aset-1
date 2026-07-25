@@ -846,51 +846,43 @@ async function updateHargaOtomatis() {
 
   const btn = document.getElementById('btnUpdateHarga');
   const statusEl = document.getElementById('updateStatus');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Mengambil harga...'; }
-  if (statusEl) { statusEl.style.display = 'block'; statusEl.textContent = 'Menghubungi server data...'; }
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Mengambil...'; }
+  if (statusEl) { statusEl.style.display = 'block'; statusEl.textContent = '⏳ Mengambil harga semua saham...'; }
 
-  // Ambil daftar kode unik
   const kodes = [...new Set(saham.map(s => s.kode.toUpperCase()))];
+
+  // Fetch semua saham paralel sekaligus
+  const results = await Promise.allSettled(kodes.map(async kode => {
+    const symbol = kode + '.JK';
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
+    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const res = await fetch(proxy, {signal: AbortSignal.timeout(8000)});
+    const data = await res.json();
+    const parsed = JSON.parse(data.contents);
+    const price = parsed?.chart?.result?.[0]?.meta?.regularMarketPrice;
+    if (!price || price <= 0) throw new Error('no price');
+    return {kode, price: Math.round(price)};
+  }));
+
   let berhasil = 0, gagal = [];
-
-  for (const kode of kodes) {
-    try {
-      // Format Yahoo Finance untuk saham IDX: BBCA.JK
-      const symbol = kode + '.JK';
-      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
-      const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-
-      const res = await fetch(proxy);
-      const data = await res.json();
-      const parsed = JSON.parse(data.contents);
-      const price = parsed?.chart?.result?.[0]?.meta?.regularMarketPrice;
-
-      if (price && price > 0) {
-        // Update semua baris dengan kode ini
-        saham.forEach((s, i) => {
-          if (s.kode.toUpperCase() === kode) {
-            APP.data.saham[i].now = Math.round(price);
-          }
-        });
-        berhasil++;
-        if (statusEl) statusEl.textContent = `✅ ${kode}: Rp ${F(Math.round(price))} — (${berhasil}/${kodes.length})`;
-      } else {
-        gagal.push(kode);
-      }
-    } catch (e) {
-      gagal.push(kode);
+  results.forEach((r, idx) => {
+    if (r.status === 'fulfilled') {
+      const {kode, price} = r.value;
+      saham.forEach((s, i) => {
+        if (s.kode.toUpperCase() === kode) APP.data.saham[i].now = price;
+      });
+      berhasil++;
+    } else {
+      gagal.push(kodes[idx]);
     }
-    // Delay antar request agar tidak diblokir
-    await new Promise(r => setTimeout(r, 400));
-  }
+  });
 
   scheduleSave();
   render();
 
-  // Tampilkan hasil akhir
   const el = document.getElementById('updateStatus');
   if (el) {
-    let msg = `✅ ${berhasil} saham berhasil diupdate`;
+    let msg = `✅ ${berhasil}/${kodes.length} saham berhasil diupdate`;
     if (gagal.length > 0) msg += ` | ⚠️ Gagal: ${gagal.join(', ')}`;
     msg += ` — ${new Date().toLocaleTimeString('id-ID')}`;
     el.textContent = msg;
