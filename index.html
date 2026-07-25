@@ -524,7 +524,13 @@ function vDash() {
 function vSaham() {
   const rows=cSaham(), tM=rows.reduce((a,r)=>a+r.m,0), tV=rows.reduce((a,r)=>a+r.v,0), tPL=tV-tM;
   return `
-  <div class="section-header"><span class="section-title">📈 Saham BEI</span><button class="btn btn-success btn-sm" onclick="openModal('saham')">+ Tambah</button></div>
+  <div class="section-header"><span class="section-title">📈 Saham BEI</span>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sm" id="btnUpdateHarga" onclick="updateHargaOtomatis()" style="background:#0369a1;color:#fff;border:none">🔄 Update Harga</button>
+      <button class="btn btn-success btn-sm" onclick="openModal('saham')">+ Tambah</button>
+    </div>
+  </div>
+  <div id="updateStatus" style="display:none;font-size:11px;color:var(--text2);padding:4px 0;margin-bottom:4px"></div>
   <div class="metric-grid" style="grid-template-columns:repeat(3,1fr)">
     <div class="metric-card"><div class="metric-label">Modal</div><div class="metric-value" style="font-size:15px">${Rp(R(tM))}</div></div>
     <div class="metric-card"><div class="metric-label">Nilai Kini</div><div class="metric-value" style="font-size:15px">${Rp(R(tV))}</div></div>
@@ -833,7 +839,66 @@ function del(arr, i) {
   render();
 }
 
-// ── EXPORT ────────────────────────────────────────────────
+// ── AUTO UPDATE HARGA SAHAM ───────────────────────────────
+async function updateHargaOtomatis() {
+  const saham = APP.data.saham;
+  if (!saham || saham.length === 0) return;
+
+  const btn = document.getElementById('btnUpdateHarga');
+  const statusEl = document.getElementById('updateStatus');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Mengambil harga...'; }
+  if (statusEl) { statusEl.style.display = 'block'; statusEl.textContent = 'Menghubungi server data...'; }
+
+  // Ambil daftar kode unik
+  const kodes = [...new Set(saham.map(s => s.kode.toUpperCase()))];
+  let berhasil = 0, gagal = [];
+
+  for (const kode of kodes) {
+    try {
+      // Format Yahoo Finance untuk saham IDX: BBCA.JK
+      const symbol = kode + '.JK';
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
+      const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+
+      const res = await fetch(proxy);
+      const data = await res.json();
+      const parsed = JSON.parse(data.contents);
+      const price = parsed?.chart?.result?.[0]?.meta?.regularMarketPrice;
+
+      if (price && price > 0) {
+        // Update semua baris dengan kode ini
+        saham.forEach((s, i) => {
+          if (s.kode.toUpperCase() === kode) {
+            APP.data.saham[i].now = Math.round(price);
+          }
+        });
+        berhasil++;
+        if (statusEl) statusEl.textContent = `✅ ${kode}: Rp ${F(Math.round(price))} — (${berhasil}/${kodes.length})`;
+      } else {
+        gagal.push(kode);
+      }
+    } catch (e) {
+      gagal.push(kode);
+    }
+    // Delay antar request agar tidak diblokir
+    await new Promise(r => setTimeout(r, 400));
+  }
+
+  scheduleSave();
+  render();
+
+  // Tampilkan hasil akhir
+  const el = document.getElementById('updateStatus');
+  if (el) {
+    let msg = `✅ ${berhasil} saham berhasil diupdate`;
+    if (gagal.length > 0) msg += ` | ⚠️ Gagal: ${gagal.join(', ')}`;
+    msg += ` — ${new Date().toLocaleTimeString('id-ID')}`;
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+  const b = document.getElementById('btnUpdateHarga');
+  if (b) { b.disabled = false; b.textContent = '🔄 Update Harga'; }
+}
 function doExport() {
   const k = APP.data.kurs;
   let c = 'Portfolio Tracker Export\nKurs USD/IDR: '+k+'\n\n';
