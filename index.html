@@ -931,7 +931,89 @@ const SEKTOR_MULTIPLE = {
   'default':  {perMin:8,  perMax:15, pbvMin:1.0, pbvMax:2.0},
 };
 
-function getSektorKey(sektor) {
+// Mapping kode emiten IDX → sektor
+const EMITEN_SEKTOR = {
+  // ── PERBANKAN ──
+  BBCA:'bank', BMRI:'bank', BBRI:'bank', BBNI:'bank', BRIS:'bank',
+  BNGA:'bank', BTPS:'bank', BDMN:'bank', BJBR:'bank', BJTM:'bank',
+  BBTN:'bank', NISP:'bank', ARTO:'bank', BBYB:'bank', AGRO:'bank',
+  PNBN:'bank', MEGA:'bank', MAYA:'bank', BMAS:'bank', NOBU:'bank',
+
+  // ── ENERGI / MINYAK & GAS ──
+  ADMR:'energi', MEDC:'energi', ELSA:'energi', RUIS:'energi',
+  ENRG:'energi', DEWA:'energi', ESSA:'energi', PGAS:'energi',
+
+  // ── TAMBANG BATU BARA ──
+  ADRO:'tambang', PTBA:'tambang', INDY:'tambang', ITMG:'tambang',
+  HRUM:'tambang', BUMI:'tambang', BYAN:'tambang', DOID:'tambang',
+  MBAP:'tambang', SMMT:'tambang', PKPK:'tambang',
+
+  // ── TAMBANG MINERAL / NIKEL / EMAS ──
+  AMMN:'tambang', ANTM:'tambang', NICL:'tambang', MDKA:'tambang',
+  INCO:'tambang', TINS:'tambang', PSAB:'tambang', NCKL:'tambang',
+  BRMS:'tambang', CITA:'tambang',
+
+  // ── CONSUMER / FMCG ──
+  UNVR:'consumer', ICBP:'consumer', INDF:'consumer', MYOR:'consumer',
+  SIDO:'consumer', CLEO:'consumer', DLTA:'consumer', MLBI:'consumer',
+  ULTJ:'consumer', SKLT:'consumer', CAMP:'consumer', GOOD:'consumer',
+  ADES:'consumer', PSDN:'consumer', ROTI:'consumer',
+
+  // ── RETAIL ──
+  ACES:'retail', MAPI:'retail', LPPF:'retail', AMRT:'retail',
+  MIDI:'retail', HERO:'retail', RANC:'retail', CSAP:'retail',
+
+  // ── OTOMOTIF ──
+  ASII:'consumer', ASSA:'consumer', AUTO:'consumer', BRAM:'consumer',
+  SMSM:'consumer', GJTL:'consumer', MASA:'consumer',
+
+  // ── TELEKOMUNIKASI ──
+  TLKM:'telecom', EXCL:'telecom', ISAT:'telecom', FREN:'telecom',
+  TBIG:'telecom', TOWR:'telecom', MTEL:'telecom',
+
+  // ── PROPERTI ──
+  BSDE:'property', SMRA:'property', CTRA:'property', PWON:'property',
+  LPKR:'property', ASRI:'property', DMAS:'property', JRPT:'property',
+  PANI:'property', MDLN:'property', KIJA:'property', BEST:'property',
+
+  // ── KONSTRUKSI / INFRASTRUKTUR ──
+  PPRE:'infrastr', WIKA:'infrastr', WSKT:'infrastr', PTPP:'infrastr',
+  ADHI:'infrastr', JSMR:'infrastr', WTON:'infrastr', TOTL:'infrastr',
+
+  // ── PERKEBUNAN / AGRI ──
+  TAPG:'agri', SSMS:'agri', AALI:'agri', LSIP:'agri', SIMP:'agri',
+  SGRO:'agri', TBLA:'agri', DSNG:'agri', PALM:'agri',
+
+  // ── MEDIA / ENTERTAINMENT ──
+  RANS:'media', SCMA:'media', MNCN:'media', EMTK:'media',
+  VIVA:'media', LINK:'media',
+
+  // ── TEKNOLOGI ──
+  GOTO:'tech', BUKA:'tech', DMMX:'tech', MCAS:'tech', CASH:'tech',
+
+  // ── KESEHATAN / FARMASI ──
+  KAEF:'health', KLBF:'health', MIKA:'health', SILO:'health',
+  HEAL:'health', PYFA:'health', TSPC:'health', DVLA:'health',
+
+  // ── SEMEN / MATERIAL ──
+  SMGR:'infrastr', INTP:'infrastr', WSBP:'infrastr', MARK:'infrastr',
+};
+
+// Tambahkan sektor agri ke multiples
+const _AGRI = {perMin:6, perMax:12, pbvMin:0.8, pbvMax:2.0};
+const _MEDIA = {perMin:10, perMax:20, pbvMin:1.5, pbvMax:3.5};
+const _HEALTH = {perMin:15, perMax:30, pbvMin:2.0, pbvMax:5.0};
+SEKTOR_MULTIPLE['agri']   = _AGRI;
+SEKTOR_MULTIPLE['media']  = _MEDIA;
+SEKTOR_MULTIPLE['health'] = _HEALTH;
+
+function getSektorKey(sektor, kode) {
+  // Prioritas 1: auto-detect dari kode emiten
+  if (kode) {
+    const mapped = EMITEN_SEKTOR[kode.toUpperCase()];
+    if (mapped) return mapped;
+  }
+  // Prioritas 2: dari field sektor yang diisi manual
   if (!sektor) return 'default';
   const s = sektor.toLowerCase();
   if (s.includes('bank') || s.includes('keuang') || s.includes('finance')) return 'bank';
@@ -941,8 +1023,11 @@ function getSektorKey(sektor) {
   if (s.includes('retail') || s.includes('ritel')) return 'retail';
   if (s.includes('proper') || s.includes('real estat')) return 'property';
   if (s.includes('teleko') || s.includes('telecom')) return 'telecom';
-  if (s.includes('infra')) return 'infrastr';
+  if (s.includes('infra') || s.includes('konstruk')) return 'infrastr';
   if (s.includes('tech') || s.includes('digital')) return 'tech';
+  if (s.includes('agri') || s.includes('kebun') || s.includes('sawit')) return 'agri';
+  if (s.includes('health') || s.includes('farma') || s.includes('kesehatan')) return 'health';
+  if (s.includes('media') || s.includes('entertain')) return 'media';
   return 'default';
 }
 
@@ -951,7 +1036,7 @@ function hitungWajar(s) {
   const bv  = s.bv  || 0;
   if (eps <= 0 && bv <= 0) return {wb: 0, wa: 0};
 
-  const key = getSektorKey(s.sektor);
+  const key = getSektorKey(s.sektor, s.kode);
   const m   = SEKTOR_MULTIPLE[key] || SEKTOR_MULTIPLE['default'];
 
   let candidates = [];
@@ -987,6 +1072,8 @@ function hitungWajarSemua() {
     if (wb > 0 && wa > 0) {
       APP.data.saham[i].wajarBawah = wb;
       APP.data.saham[i].wajarAtas  = wa;
+      // Simpan sektor yang terdeteksi
+      if (!s.sektor) APP.data.saham[i].sektor = getSektorKey(s.sektor, s.kode);
       updated++;
     }
   });
