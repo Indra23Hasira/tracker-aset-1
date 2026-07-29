@@ -527,6 +527,7 @@ function vSaham() {
   <div class="section-header"><span class="section-title">📈 Saham BEI</span>
     <div style="display:flex;gap:8px">
       <button class="btn btn-sm" id="btnUpdateHarga" onclick="updateHargaOtomatis()" style="background:#0369a1;color:#fff;border:none">🔄 Update Harga</button>
+      <button class="btn btn-sm" id="btnHitungWajar" onclick="hitungWajarSemua()" style="background:#6d28d9;color:#fff;border:none">🧮 Hitung Wajar</button>
       <button class="btn btn-success btn-sm" onclick="openModal('saham')">+ Tambah</button>
     </div>
   </div>
@@ -735,7 +736,7 @@ function vSpt() {
 // ── MODAL DEFINITIONS ─────────────────────────────────────
 const MODAL_DEF = {
   kurs:   {t:'Update Kurs USD/IDR', f:[{id:'kurs',l:'1 USD = Rp',type:'number'}]},
-  saham:  {t:'Tambah Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text',ph:'BBCA'},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'wajarBawah',l:'Harga Wajar Bawah',type:'number'},{id:'wajarAtas',l:'Harga Wajar Atas',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
+  saham:  {t:'Tambah Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text',ph:'BBCA'},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'eps',l:'EPS - Laba per Saham (Rp)',type:'number',ph:'0'},{id:'bv',l:'Book Value per Saham (Rp)',type:'number',ph:'0'},{id:'sektor',l:'Sektor',type:'text',ph:'Bank / Energi / Consumer / dll'},{id:'wajarBawah',l:'Harga Wajar Bawah (otomatis)',type:'number'},{id:'wajarAtas',l:'Harga Wajar Atas (otomatis)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
   etf:    {t:'Tambah ETF', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode ETF',type:'text',ph:'QQQ'},{id:'unit',l:'Unit',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli (USD)',type:'number',step:'0.01'},{id:'now',l:'Harga Kini (USD)',type:'number',step:'0.01'},{id:'ket',l:'Keterangan (isi "hold" utk tampil di preview)',type:'text'}]},
   emas:   {t:'Tambah Emas', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'lokasi',l:'Lokasi',type:'text',ph:'DANA/TRINGS'},{id:'gram',l:'Gram',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli/gr',type:'number'},{id:'now',l:'Harga Kini/gr',type:'number'}]},
   btc:    {t:'Tambah Bitcoin', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'jumlah',l:'Jumlah BTC',type:'number',step:'0.00000001'},{id:'beli',l:'Harga Beli (Rp)',type:'number'},{id:'now',l:'Harga Kini (Rp)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
@@ -750,7 +751,7 @@ function closeModal() { APP.modal=null; render(); }
 
 // ── EDIT MODAL ────────────────────────────────────────────
 const EDIT_DEF = {
-  saham:  {t:'Edit Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text'},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'wajarBawah',l:'Harga Wajar Bawah',type:'number'},{id:'wajarAtas',l:'Harga Wajar Atas',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
+  saham:  {t:'Edit Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text'},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'eps',l:'EPS - Laba per Saham (Rp)',type:'number'},{id:'bv',l:'Book Value per Saham (Rp)',type:'number'},{id:'sektor',l:'Sektor',type:'text',ph:'Bank / Energi / Consumer / dll'},{id:'wajarBawah',l:'Harga Wajar Bawah (otomatis)',type:'number'},{id:'wajarAtas',l:'Harga Wajar Atas (otomatis)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
   etf:    {t:'Edit ETF LN', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode ETF',type:'text'},{id:'unit',l:'Unit',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli (USD)',type:'number',step:'0.01'},{id:'now',l:'Harga Kini (USD)',type:'number',step:'0.01'},{id:'ket',l:'Keterangan (isi "hold" utk tampil di preview)',type:'text'}]},
   dana:   {t:'Edit Dana Darurat', f:[{id:'item',l:'Nama Instrumen',type:'text'},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
   goals:  {t:'Edit Goal Keuangan', f:[{id:'nama',l:'Nama Tujuan',type:'text'},{id:'target',l:'Target Dana',type:'number'},{id:'deadline',l:'Deadline (Tahun)',type:'text'},{id:'terkumpul',l:'Dana Terkumpul',type:'number'}]},
@@ -915,7 +916,92 @@ async function updateHargaOtomatis() {
   if (b) { b.disabled = false; b.textContent = '🔄 Update Harga'; }
 }
 
-async function updateHargaEtf() {
+// ── HITUNG HARGA WAJAR OTOMATIS ──────────────────────────
+// PER & PBV wajar per sektor (range bawah-atas)
+const SEKTOR_MULTIPLE = {
+  'bank':     {perMin:8,  perMax:14, pbvMin:1.2, pbvMax:2.5},
+  'energi':   {perMin:5,  perMax:10, pbvMin:0.8, pbvMax:1.8},
+  'tambang':  {perMin:5,  perMax:10, pbvMin:0.8, pbvMax:1.8},
+  'consumer': {perMin:15, perMax:25, pbvMin:2.0, pbvMax:4.0},
+  'retail':   {perMin:12, perMax:20, pbvMin:1.5, pbvMax:3.0},
+  'property': {perMin:8,  perMax:15, pbvMin:0.5, pbvMax:1.5},
+  'telecom':  {perMin:10, perMax:18, pbvMin:1.5, pbvMax:3.0},
+  'infrastr': {perMin:8,  perMax:15, pbvMin:1.0, pbvMax:2.0},
+  'tech':     {perMin:20, perMax:40, pbvMin:3.0, pbvMax:8.0},
+  'default':  {perMin:8,  perMax:15, pbvMin:1.0, pbvMax:2.0},
+};
+
+function getSektorKey(sektor) {
+  if (!sektor) return 'default';
+  const s = sektor.toLowerCase();
+  if (s.includes('bank') || s.includes('keuang') || s.includes('finance')) return 'bank';
+  if (s.includes('energi') || s.includes('energy') || s.includes('minyak') || s.includes('gas')) return 'energi';
+  if (s.includes('tambang') || s.includes('mining') || s.includes('batu bara') || s.includes('nikel')) return 'tambang';
+  if (s.includes('consumer') || s.includes('fmcg') || s.includes('makanan') || s.includes('minuman')) return 'consumer';
+  if (s.includes('retail') || s.includes('ritel')) return 'retail';
+  if (s.includes('proper') || s.includes('real estat')) return 'property';
+  if (s.includes('teleko') || s.includes('telecom')) return 'telecom';
+  if (s.includes('infra')) return 'infrastr';
+  if (s.includes('tech') || s.includes('digital')) return 'tech';
+  return 'default';
+}
+
+function hitungWajar(s) {
+  const eps = s.eps || 0;
+  const bv  = s.bv  || 0;
+  if (eps <= 0 && bv <= 0) return {wb: 0, wa: 0};
+
+  const key = getSektorKey(s.sektor);
+  const m   = SEKTOR_MULTIPLE[key] || SEKTOR_MULTIPLE['default'];
+
+  let candidates = [];
+  if (eps > 0) {
+    candidates.push(eps * m.perMin); // wajar bawah via PER
+    candidates.push(eps * m.perMax); // wajar atas via PER
+  }
+  if (bv > 0) {
+    candidates.push(bv * m.pbvMin);  // wajar bawah via PBV
+    candidates.push(bv * m.pbvMax);  // wajar atas via PBV
+  }
+
+  // Jika ada keduanya, ambil rata-rata keduanya
+  let wb, wa;
+  if (eps > 0 && bv > 0) {
+    wb = Math.round((eps * m.perMin + bv * m.pbvMin) / 2);
+    wa = Math.round((eps * m.perMax + bv * m.pbvMax) / 2);
+  } else {
+    wb = Math.round(Math.min(...candidates));
+    wa = Math.round(Math.max(...candidates));
+  }
+  return {wb, wa};
+}
+
+function hitungWajarSemua() {
+  const saham = APP.data.saham;
+  if (!saham || saham.length === 0) return;
+
+  let updated = 0, skip = 0;
+  saham.forEach((s, i) => {
+    if ((s.eps||0) <= 0 && (s.bv||0) <= 0) { skip++; return; }
+    const {wb, wa} = hitungWajar(s);
+    if (wb > 0 && wa > 0) {
+      APP.data.saham[i].wajarBawah = wb;
+      APP.data.saham[i].wajarAtas  = wa;
+      updated++;
+    }
+  });
+
+  scheduleSave();
+  render();
+
+  const el = document.getElementById('updateStatus');
+  if (el) {
+    let msg = `🧮 ${updated} saham berhasil dihitung harga wajarnya`;
+    if (skip > 0) msg += ` | ⚠️ ${skip} saham belum ada data EPS/BV (isi via tombol ✏️ Edit)`;
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+}
   const etf = APP.data.etf;
   if (!etf || etf.length === 0) return;
 
