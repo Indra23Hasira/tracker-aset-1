@@ -736,7 +736,7 @@ function vSpt() {
 // ── MODAL DEFINITIONS ─────────────────────────────────────
 const MODAL_DEF = {
   kurs:   {t:'Update Kurs USD/IDR', f:[{id:'kurs',l:'1 USD = Rp',type:'number'}]},
-  saham:  {t:'Tambah Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text',ph:'BBCA'},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'eps',l:'EPS - Laba per Saham (Rp)',type:'number',ph:'0'},{id:'bv',l:'Book Value per Saham (Rp)',type:'number',ph:'0'},{id:'wajarBawah',l:'Wajar Bawah (otomatis)',type:'number'},{id:'wajarAtas',l:'Wajar Atas (otomatis)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
+  saham:  {t:'Tambah Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text',ph:'BBCA'},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'eps',l:'EPS TTM (Rp)',type:'number',ph:'0'},{id:'pbvRatio',l:'PBV Ratio (misal: 0.84)',type:'number',ph:'0',step:'0.01'},{id:'wajarBawah',l:'Wajar Bawah (otomatis)',type:'number'},{id:'wajarAtas',l:'Wajar Atas (otomatis)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
   etf:    {t:'Tambah ETF', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode ETF',type:'text',ph:'QQQ'},{id:'unit',l:'Unit',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli (USD)',type:'number',step:'0.01'},{id:'now',l:'Harga Kini (USD)',type:'number',step:'0.01'},{id:'ket',l:'Keterangan (isi "hold" utk tampil di preview)',type:'text'}]},
   emas:   {t:'Tambah Emas', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'lokasi',l:'Lokasi',type:'text',ph:'DANA/TRINGS'},{id:'gram',l:'Gram',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli/gr',type:'number'},{id:'now',l:'Harga Kini/gr',type:'number'}]},
   btc:    {t:'Tambah Bitcoin', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'jumlah',l:'Jumlah BTC',type:'number',step:'0.00000001'},{id:'beli',l:'Harga Beli (Rp)',type:'number'},{id:'now',l:'Harga Kini (Rp)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
@@ -751,7 +751,7 @@ function closeModal() { APP.modal=null; render(); }
 
 // ── EDIT MODAL ────────────────────────────────────────────
 const EDIT_DEF = {
-  saham:  {t:'Edit Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text'},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'eps',l:'EPS - Laba per Saham (Rp)',type:'number'},{id:'bv',l:'Book Value per Saham (Rp)',type:'number'},{id:'wajarBawah',l:'Wajar Bawah (otomatis)',type:'number'},{id:'wajarAtas',l:'Wajar Atas (otomatis)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
+  saham:  {t:'Edit Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text'},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'eps',l:'EPS TTM (Rp)',type:'number'},{id:'pbvRatio',l:'PBV Ratio (misal: 0.84)',type:'number',step:'0.01'},{id:'wajarBawah',l:'Wajar Bawah (otomatis)',type:'number'},{id:'wajarAtas',l:'Wajar Atas (otomatis)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
   etf:    {t:'Edit ETF LN', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode ETF',type:'text'},{id:'unit',l:'Unit',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli (USD)',type:'number',step:'0.01'},{id:'now',l:'Harga Kini (USD)',type:'number',step:'0.01'},{id:'ket',l:'Keterangan (isi "hold" utk tampil di preview)',type:'text'}]},
   dana:   {t:'Edit Dana Darurat', f:[{id:'item',l:'Nama Instrumen',type:'text'},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
   goals:  {t:'Edit Goal Keuangan', f:[{id:'nama',l:'Nama Tujuan',type:'text'},{id:'target',l:'Target Dana',type:'number'},{id:'deadline',l:'Deadline (Tahun)',type:'text'},{id:'terkumpul',l:'Dana Terkumpul',type:'number'}]},
@@ -976,11 +976,18 @@ function getSektorKey(sektor, kode) {
 }
 
 function hitungWajar(s) {
-  const eps = s.eps || 0;
-  const bv  = s.bv  || 0;
-  if (eps <= 0 && bv <= 0) return {wb:0, wa:0};
+  const eps      = s.eps      || 0;
+  const pbvRatio = s.pbvRatio || 0;
+  const hargaKini = s.now     || 0;
+
+  if (eps <= 0 && pbvRatio <= 0) return {wb:0, wa:0};
+
+  // BV dihitung otomatis: Harga Kini ÷ PBV Ratio
+  const bv = (pbvRatio > 0 && hargaKini > 0) ? hargaKini / pbvRatio : 0;
+
   const key = getSektorKey(s.sektor, s.kode);
   const m   = SEKTOR_MULTIPLE[key] || SEKTOR_MULTIPLE['default'];
+
   let wb, wa;
   if (eps > 0 && bv > 0) {
     wb = Math.round((eps * m.perMin + bv * m.pbvMin) / 2);
@@ -1000,7 +1007,7 @@ function hitungWajarSemua() {
   if (!saham || saham.length === 0) return;
   let updated = 0, skip = 0;
   saham.forEach((s, i) => {
-    if ((s.eps||0) <= 0 && (s.bv||0) <= 0) { skip++; return; }
+    if ((s.eps||0) <= 0 && (s.pbvRatio||0) <= 0) { skip++; return; }
     const {wb, wa} = hitungWajar(s);
     if (wb > 0 && wa > 0) {
       APP.data.saham[i].wajarBawah = wb;
