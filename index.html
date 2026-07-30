@@ -818,7 +818,9 @@ function saveModal() {
   if (type === 'kurs') {
     const v = +document.getElementById('mf_kurs').value;
     if (v > 0) { APP.data.kurs = v; scheduleSave(); }
-    return closeModal();
+    closeModal();
+    render();
+    return;
   }
   const obj = {};
   m.f.forEach(f => {
