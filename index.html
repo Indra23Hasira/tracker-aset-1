@@ -436,7 +436,11 @@ function taRow(id, label, pctNow, min, max, editing, dotColor) {
   const inRange = pctNow >= min && pctNow <= max;
   const below = pctNow < min;
   const color = inRange ? 'var(--green)' : (below ? 'var(--amber)' : 'var(--red)');
-  const barPct = Math.max(0, Math.min(100, pctNow));
+  // Skala bar dibuat relatif terhadap target (bukan 0-100% mutlak), supaya band kecil seperti 5-10% tetap kelihatan jelas.
+  const scale = Math.max(max * 1.4, pctNow * 1.15, 1);
+  const barPct = Math.max(0, Math.min(100, (pctNow/scale)*100));
+  const markMin = Math.max(0, Math.min(100, (min/scale)*100));
+  const markMax = Math.max(0, Math.min(100, (max/scale)*100));
   const dotHtml = dotColor ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${dotColor};margin-right:6px"></span>` : '';
   const editHtml = editing
     ? `<span style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px">Target
@@ -451,7 +455,11 @@ function taRow(id, label, pctNow, min, max, editing, dotColor) {
         ${editHtml}
       </div>
     </div>
-    <div class="progress-bar"><div class="progress-fill" style="width:${barPct}%;background:${color}"></div></div>
+    <div class="progress-bar" style="position:relative;overflow:visible">
+      <div class="progress-fill" style="width:${barPct}%;background:${color}"></div>
+      <div style="position:absolute;top:-2px;left:${markMin}%;width:1px;height:10px;background:var(--text2);opacity:.6"></div>
+      <div style="position:absolute;top:-2px;left:${markMax}%;width:1px;height:10px;background:var(--text2);opacity:.6"></div>
+    </div>
   </div>`;
 }
 
