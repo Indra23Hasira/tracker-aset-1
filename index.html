@@ -216,10 +216,10 @@ const DEFAULT_TARGET = {
   }
 };
 const KATEGORI_OPTS = [
-  {v:'blue', l:'Blue Chip'},
-  {v:'menengah', l:'Menengah / Wajar'},
-  {v:'komoditas', l:'Komoditas / Siklikal'},
-  {v:'spekulatif', l:'Spekulatif'}
+  {v:'blue', l:'Blue Chip', bg:'#EFF6FF', fg:'#185FA5'},
+  {v:'menengah', l:'Menengah / Wajar', bg:'#F0FDF4', fg:'#3B6D11'},
+  {v:'komoditas', l:'Komoditas / Siklikal', bg:'#F1F3F5', fg:'#1a1a1a'},
+  {v:'spekulatif', l:'Spekulatif', bg:'#FEF2F2', fg:'#A32D2D'}
 ];
 // Lookup bantu untuk tombol "Auto-kategori" — silakan tambah/ubah sesuai penilaian sendiri
 const KATEGORI_MAP = {
@@ -432,11 +432,12 @@ function vLogin() {
   </div></div>`;
 }
 
-function taRow(id, label, pctNow, min, max, editing) {
+function taRow(id, label, pctNow, min, max, editing, dotColor) {
   const inRange = pctNow >= min && pctNow <= max;
   const below = pctNow < min;
   const color = inRange ? 'var(--green)' : (below ? 'var(--amber)' : 'var(--red)');
   const barPct = Math.max(0, Math.min(100, pctNow));
+  const dotHtml = dotColor ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${dotColor};margin-right:6px"></span>` : '';
   const editHtml = editing
     ? `<span style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px">Target
         <input id="ta_${id}_min" type="number" value="${min}" style="width:44px;padding:2px 4px;font-size:11px;border:1px solid var(--border2);border-radius:4px">–
@@ -444,7 +445,7 @@ function taRow(id, label, pctNow, min, max, editing) {
     : `<span style="font-size:11px;color:var(--text2)">Target ${min}–${max}%</span>`;
   return `<div style="margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:3px">
-      <span>${label}</span>
+      <span>${dotHtml}${label}</span>
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-weight:600;color:${color}">${pctNow.toFixed(1)}%</span>
         ${editHtml}
@@ -684,7 +685,7 @@ function vSaham() {
     <tbody>${rows.map((s,i)=>{
       const wb = s.wajarBawah||0, wa = s.wajarAtas||0;
       const beli = s.beli||0;
-      const katLabel = (KATEGORI_OPTS.find(o=>o.v===(s.kategori||'menengah'))||{}).l || '—';
+      const katObj = KATEGORI_OPTS.find(o=>o.v===(s.kategori||'menengah')) || {l:'—', bg:'#F1F3F5', fg:'#6b7280'};
       let statusEl = '<span style="color:var(--text2);font-size:11px">—</span>';
       if (wb > 0 && wa > 0) {
         if (beli < wb) {
@@ -699,7 +700,7 @@ function vSaham() {
         }
       }
       return `<tr>
-      <td style="font-size:11px">${s.tgl}</td><td><b>${s.kode}</b></td><td><span class="badge badge-blue" style="font-size:10px">${katLabel}</span></td><td>${s.lot}</td><td>${F(s.beli)}</td><td style="font-size:11px">${Rp(R(s.m))}</td>
+      <td style="font-size:11px">${s.tgl}</td><td><b>${s.kode}</b></td><td><span class="badge" style="font-size:10px;background:${katObj.bg};color:${katObj.fg}">${katObj.l}</span></td><td>${s.lot}</td><td>${F(s.beli)}</td><td style="font-size:11px">${Rp(R(s.m))}</td>
       <td><input class="cell-input" type="number" value="${s.now}" onchange="upd('saham',${i},'now',+this.value)" style="width:70px"></td>
       <td style="font-size:11px">${Rp(R(s.v))}</td><td class="${Cls(s.pl)}" style="font-size:11px">${Rp(R(s.pl))}</td><td class="${Cls(s.pct)}" style="font-size:11px">${Pct(s.pct)}</td>
       <td>
