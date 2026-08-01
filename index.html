@@ -200,6 +200,49 @@ const DEFAULT_DATA = {
   goals: [],
 };
 
+// ── TARGET ALOKASI ────────────────────────────────────────
+const DEFAULT_TARGET = {
+  kelas: {
+    saham: {min:35, max:45, label:'Saham BEI'},
+    etf:   {min:45, max:55, label:'ETF LN'},
+    emas:  {min:5,  max:10, label:'Emas'},
+    btc:   {min:0,  max:5,  label:'Bitcoin'}
+  },
+  sahamKategori: {
+    blue:       {min:25, max:32, label:'Blue Chip'},
+    menengah:   {min:5,  max:8,  label:'Menengah / Wajar'},
+    komoditas:  {min:5,  max:10, label:'Komoditas / Siklikal'},
+    spekulatif: {min:0,  max:4,  label:'Spekulatif'}
+  }
+};
+const KATEGORI_OPTS = [
+  {v:'blue', l:'Blue Chip'},
+  {v:'menengah', l:'Menengah / Wajar'},
+  {v:'komoditas', l:'Komoditas / Siklikal'},
+  {v:'spekulatif', l:'Spekulatif'}
+];
+// Lookup bantu untuk tombol "Auto-kategori" — silakan tambah/ubah sesuai penilaian sendiri
+const KATEGORI_MAP = {
+  BBCA:'blue', BMRI:'blue', ASII:'blue', TLKM:'blue',
+  ADRO:'menengah',
+  ADMR:'komoditas', AMMN:'komoditas', TAPG:'komoditas', DEWA:'komoditas',
+  PPRE:'spekulatif', RANS:'spekulatif'
+};
+function ensureTargetDefaults() {
+  if (!APP.data.targetAlokasi) APP.data.targetAlokasi = JSON.parse(JSON.stringify(DEFAULT_TARGET));
+  APP.data.targetAlokasi.kelas = Object.assign({}, DEFAULT_TARGET.kelas, APP.data.targetAlokasi.kelas);
+  APP.data.targetAlokasi.sahamKategori = Object.assign({}, DEFAULT_TARGET.sahamKategori, APP.data.targetAlokasi.sahamKategori);
+}
+function autoTagKategori() {
+  (APP.data.saham||[]).forEach(s => {
+    const k = KATEGORI_MAP[(s.kode||'').toUpperCase()];
+    if (k) s.kategori = k;
+    else if (!s.kategori) s.kategori = 'menengah';
+  });
+  scheduleSave();
+  render();
+}
+
 // ── STATE ─────────────────────────────────────────────────
 let APP = {
   user: null,
@@ -213,6 +256,7 @@ let APP = {
   db: null,
   auth: null,
   error: null,
+  taEditing: false,
 };
 
 // ── FIREBASE INIT ─────────────────────────────────────────
@@ -388,6 +432,102 @@ function vLogin() {
   </div></div>`;
 }
 
+function taRow(id, label, pctNow, min, max, editing) {
+  const inRange = pctNow >= min && pctNow <= max;
+  const below = pctNow < min;
+  const color = inRange ? 'var(--green)' : (below ? 'var(--amber)' : 'var(--red)');
+  const barPct = Math.max(0, Math.min(100, pctNow));
+  const editHtml = editing
+    ? `<span style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px">Target
+        <input id="ta_${id}_min" type="number" value="${min}" style="width:44px;padding:2px 4px;font-size:11px;border:1px solid var(--border2);border-radius:4px">–
+        <input id="ta_${id}_max" type="number" value="${max}" style="width:44px;padding:2px 4px;font-size:11px;border:1px solid var(--border2);border-radius:4px">%</span>`
+    : `<span style="font-size:11px;color:var(--text2)">Target ${min}–${max}%</span>`;
+  return `<div style="margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:3px">
+      <span>${label}</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-weight:600;color:${color}">${pctNow.toFixed(1)}%</span>
+        ${editHtml}
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${barPct}%;background:${color}"></div></div>
+  </div>`;
+}
+
+function toggleTaEdit() { APP.taEditing = !APP.taEditing; render(); }
+
+function saveTargetAlokasi() {
+  ensureTargetDefaults();
+  ['saham','etf','emas','btc'].forEach(k => {
+    const minEl = document.getElementById('ta_kelas_'+k+'_min'), maxEl = document.getElementById('ta_kelas_'+k+'_max');
+    if (minEl) APP.data.targetAlokasi.kelas[k].min = parseFloat(minEl.value)||0;
+    if (maxEl) APP.data.targetAlokasi.kelas[k].max = parseFloat(maxEl.value)||0;
+  });
+  ['blue','menengah','komoditas','spekulatif'].forEach(k => {
+    const minEl = document.getElementById('ta_sub_'+k+'_min'), maxEl = document.getElementById('ta_sub_'+k+'_max');
+    if (minEl) APP.data.targetAlokasi.sahamKategori[k].min = parseFloat(minEl.value)||0;
+    if (maxEl) APP.data.targetAlokasi.sahamKategori[k].max = parseFloat(maxEl.value)||0;
+  });
+  scheduleSave();
+  APP.taEditing = false;
+  render();
+}
+
+function vTargetAlokasi(tot, ts, te, tem, tb) {
+  ensureTargetDefaults();
+  const T = APP.data.targetAlokasi;
+  const editing = APP.taEditing;
+
+  const kelasVals = {saham: ts, etf: te, emas: tem, btc: tb};
+  const kelasRows = Object.keys(T.kelas).map(k => {
+    const pct = tot > 0 ? (kelasVals[k]/tot*100) : 0;
+    return taRow('kelas_'+k, T.kelas[k].label, pct, T.kelas[k].min, T.kelas[k].max, editing);
+  }).join('');
+
+  // Sub-kategori saham BEI, dihitung terhadap total investasi (bukan terhadap total saham saja)
+  const sahamByKat = {};
+  cSaham().forEach(s => {
+    const k = s.kategori || 'menengah';
+    sahamByKat[k] = (sahamByKat[k]||0) + s.v;
+  });
+  const subRows = Object.keys(T.sahamKategori).map(k => {
+    const val = sahamByKat[k] || 0;
+    const pct = tot > 0 ? (val/tot*100) : 0;
+    return taRow('sub_'+k, T.sahamKategori[k].label, pct, T.sahamKategori[k].min, T.sahamKategori[k].max, editing);
+  }).join('');
+
+  // Saran alokasi setoran bulanan untuk sub-kategori saham
+  let saran = '';
+  if (tot > 0 && ts > 0) {
+    const gaps = Object.keys(T.sahamKategori).map(k => {
+      const val = sahamByKat[k] || 0;
+      const pct = (val/tot*100);
+      return {k, label:T.sahamKategori[k].label, gap: T.sahamKategori[k].min - pct};
+    }).sort((a,b) => b.gap - a.gap);
+    if (gaps[0].gap > 0.1) {
+      saran = `💡 Setoran bulanan ke saham BEI bulan ini paling pas diarahkan ke kategori <b>${gaps[0].label}</b> — masih ${gaps[0].gap.toFixed(1)}% di bawah target minimum.`;
+    } else {
+      saran = `💡 Semua kategori saham BEI sudah berada dalam rentang target. Setoran bulan ini bebas dialokasikan sesuai keputusan sendiri, atau prioritaskan kategori dengan gap terkecil.`;
+    }
+  } else {
+    saran = `💡 Isi kategori risiko di tab Saham BEI (atau klik "🏷 Auto-kategori") supaya saran ini bisa dihitung.`;
+  }
+
+  return `
+  <div class="donut-container" style="margin-bottom:16px">
+    <div class="donut-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>🎯 Target Alokasi</span>
+      ${editing
+        ? `<div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="toggleTaEdit()">Batal</button><button class="btn btn-sm btn-primary" onclick="saveTargetAlokasi()">💾 Simpan</button></div>`
+        : `<button class="btn btn-sm" onclick="toggleTaEdit()">✏️ Atur Target</button>`}
+    </div>
+    ${kelasRows}
+    <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 10px">Sub-kategori Saham BEI</div>
+    ${subRows}
+    <div style="font-size:12px;color:var(--text2);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">${saran}</div>
+  </div>`;
+}
+
 function vDash() {
   const ts=tSaham(), te=tEtf(), tem=tEmas(), tb=tBtc(), td=tDana();
   const tot = ts+te+tem+tb;
@@ -501,6 +641,7 @@ function vDash() {
       <div style="display:flex;justify-content:space-between;padding-top:8px"><span style="font-weight:600;font-size:13px">Total</span><span style="font-weight:700;font-size:14px;color:var(--blue)">${Rp(R(tot))}</span></div>
     </div>
   </div>
+  ${vTargetAlokasi(tot, ts, te, tem, tb)}
   ${barChart(divBeiMonthly, '📈 Dividen BEI', '#185FA5', yearBei)}
   ${barChart(divEtfMonthly, '🌍 Dividen ETF (IDR)', '#3B6D11', yearEtf)}
   <div class="section-header"><span class="section-title">📌 Hold Portfolio (preview)</span><button class="btn btn-sm" onclick="APP.tab='saham';render()">Lihat semua →</button></div>
@@ -528,6 +669,7 @@ function vSaham() {
     <div style="display:flex;gap:8px">
       <button class="btn btn-sm" id="btnUpdateHarga" onclick="updateHargaOtomatis()" style="background:#0369a1;color:#fff;border:none">🔄 Update Harga</button>
       <button class="btn btn-sm" id="btnHitungWajar" onclick="hitungWajarSemua()" style="background:#6d28d9;color:#fff;border:none">🧮 Hitung Wajar</button>
+      <button class="btn btn-sm" onclick="autoTagKategori()" style="background:#0f6e56;color:#fff;border:none" title="Isi kategori risiko otomatis untuk ticker yang dikenal, sisanya default Menengah/Wajar">🏷 Auto-kategori</button>
       <button class="btn btn-success btn-sm" onclick="openModal('saham')">+ Tambah</button>
     </div>
   </div>
@@ -538,10 +680,11 @@ function vSaham() {
     <div class="metric-card"><div class="metric-label">P&L</div><div class="metric-value ${Cls(tPL)}" style="font-size:15px">${Rp(R(tPL))}</div></div>
   </div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Tgl</th><th>Kode</th><th>Lot</th><th>Hrg Beli</th><th>Modal</th><th>Hrg Kini</th><th>Nilai</th><th>P&L</th><th>%</th><th>Wajar (Bwh-Atas)</th><th>Status</th><th></th></tr></thead>
+    <thead><tr><th>Tgl</th><th>Kode</th><th>Kategori</th><th>Lot</th><th>Hrg Beli</th><th>Modal</th><th>Hrg Kini</th><th>Nilai</th><th>P&L</th><th>%</th><th>Wajar (Bwh-Atas)</th><th>Status</th><th></th></tr></thead>
     <tbody>${rows.map((s,i)=>{
       const wb = s.wajarBawah||0, wa = s.wajarAtas||0;
       const beli = s.beli||0;
+      const katLabel = (KATEGORI_OPTS.find(o=>o.v===(s.kategori||'menengah'))||{}).l || '—';
       let statusEl = '<span style="color:var(--text2);font-size:11px">—</span>';
       if (wb > 0 && wa > 0) {
         if (beli < wb) {
@@ -556,7 +699,7 @@ function vSaham() {
         }
       }
       return `<tr>
-      <td style="font-size:11px">${s.tgl}</td><td><b>${s.kode}</b></td><td>${s.lot}</td><td>${F(s.beli)}</td><td style="font-size:11px">${Rp(R(s.m))}</td>
+      <td style="font-size:11px">${s.tgl}</td><td><b>${s.kode}</b></td><td><span class="badge badge-blue" style="font-size:10px">${katLabel}</span></td><td>${s.lot}</td><td>${F(s.beli)}</td><td style="font-size:11px">${Rp(R(s.m))}</td>
       <td><input class="cell-input" type="number" value="${s.now}" onchange="upd('saham',${i},'now',+this.value)" style="width:70px"></td>
       <td style="font-size:11px">${Rp(R(s.v))}</td><td class="${Cls(s.pl)}" style="font-size:11px">${Rp(R(s.pl))}</td><td class="${Cls(s.pct)}" style="font-size:11px">${Pct(s.pct)}</td>
       <td>
@@ -569,7 +712,7 @@ function vSaham() {
       <td style="text-align:center">${statusEl}</td>
       <td><div class="row-actions"><button class="btn btn-icon-edit" title="Edit" onclick="openEdit('saham',${i})">✏️</button><button class="btn btn-icon" onclick="del('saham',${i})">🗑</button></div></td>
     </tr>`;}).join('')}</tbody>
-    <tfoot><tr class="tr-total"><td colspan="4">TOTAL</td><td style="font-size:11px">${Rp(R(tM))}</td><td></td><td style="font-size:11px">${Rp(R(tV))}</td><td class="${Cls(tPL)}" style="font-size:11px">${Rp(R(tPL))}</td><td class="${Cls(tPL)}" style="font-size:11px">${Pct(tM?tPL/tM:0)}</td><td colspan="3"></td></tr></tfoot>
+    <tfoot><tr class="tr-total"><td colspan="5">TOTAL</td><td style="font-size:11px">${Rp(R(tM))}</td><td></td><td style="font-size:11px">${Rp(R(tV))}</td><td class="${Cls(tPL)}" style="font-size:11px">${Rp(R(tPL))}</td><td class="${Cls(tPL)}" style="font-size:11px">${Pct(tM?tPL/tM:0)}</td><td colspan="3"></td></tr></tfoot>
   </table></div>`;
 }
 
@@ -736,7 +879,7 @@ function vSpt() {
 // ── MODAL DEFINITIONS ─────────────────────────────────────
 const MODAL_DEF = {
   kurs:   {t:'Update Kurs USD/IDR', f:[{id:'kurs',l:'1 USD = Rp',type:'number'}]},
-  saham:  {t:'Tambah Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text',ph:'BBCA'},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'eps',l:'EPS TTM (Rp)',type:'number',ph:'0'},{id:'pbvRatio',l:'PBV Ratio (misal: 0.84)',type:'number',ph:'0',step:'0.01'},{id:'wajarBawah',l:'Wajar Bawah (otomatis)',type:'number'},{id:'wajarAtas',l:'Wajar Atas (otomatis)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
+  saham:  {t:'Tambah Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text',ph:'BBCA'},{id:'kategori',l:'Kategori Risiko',type:'select',opts:KATEGORI_OPTS},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'eps',l:'EPS TTM (Rp)',type:'number',ph:'0'},{id:'pbvRatio',l:'PBV Ratio (misal: 0.84)',type:'number',ph:'0',step:'0.01'},{id:'wajarBawah',l:'Wajar Bawah (otomatis)',type:'number'},{id:'wajarAtas',l:'Wajar Atas (otomatis)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
   etf:    {t:'Tambah ETF', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode ETF',type:'text',ph:'QQQ'},{id:'unit',l:'Unit',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli (USD)',type:'number',step:'0.01'},{id:'now',l:'Harga Kini (USD)',type:'number',step:'0.01'},{id:'ket',l:'Keterangan (isi "hold" utk tampil di preview)',type:'text'}]},
   emas:   {t:'Tambah Emas', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'lokasi',l:'Lokasi',type:'text',ph:'DANA/TRINGS'},{id:'gram',l:'Gram',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli/gr',type:'number'},{id:'now',l:'Harga Kini/gr',type:'number'}]},
   btc:    {t:'Tambah Bitcoin', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'jumlah',l:'Jumlah BTC',type:'number',step:'0.00000001'},{id:'beli',l:'Harga Beli (Rp)',type:'number'},{id:'now',l:'Harga Kini (Rp)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
@@ -751,7 +894,7 @@ function closeModal() { APP.modal=null; render(); }
 
 // ── EDIT MODAL ────────────────────────────────────────────
 const EDIT_DEF = {
-  saham:  {t:'Edit Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text'},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'eps',l:'EPS TTM (Rp)',type:'number'},{id:'pbvRatio',l:'PBV Ratio (misal: 0.84)',type:'number',step:'0.01'},{id:'wajarBawah',l:'Wajar Bawah (otomatis)',type:'number'},{id:'wajarAtas',l:'Wajar Atas (otomatis)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
+  saham:  {t:'Edit Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text'},{id:'kategori',l:'Kategori Risiko',type:'select',opts:KATEGORI_OPTS},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'eps',l:'EPS TTM (Rp)',type:'number'},{id:'pbvRatio',l:'PBV Ratio (misal: 0.84)',type:'number',step:'0.01'},{id:'wajarBawah',l:'Wajar Bawah (otomatis)',type:'number'},{id:'wajarAtas',l:'Wajar Atas (otomatis)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
   etf:    {t:'Edit ETF LN', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode ETF',type:'text'},{id:'unit',l:'Unit',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli (USD)',type:'number',step:'0.01'},{id:'now',l:'Harga Kini (USD)',type:'number',step:'0.01'},{id:'ket',l:'Keterangan (isi "hold" utk tampil di preview)',type:'text'}]},
   dana:   {t:'Edit Dana Darurat', f:[{id:'item',l:'Nama Instrumen',type:'text'},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
   goals:  {t:'Edit Goal Keuangan', f:[{id:'nama',l:'Nama Tujuan',type:'text'},{id:'target',l:'Target Dana',type:'number'},{id:'deadline',l:'Deadline (Tahun)',type:'text'},{id:'terkumpul',l:'Dana Terkumpul',type:'number'}]},
@@ -790,7 +933,10 @@ function vEditModal() {
   return `<div class="modal-overlay" onclick="if(event.target===this)closeEdit()">
   <div class="modal-box">
     <div class="modal-title">${m.t}</div>
-    <div class="form-grid">${m.f.map(f=>`<div class="form-group"><label>${f.l}</label><input id="ef_${f.id}" type="${f.type}" placeholder="${f.ph||''}" ${f.step?'step='+f.step:''} value="${row[f.id]!==undefined?row[f.id]:''}"></div>`).join('')}</div>
+    <div class="form-grid">${m.f.map(f=>f.type==='select'
+      ? `<div class="form-group"><label>${f.l}</label><select id="ef_${f.id}">${f.opts.map(o=>`<option value="${o.v}" ${row[f.id]===o.v?'selected':''}>${o.l}</option>`).join('')}</select></div>`
+      : `<div class="form-group"><label>${f.l}</label><input id="ef_${f.id}" type="${f.type}" placeholder="${f.ph||''}" ${f.step?'step='+f.step:''} value="${row[f.id]!==undefined?row[f.id]:''}"></div>`
+    ).join('')}</div>
     <div class="modal-actions">
       <button class="btn" onclick="closeEdit()">Batal</button>
       <button class="btn btn-primary" onclick="saveEdit()">💾 Simpan</button>
@@ -804,7 +950,10 @@ function vModal() {
   return `<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
   <div class="modal-box">
     <div class="modal-title">${m.t}</div>
-    <div class="form-grid">${m.f.map(f=>`<div class="form-group"><label>${f.l}</label><input id="mf_${f.id}" type="${f.type}" placeholder="${f.ph||''}" ${f.step?'step='+f.step:''} ${APP.modal==='kurs'&&f.id==='kurs'?'value='+APP.data.kurs:''}></div>`).join('')}</div>
+    <div class="form-grid">${m.f.map(f=>f.type==='select'
+      ? `<div class="form-group"><label>${f.l}</label><select id="mf_${f.id}">${f.opts.map(o=>`<option value="${o.v}">${o.l}</option>`).join('')}</select></div>`
+      : `<div class="form-group"><label>${f.l}</label><input id="mf_${f.id}" type="${f.type}" placeholder="${f.ph||''}" ${f.step?'step='+f.step:''} ${APP.modal==='kurs'&&f.id==='kurs'?'value='+APP.data.kurs:''}></div>`
+    ).join('')}</div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal()">Batal</button>
       <button class="btn btn-primary" onclick="saveModal()">💾 Simpan</button>
