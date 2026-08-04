@@ -190,6 +190,7 @@ const IS_CONFIGURED = !!(
 // ── DATA DEFAULT ──────────────────────────────────────────
 const DEFAULT_DATA = {
   kurs: 17800,
+  umur: 0,
   saham: [],
   divBei: [],
   etf: [],
@@ -864,6 +865,24 @@ function vDana() {
   </div>` : ''}`;
 }
 
+function vSaveUmur() {
+  const el = document.getElementById('spt-umur');
+  const umur = parseFloat(el.value) || 0;
+  APP.data.umur = umur;
+  scheduleSave();
+  render();
+}
+
+function sptSimpleRow(label, value, colorText) {
+  const barPct = Math.max(0, Math.min(100, value));
+  return `<div style="margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+      <span>${label}</span><span style="font-weight:600;color:${colorText||'var(--text)'}">${value.toFixed(1)}%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${barPct}%;background:${colorText||'var(--blue)'}"></div></div>
+  </div>`;
+}
+
 function vSpt() {
   const rows = [
     {kat:'HARTA',item:'Saham BEI (31 Des)',modal:cSaham().reduce((a,r)=>a+r.m,0),nilai:tSaham()},
@@ -876,13 +895,67 @@ function vSpt() {
     {kat:'GOALS',item:'Tujuan Keuangan',modal:(APP.data.goals||[]).reduce((a,g)=>a+g.terkumpul,0),nilai:(APP.data.goals||[]).reduce((a,g)=>a+g.terkumpul,0)},
   ];
   const tM=rows.reduce((a,r)=>a+r.modal,0), tN=rows.reduce((a,r)=>a+r.nilai,0);
+
+  // ── Dashboard Alokasi (berbasis MODAL, dividen tidak dihitung karena sudah reinvest) ──
+  const mSaham = cSaham().reduce((a,r)=>a+r.m,0);
+  const mEtf   = cEtf().reduce((a,r)=>a+r.mi,0);
+  const mEmas  = cEmas().reduce((a,r)=>a+r.m,0);
+  const mBtc   = cBtc().reduce((a,r)=>a+r.m,0);
+  const mDana  = (APP.data.dana||[]).reduce((a,r)=>a+r.masuk,0);
+  const mGoals = (APP.data.goals||[]).reduce((a,g)=>a+g.terkumpul,0);
+  const totalModalAlokasi = mSaham + mEtf + mEmas + mBtc + mDana + mGoals;
+
+  const riskTinggi = mSaham + mEtf + mBtc; // Saham BEI + ETF LN + Bitcoin
+  const moderat = mEmas;                    // Emas: hedge, bukan risiko tinggi murni
+  const aman = mDana + mGoals;              // Dana Darurat + Goals
+
+  const pctRisk = totalModalAlokasi > 0 ? (riskTinggi/totalModalAlokasi*100) : 0;
+  const pctModerat = totalModalAlokasi > 0 ? (moderat/totalModalAlokasi*100) : 0;
+  const pctAman = totalModalAlokasi > 0 ? (aman/totalModalAlokasi*100) : 0;
+
+  const umur = APP.data.umur || 0;
+  const batasRisk = umur > 0 ? Math.max(0, 100 - umur) : null;
+
+  const alokasiCard = `
+  <div class="donut-container" style="margin-top:16px">
+    <div class="donut-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>📊 Dashboard Alokasi (berbasis Modal, dividen tidak dihitung)</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <label style="font-size:11px;color:var(--text2)">Umur</label>
+        <input id="spt-umur" type="number" value="${umur||''}" placeholder="38" style="width:52px;padding:3px 6px;font-size:12px;border:1px solid var(--border2);border-radius:6px">
+        <button class="btn btn-sm" onclick="vSaveUmur()">Simpan</button>
+      </div>
+    </div>
+
+    ${batasRisk!==null
+      ? taRow('spt_risk', 'Aset Risiko Tinggi (Saham BEI + ETF LN + Bitcoin)', pctRisk, 0, batasRisk, false)
+      : `<div style="font-size:12px;color:var(--text2);margin-bottom:10px">Isi umur di atas untuk melihat batas aturan investasi (100 − umur)%.</div>`
+    }
+
+    <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 10px">Komposisi Total Modal</div>
+    ${sptSimpleRow('Saham BEI', totalModalAlokasi>0?(mSaham/totalModalAlokasi*100):0, 'var(--blue)')}
+    ${sptSimpleRow('ETF LN', totalModalAlokasi>0?(mEtf/totalModalAlokasi*100):0, 'var(--blue)')}
+    ${sptSimpleRow('Bitcoin', totalModalAlokasi>0?(mBtc/totalModalAlokasi*100):0, 'var(--blue)')}
+    ${sptSimpleRow('Emas (moderat)', pctModerat, 'var(--amber)')}
+    ${sptSimpleRow('Dana Darurat', totalModalAlokasi>0?(mDana/totalModalAlokasi*100):0, 'var(--green)')}
+    ${sptSimpleRow('Goals', totalModalAlokasi>0?(mGoals/totalModalAlokasi*100):0, 'var(--green)')}
+
+    <div style="font-size:12px;color:var(--text2);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      Total modal (tanpa dividen): <b>${Rp(R(totalModalAlokasi))}</b> &middot;
+      Risiko tinggi: <b>${Rp(R(riskTinggi))}</b> (${pctRisk.toFixed(1)}%) &middot;
+      Moderat (Emas): <b>${Rp(R(moderat))}</b> (${pctModerat.toFixed(1)}%) &middot;
+      Aman: <b>${Rp(R(aman))}</b> (${pctAman.toFixed(1)}%)
+    </div>
+  </div>`;
+
   return `
   <div class="section-title" style="margin-bottom:14px">📋 SPT Summary — Rekap Pajak</div>
   <div class="table-wrap"><table>
     <thead><tr><th>Kategori</th><th>Item</th><th>Modal (Rp)</th><th>Nilai (Rp)</th><th>P&L Belum Realisasi</th></tr></thead>
     <tbody>${rows.map(r=>{const pl=r.nilai-r.modal;return`<tr><td><span class="badge badge-blue">${r.kat}</span></td><td>${r.item}</td><td>${Rp(R(r.modal))}</td><td>${Rp(R(r.nilai))}</td><td class="${Cls(pl)}">${Rp(R(pl))}</td></tr>`;}).join('')}</tbody>
     <tfoot><tr class="tr-total"><td colspan="2">TOTAL ALL</td><td>${Rp(R(tM))}</td><td>${Rp(R(tN))}</td><td class="${Cls(tN-tM)}">${Rp(R(tN-tM))}</td></tr></tfoot>
-  </table></div>`;
+  </table></div>
+  ${alokasiCard}`;
 }
 
 // ── MODAL DEFINITIONS ─────────────────────────────────────
