@@ -890,8 +890,6 @@ function vSpt() {
     {kat:'HARTA',item:'Emas Digital',modal:cEmas().reduce((a,r)=>a+r.m,0),nilai:tEmas()},
     {kat:'HARTA',item:'Bitcoin',modal:cBtc().reduce((a,r)=>a+r.m,0),nilai:tBtc()},
     {kat:'DANA DARURAT',item:'Reksadana + Bank Digital',modal:(APP.data.dana||[]).reduce((a,r)=>a+r.masuk,0),nilai:tDana()},
-    {kat:'PENGHASILAN FINAL',item:'Dividen BEI (bruto)',modal:tDivBei(),nilai:tDivBei()},
-    {kat:'PENGHASILAN LN',item:'Dividen ETF (bruto)',modal:tDivEtf(),nilai:tDivEtf()},
     {kat:'GOALS',item:'Tujuan Keuangan',modal:(APP.data.goals||[]).reduce((a,g)=>a+g.terkumpul,0),nilai:(APP.data.goals||[]).reduce((a,g)=>a+g.terkumpul,0)},
   ];
   const tM=rows.reduce((a,r)=>a+r.modal,0), tN=rows.reduce((a,r)=>a+r.nilai,0);
@@ -949,7 +947,7 @@ function vSpt() {
   </div>`;
 
   return `
-  <div class="section-title" style="margin-bottom:14px">📋 SPT Summary — Rekap Pajak</div>
+  <div class="section-title" style="margin-bottom:14px">🏦 Rekap Harta — untuk SPT Tahunan</div>
   <div class="table-wrap"><table>
     <thead><tr><th>Kategori</th><th>Item</th><th>Modal (Rp)</th><th>Nilai (Rp)</th><th>P&L Belum Realisasi</th></tr></thead>
     <tbody>${rows.map(r=>{const pl=r.nilai-r.modal;return`<tr><td><span class="badge badge-blue">${r.kat}</span></td><td>${r.item}</td><td>${Rp(R(r.modal))}</td><td>${Rp(R(r.nilai))}</td><td class="${Cls(pl)}">${Rp(R(pl))}</td></tr>`;}).join('')}</tbody>
@@ -1390,7 +1388,7 @@ function doExport() {
 const TABS = [
   {id:'dash',l:'🏠 Dashboard'},{id:'saham',l:'📈 Saham BEI'},{id:'etf',l:'🌍 ETF LN'},
   {id:'emas',l:'🥇 Emas'},{id:'btc',l:'₿ Bitcoin'},{id:'div',l:'💰 Dividen'},
-  {id:'dana',l:'🛡 Dana & Goals'},{id:'spt',l:'📋 SPT'},
+  {id:'dana',l:'🛡 Dana & Goals'},{id:'spt',l:'🏦 Rekap Harta'},
 ];
 
 const VIEWS = {dash:vDash, saham:vSaham, etf:vEtf, emas:vEmas, btc:vBtc, div:vDiv, dana:vDana, spt:vSpt};
