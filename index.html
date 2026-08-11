@@ -392,11 +392,20 @@ const tBtc   = () => cBtc().reduce((a,r)=>a+r.v, 0);
 const tDana  = () => (APP.data.dana||[]).reduce((a,r)=>a+(r.now||r.masuk), 0);
 const tRdana = () => (APP.data.rdana||[]).reduce((a,r)=>a+(r.now||r.masuk), 0);
 
+function getNilaiNominal(ob) {
+  // 1 unit = Rp 1.000.000
+  return (ob.unit || 0) * 1000000;
+}
+function getModalBeli(ob) {
+  const nominal = getNilaiNominal(ob);
+  const hargaPct = ob.hargaPct || 100;
+  return Math.round(nominal * hargaPct / 100);
+}
+
 function hitungBungaAkrual(ob) {
-  // Hitung bunga akrual otomatis dari tgl beli sampai hari ini
-  const nominal = ob.nilaiNominal || 0;
+  const nominal = getNilaiNominal(ob);
   const kupon   = ob.kupon || 0;
-  if (!ob.tgl || nominal <= 0 || kupon <= 0) return ob.bungaAkrual || 0;
+  if (!ob.tgl || nominal <= 0 || kupon <= 0) return 0;
   const tglBeli = new Date(ob.tgl);
   const today   = new Date();
   const hariJalan = Math.max(0, Math.floor((today - tglBeli) / (1000*60*60*24)));
@@ -405,7 +414,7 @@ function hitungBungaAkrual(ob) {
 
 const tObligasi = () => (APP.data.obligasi||[]).reduce((a,r) => {
   const bunga = hitungBungaAkrual(r);
-  return a + (r.nilaiNominal||0) + bunga;
+  return a + getNilaiNominal(r) + bunga;
 }, 0);
 const tDivBei= () => (APP.data.divBei||[]).reduce((a,r)=>a+r.bruto, 0);
 const tDivEtf= () => (APP.data.divEtf||[]).reduce((a,r)=>a+r.bruto*(APP.data.kurs||17800), 0);
@@ -939,10 +948,10 @@ function vRdana() {
 
 function vObligasi() {
   const ob = APP.data.obligasi||[];
-  const tNominal = ob.reduce((a,r)=>a+(r.nilaiNominal||0),0);
+  const tNominal = ob.reduce((a,r)=>a+getNilaiNominal(r),0);
   const tBunga   = ob.reduce((a,r)=>a+hitungBungaAkrual(r),0);
   const tTotal   = tNominal + tBunga;
-  const tModal   = ob.reduce((a,r)=>a+(r.modal||r.nilaiNominal||0),0);
+  const tModal   = ob.reduce((a,r)=>a+getModalBeli(r),0);
   const tPL      = tTotal - tModal;
   return `
   <div class="section-header"><span class="section-title">🏦 Obligasi / SBN</span><button class="btn btn-success btn-sm" onclick="openModal('obligasi')">+ Tambah</button></div>
@@ -953,23 +962,26 @@ function vObligasi() {
     <div class="metric-card"><div class="metric-label">P&L</div><div class="metric-value ${Cls(tPL)}" style="font-size:14px">${Rp(R(tPL))}</div></div>
   </div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Nama/Seri</th><th>Jenis</th><th>Tgl Beli</th><th>Jatuh Tempo</th><th>Nominal (Rp)</th><th>Kupon/th</th><th>Hari Jalan</th><th>Bunga Akrual 🔄</th><th>Total Nilai</th><th>P&L</th><th></th></tr></thead>
+    <thead><tr><th>Nama/Seri</th><th>Jenis</th><th>Tgl Beli</th><th>Jatuh Tempo</th><th>Unit</th><th>Harga Beli</th><th>Modal Beli</th><th>Nominal</th><th>Kupon/th</th><th>Hari</th><th>Bunga Akrual 🔄</th><th>Total Nilai</th><th>P&L</th><th></th></tr></thead>
     <tbody>${ob.map((r,i)=>{
-      const nominal = r.nilaiNominal||0;
+      const nominal = getNilaiNominal(r);
+      const modal   = getModalBeli(r);
       const bunga   = hitungBungaAkrual(r);
       const total   = nominal + bunga;
-      const modal   = r.modal||nominal;
       const pl      = total - modal;
       const tglBeli = r.tgl ? new Date(r.tgl) : null;
       const today   = new Date();
       const hariJalan = tglBeli ? Math.max(0, Math.floor((today-tglBeli)/(1000*60*60*24))) : 0;
       const sisaHari = r.jatuhTempo ? Math.max(0, Math.floor((new Date(r.jatuhTempo)-today)/(1000*60*60*24))) : null;
       return `<tr>
-        <td><b>${r.nama}</b></td>
+        <td><b>${r.nama||'-'}</b></td>
         <td><span style="font-size:10px;padding:2px 6px;border-radius:4px;background:#eff6ff;color:#1e40af">${r.jenis||'SBN'}</span></td>
         <td style="font-size:11px">${r.tgl||'-'}</td>
         <td style="font-size:11px">${r.jatuhTempo||'-'}${sisaHari!==null?`<br><small style="color:${sisaHari<90?'var(--red)':'var(--text2)'}">sisa ${sisaHari}hr</small>`:''}</td>
-        <td>${Rp(nominal)}</td>
+        <td style="font-size:12px">${r.unit||0} unit</td>
+        <td style="font-size:12px">${r.hargaPct||100}%</td>
+        <td style="font-size:12px">${Rp(R(modal))}</td>
+        <td>${Rp(R(nominal))}</td>
         <td><span style="color:var(--green);font-weight:600">${r.kupon||0}%</span></td>
         <td style="font-size:12px;color:var(--text2)">${hariJalan} hr</td>
         <td><b style="color:var(--green)">${Rp(R(bunga))}</b><br><small style="color:var(--text2)">otomatis</small></td>
@@ -978,10 +990,11 @@ function vObligasi() {
         <td><div class="row-actions"><button class="btn btn-icon-edit" onclick="openEdit('obligasi',${i})">✏️</button><button class="btn btn-icon" onclick="del('obligasi',${i})">🗑</button></div></td>
       </tr>`;
     }).join('')}</tbody>
-    <tfoot><tr class="tr-total"><td colspan="4">TOTAL</td><td>${Rp(R(tNominal))}</td><td></td><td></td><td>${Rp(R(tBunga))}</td><td>${Rp(R(tTotal))}</td><td class="${Cls(tPL)}">${Rp(R(tPL))}</td><td></td></tr></tfoot>
+    <tfoot><tr class="tr-total"><td colspan="6">TOTAL</td><td>${Rp(R(tModal))}</td><td>${Rp(R(tNominal))}</td><td></td><td></td><td>${Rp(R(tBunga))}</td><td>${Rp(R(tTotal))}</td><td class="${Cls(tPL)}">${Rp(R(tPL))}</td><td></td></tr></tfoot>
   </table></div>
   <div style="margin-top:12px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius2);font-size:12px;color:#065f46">
-    🔄 <b>Bunga Akrual dihitung otomatis</b> — Nominal × Kupon% ÷ 365 × Hari Berjalan (sejak tanggal beli sampai hari ini). Tidak perlu input manual.
+    🔄 <b>Bunga Akrual otomatis</b>: Nominal × Kupon% ÷ 365 × Hari Berjalan &nbsp;|&nbsp;
+    💡 <b>Harga Beli</b>: isi 100 untuk ORI/SBR/SR (harga par), kurang dari 100 untuk FR yang beli di pasar sekunder.
   </div>`;
 }
 
@@ -998,7 +1011,7 @@ function sptSimpleRow(label, value, colorText) {
 function vSpt() {
   const ob = APP.data.obligasi||[];
   const tBungaOb = ob.reduce((a,r)=>a+hitungBungaAkrual(r),0);
-  const tNominalOb = ob.reduce((a,r)=>a+(r.nilaiNominal||0),0);
+  const tNominalOb = ob.reduce((a,r)=>a+getNilaiNominal(r),0);
 
   const rows = [
     {kat:'HARTA',        item:'Saham BEI (31 Des)',  modal:cSaham().reduce((a,r)=>a+r.m,0),  nilai:tSaham()},
@@ -1006,7 +1019,7 @@ function vSpt() {
     {kat:'HARTA',        item:'Emas',                 modal:cEmas().reduce((a,r)=>a+r.m,0),   nilai:tEmas()},
     {kat:'HARTA',        item:'Crypto',               modal:cBtc().reduce((a,r)=>a+r.m,0),    nilai:tBtc()},
     {kat:'INVESTASI',    item:'Reksadana',            modal:(APP.data.rdana||[]).reduce((a,r)=>a+(r.masuk||0),0), nilai:tRdana()},
-    {kat:'INVESTASI',    item:'Obligasi / SBN',       modal:ob.reduce((a,r)=>a+(r.modal||r.nilaiNominal||0),0),   nilai:tNominalOb+tBungaOb},
+    {kat:'INVESTASI',    item:'Obligasi / SBN',       modal:ob.reduce((a,r)=>a+getModalBeli(r),0), nilai:tNominalOb+tBungaOb},
     {kat:'DANA DARURAT', item:'Dana Darurat (Cash & RDPU)', modal:(APP.data.dana||[]).reduce((a,r)=>a+r.masuk,0), nilai:tDana()},
     {kat:'GOALS',        item:'Tujuan Keuangan',      modal:(APP.data.goals||[]).reduce((a,g)=>a+g.terkumpul,0),  nilai:(APP.data.goals||[]).reduce((a,g)=>a+g.terkumpul,0)},
   ];
@@ -1018,7 +1031,7 @@ function vSpt() {
   const mEmas     = cEmas().reduce((a,r)=>a+r.m,0);
   const mBtc      = cBtc().reduce((a,r)=>a+r.m,0);
   const mRdana    = (APP.data.rdana||[]).reduce((a,r)=>a+(r.masuk||0),0);
-  const mObligasi = ob.reduce((a,r)=>a+(r.modal||r.nilaiNominal||0),0);
+  const mObligasi = ob.reduce((a,r)=>a+getModalBeli(r),0);
   const mDana     = (APP.data.dana||[]).reduce((a,r)=>a+r.masuk,0);
   const mGoals    = (APP.data.goals||[]).reduce((a,g)=>a+g.terkumpul,0);
   const totalModalAlokasi = mSaham + mEtf + mEmas + mBtc + mRdana + mObligasi + mDana + mGoals;
@@ -1094,7 +1107,7 @@ const MODAL_DEF = {
   emas:   {t:'Tambah Emas', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'jenis',l:'Jenis',type:'text',ph:'digital / fisik'},{id:'lokasi',l:'Lokasi/Platform',type:'text',ph:'DANA / Pegadaian / dll'},{id:'gram',l:'Gram',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli/gr',type:'number'},{id:'now',l:'Harga Kini/gr',type:'number'}]},
   btc:    {t:'Tambah Crypto', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'jenis',l:'Jenis Crypto',type:'text',ph:'BTC / ETH / USDT / dll'},{id:'jumlah',l:'Jumlah',type:'number',step:'0.00000001'},{id:'beli',l:'Harga Beli (Rp)',type:'number'},{id:'now',l:'Harga Kini (Rp)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
   rdana:  {t:'Tambah Reksadana', f:[{id:'item',l:'Nama Reksadana',type:'text',ph:'RDPU Majoris / RDPU TRIM...'},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
-  obligasi:{t:'Tambah Obligasi/SBN', f:[{id:'tgl',l:'Tanggal Beli',type:'date'},{id:'nama',l:'Nama/Seri',type:'text',ph:'SBR013 / ORI025 / SR020'},{id:'jenis',l:'Jenis',type:'text',ph:'SBR / ORI / SR / SUN'},{id:'nilaiNominal',l:'Nilai Nominal (Rp)',type:'number'},{id:'modal',l:'Modal Beli (Rp)',type:'number'},{id:'kupon',l:'Kupon/Tahun (%)',type:'number',step:'0.01'},{id:'jatuhTempo',l:'Jatuh Tempo',type:'date'}]},
+  obligasi:{t:'Tambah Obligasi/SBN', f:[{id:'tgl',l:'Tanggal Beli',type:'date'},{id:'nama',l:'Nama/Seri',type:'text',ph:'FR0100 / ORI025 / SBR013'},{id:'jenis',l:'Jenis',type:'text',ph:'FR / ORI / SBR / SR / SUN'},{id:'unit',l:'Jumlah Unit (1 unit = Rp 1 juta)',type:'number',ph:'10'},{id:'hargaPct',l:'Harga Beli (%)',type:'number',step:'0.01',ph:'98.30 atau 100'},{id:'kupon',l:'Kupon/Tahun (%)',type:'number',step:'0.01',ph:'6.5'},{id:'jatuhTempo',l:'Jatuh Tempo',type:'date'}]},
   divBei: {t:'Tambah Dividen BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'saham',l:'Kode Saham',type:'text'},{id:'bruto',l:'Dividen Bruto (Rp)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
   divEtf: {t:'Tambah Dividen US', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode ETF',type:'text'},{id:'bruto',l:'Bruto (USD)',type:'number',step:'0.01'},{id:'ket',l:'Keterangan',type:'text'}]},
   dana:   {t:'Tambah Dana Darurat', f:[{id:'item',l:'Nama Instrumen',type:'text',ph:'RDPU Majoris...'},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
@@ -1111,7 +1124,7 @@ const EDIT_DEF = {
   emas:   {t:'Edit Emas', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'jenis',l:'Jenis',type:'text',ph:'digital / fisik'},{id:'lokasi',l:'Lokasi/Platform',type:'text'},{id:'gram',l:'Gram',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli/gr',type:'number'},{id:'now',l:'Harga Kini/gr',type:'number'}]},
   btc:    {t:'Edit Crypto', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'jenis',l:'Jenis Crypto',type:'text'},{id:'jumlah',l:'Jumlah',type:'number',step:'0.00000001'},{id:'beli',l:'Harga Beli (Rp)',type:'number'},{id:'now',l:'Harga Kini (Rp)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
   rdana:  {t:'Edit Reksadana', f:[{id:'item',l:'Nama Reksadana',type:'text'},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
-  obligasi:{t:'Edit Obligasi/SBN', f:[{id:'tgl',l:'Tanggal Beli',type:'date'},{id:'nama',l:'Nama/Seri',type:'text'},{id:'jenis',l:'Jenis',type:'text'},{id:'nilaiNominal',l:'Nilai Nominal (Rp)',type:'number'},{id:'modal',l:'Modal Beli (Rp)',type:'number'},{id:'kupon',l:'Kupon/Tahun (%)',type:'number',step:'0.01'},{id:'jatuhTempo',l:'Jatuh Tempo',type:'date'}]},
+  obligasi:{t:'Edit Obligasi/SBN', f:[{id:'tgl',l:'Tanggal Beli',type:'date'},{id:'nama',l:'Nama/Seri',type:'text'},{id:'jenis',l:'Jenis',type:'text'},{id:'unit',l:'Jumlah Unit (1 unit = Rp 1 juta)',type:'number'},{id:'hargaPct',l:'Harga Beli (%)',type:'number',step:'0.01'},{id:'kupon',l:'Kupon/Tahun (%)',type:'number',step:'0.01'},{id:'jatuhTempo',l:'Jatuh Tempo',type:'date'}]},
   dana:   {t:'Edit Dana Darurat', f:[{id:'item',l:'Nama Instrumen',type:'text'},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
   goals:  {t:'Edit Goal Keuangan', f:[{id:'nama',l:'Nama Tujuan',type:'text'},{id:'target',l:'Target Dana',type:'number'},{id:'deadline',l:'Deadline (Tahun)',type:'text'},{id:'terkumpul',l:'Dana Terkumpul',type:'number'}]},
 };
