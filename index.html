@@ -509,9 +509,18 @@ function vTargetAlokasi(tot, ts, te, tem, tb) {
   const T = APP.data.targetAlokasi;
   const editing = APP.taEditing;
 
-  const kelasVals = {saham: ts, etf: te, emas: tem, btc: tb};
+  const kelasVals = {
+    saham:    ts,
+    etf:      te,
+    emas:     tem,
+    btc:      tb,
+    rdana:    tRdana(),
+    obligasi: tObligasi(),
+  };
+  const tot6 = Object.values(kelasVals).reduce((a,v)=>a+v, 0) || tot || 1;
   const kelasRows = Object.keys(T.kelas).map(k => {
-    const pct = tot > 0 ? (kelasVals[k]/tot*100) : 0;
+    const val = kelasVals[k] || 0;
+    const pct = tot6 > 0 ? (val/tot6*100) : 0;
     return taRow('kelas_'+k, T.kelas[k].label, pct, T.kelas[k].min, T.kelas[k].max, editing);
   }).join('');
 
@@ -689,7 +698,7 @@ function vDash() {
       return combined.map(r=>`<tr><td><b>${r.kode}</b></td><td><span class="badge ${r.tipe==='ETF'?'badge-green':'badge-blue'}">${r.tipe}</span></td><td>${F(r.lotUnit,r.tipe==='ETF'?4:0)}</td><td>${Rp(R(r.m))}</td><td>${Rp(R(r.v))}</td><td class="${Cls(r.pl)}">${Rp(R(r.pl))}</td><td class="${Cls(r.pct)}">${Pct(r.pct)}</td></tr>`).join('');
     })()}</tbody>
   </table>
-  ${(cSaham().filter(s=>(s.ket||'').toLowerCase().includes('hold')).length + cEtf().filter(e=>(e.ket||'').toLowerCase().includes('hold')).length) === 0 && (cSaham().length > 0 || cEtf().length > 0) ? '<div style="font-size:11px;color:var(--text2);padding:6px 0">💡 Tip: isi keterangan "hold" di tab Saham BEI atau ETF LN untuk filter otomatis di sini (maks. 6)</div>' : ''}
+  ${(cSaham().filter(s=>(s.ket||'').toLowerCase().includes('hold')).length + cEtf().filter(e=>(e.ket||'').toLowerCase().includes('hold')).length) === 0 && (cSaham().length > 0 || cEtf().length > 0) ? '<div style="font-size:11px;color:var(--text2);padding:6px 0">💡 Tip: isi keterangan "hold" di tab Saham BEI atau US untuk filter otomatis di sini (maks. 6)</div>' : ''}
   </div>`;
 }
 
@@ -1456,8 +1465,8 @@ function doExport() {
   c += 'SAHAM BEI\nTanggal,Kode,Lot,Hrg Beli,Modal,Hrg Kini,Nilai Market,P&L,% P&L\n';
   cSaham().forEach(s => c+=`${s.tgl},${s.kode},${s.lot},${s.beli},${R(s.m)},${s.now},${R(s.v)},${R(s.pl)},${(s.pct*100).toFixed(2)}%\n`);
 
-  // ETF LN
-  c += '\nETF LN\nTanggal,Kode,Unit,Beli USD,Kini USD,Nilai USD,Nilai IDR,P&L IDR\n';
+  // US (ETF)
+  c += '\nUS (ETF)\nTanggal,Kode,Unit,Beli USD,Kini USD,Nilai USD,Nilai IDR,P&L IDR\n';
   cEtf().forEach(e => c+=`${e.tgl},${e.kode},${e.unit},${e.beli},${e.now},${e.vu.toFixed(2)},${R(e.vi)},${R(e.pl)}\n`);
 
   // EMAS
