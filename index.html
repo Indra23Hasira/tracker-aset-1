@@ -198,6 +198,8 @@ const DEFAULT_DATA = {
   emas: [],
   btc: [],
   dana: [],
+  rdana: [],
+  obligasi: [],
   goals: [],
 };
 
@@ -205,9 +207,9 @@ const DEFAULT_DATA = {
 const DEFAULT_TARGET = {
   kelas: {
     saham: {min:35, max:45, label:'Saham BEI'},
-    etf:   {min:45, max:55, label:'ETF LN'},
+    etf:   {min:45, max:55, label:'US'},
     emas:  {min:5,  max:10, label:'Emas'},
-    btc:   {min:0,  max:5,  label:'Bitcoin'}
+    btc:   {min:0,  max:5,  label:'Crypto'}
   },
   sahamKategori: {
     blue:       {min:25, max:32, label:'Blue Chip'},
@@ -386,6 +388,8 @@ const tEtf   = () => cEtf().reduce((a,r)=>a+r.vi, 0);
 const tEmas  = () => cEmas().reduce((a,r)=>a+r.v, 0);
 const tBtc   = () => cBtc().reduce((a,r)=>a+r.v, 0);
 const tDana  = () => (APP.data.dana||[]).reduce((a,r)=>a+(r.now||r.masuk), 0);
+const tRdana = () => (APP.data.rdana||[]).reduce((a,r)=>a+(r.now||r.masuk), 0);
+const tObligasi = () => (APP.data.obligasi||[]).reduce((a,r)=>a+((r.nilaiNominal||0)+(r.bungaAkrual||0)), 0);
 const tDivBei= () => (APP.data.divBei||[]).reduce((a,r)=>a+r.bruto, 0);
 const tDivEtf= () => (APP.data.divEtf||[]).reduce((a,r)=>a+r.bruto*(APP.data.kurs||17800), 0);
 
@@ -539,9 +543,9 @@ function vTargetAlokasi(tot, ts, te, tem, tb) {
 }
 
 function vDash() {
-  const ts=tSaham(), te=tEtf(), tem=tEmas(), tb=tBtc(), td=tDana();
-  const tot = ts+te+tem+tb;
-  const items = [['Saham BEI',ts,'#185FA5'],['ETF LN',te,'#3B6D11'],['Emas',tem,'#BA7517'],['Bitcoin',tb,'#A32D2D']];
+  const ts=tSaham(), te=tEtf(), tem=tEmas(), tb=tBtc(), td=tDana(), trd=tRdana(), tob=tObligasi();
+  const tot = ts+te+tem+tb+trd+tob;
+  const items = [['Saham BEI',ts,'#185FA5'],['US',te,'#3B6D11'],['Emas',tem,'#BA7517'],['Crypto',tb,'#A32D2D'],['Reksadana',trd,'#7c3aed'],['Obligasi',tob,'#0891b2']];
   const CIRC = 2*Math.PI*38;
   let donut=''; let cum=0;
   items.filter(x=>x[1]>0).forEach(([l,v,c])=>{
@@ -622,11 +626,11 @@ function vDash() {
     <button class="btn btn-sm" onclick="openModal('kurs')">✏️ Update</button>
   </div>
   <div class="metric-grid">
-    <div class="metric-card"><div class="metric-label">Total Investasi</div><div class="metric-value">${Rp(R(tot))}</div><div class="metric-sub">4 aset aktif</div></div>
+    <div class="metric-card"><div class="metric-label">Total Investasi</div><div class="metric-value">${Rp(R(tot))}</div><div class="metric-sub">6 aset aktif</div></div>
     <div class="metric-card"><div class="metric-label">Dana Darurat</div><div class="metric-value">${Rp(R(td))}</div><div class="metric-sub">Liquid</div></div>
     <div class="metric-card"><div class="metric-label">Grand Total</div><div class="metric-value">${Rp(R(tot+td))}</div><div class="metric-sub">Semua aset</div></div>
     <div class="metric-card"><div class="metric-label">Dividen BEI (YTD)</div><div class="metric-value pos">${Rp(R(tDivBei()))}</div></div>
-    <div class="metric-card"><div class="metric-label">Dividen ETF (YTD)</div><div class="metric-value pos">${Rp(R(tDivEtf()))}</div></div>
+    <div class="metric-card"><div class="metric-label">Dividen US (YTD)</div><div class="metric-value pos">${Rp(R(tDivEtf()))}</div></div>
   </div>
   <div class="dashboard-grid">
     <div class="donut-container">
@@ -636,7 +640,7 @@ function vDash() {
           <circle cx="48" cy="48" r="38" fill="none" stroke="#e5e7eb" stroke-width="18"/>
           ${donut}
           <text x="48" y="44" text-anchor="middle" font-size="9" fill="#6b7280">Total</text>
-          <text x="48" y="57" text-anchor="middle" font-size="9" font-weight="600" fill="#1a1a1a">${(tot/1e6).toFixed(1)}Jt</text>
+  <text x="48" y="57" text-anchor="middle" font-size="9" font-weight="600" fill="#1a1a1a">${(tot/1e6).toFixed(1)}Jt</text>
         </svg>
         <div>${items.map(([l,v,c])=>`<div class="legend-item"><div class="legend-dot" style="background:${c}"></div><span style="flex:1">${l}</span><span style="font-weight:600;margin-left:8px">${tot>0?F(v/tot*100,1)+'%':'-'}</span></div>`).join('')}</div>
       </div>
@@ -653,7 +657,7 @@ function vDash() {
   </div>
   ${vTargetAlokasi(tot, ts, te, tem, tb)}
   ${barChart(divBeiMonthly, '📈 Dividen BEI', '#185FA5', yearBei)}
-  ${barChart(divEtfMonthly, '🌍 Dividen ETF (IDR)', '#3B6D11', yearEtf)}
+  ${barChart(divEtfMonthly, '🌍 Dividen US (IDR)', '#3B6D11', yearEtf)}
   <div class="section-header"><span class="section-title">📌 Hold Portfolio (preview)</span><button class="btn btn-sm" onclick="APP.tab='saham';render()">Lihat semua →</button></div>
   <div class="table-wrap"><table>
     <thead><tr><th>Kode</th><th>Tipe</th><th>Lot/Unit</th><th>Modal</th><th>Nilai</th><th>P&L</th><th>%</th></tr></thead>
@@ -729,7 +733,7 @@ function vSaham() {
 function vEtf() {
   const rows=cEtf(), k=APP.data.kurs, tM=rows.reduce((a,r)=>a+r.mi,0), tV=rows.reduce((a,r)=>a+r.vi,0), tPL=tV-tM;
   return `
-  <div class="section-header"><span class="section-title">🌍 ETF Luar Negeri</span>
+  <div class="section-header"><span class="section-title">🌍 US (ETF & Saham)</span>
     <div style="display:flex;gap:8px">
       <button class="btn btn-sm" id="btnUpdateEtf" onclick="updateHargaEtf()" style="background:#0369a1;color:#fff;border:none">🔄 Update Harga</button>
       <button class="btn btn-success btn-sm" onclick="openModal('etf')">+ Tambah</button>
@@ -756,42 +760,50 @@ function vEtf() {
 
 function vEmas() {
   const rows=cEmas(), tM=rows.reduce((a,r)=>a+r.m,0), tV=rows.reduce((a,r)=>a+r.v,0), tPL=tV-tM;
+  const digital = rows.filter(r=>r.jenis==='digital');
+  const fisik   = rows.filter(r=>r.jenis==='fisik');
   return `
-  <div class="section-header"><span class="section-title">🥇 Emas Digital</span><button class="btn btn-success btn-sm" onclick="openModal('emas')">+ Tambah</button></div>
+  <div class="section-header"><span class="section-title">🥇 Emas</span><button class="btn btn-success btn-sm" onclick="openModal('emas')">+ Tambah</button></div>
   <div class="metric-grid" style="grid-template-columns:repeat(3,1fr)">
     <div class="metric-card"><div class="metric-label">Modal</div><div class="metric-value" style="font-size:15px">${Rp(R(tM))}</div></div>
     <div class="metric-card"><div class="metric-label">Nilai Kini</div><div class="metric-value" style="font-size:15px">${Rp(R(tV))}</div></div>
     <div class="metric-card"><div class="metric-label">P&L</div><div class="metric-value ${Cls(tPL)}" style="font-size:15px">${Rp(R(tPL))}</div></div>
   </div>
+  ${digital.length>0?`<div style="font-size:12px;font-weight:600;color:var(--text2);margin:8px 0 4px">📱 Emas Digital</div>`:''}
   <div class="table-wrap"><table>
-    <thead><tr><th>Tanggal</th><th>Lokasi</th><th>Gram</th><th>Beli/gr</th><th>Modal</th><th>Kini/gr</th><th>Nilai</th><th>P&L</th><th></th></tr></thead>
+    <thead><tr><th>Tanggal</th><th>Jenis</th><th>Lokasi</th><th>Gram</th><th>Beli/gr</th><th>Modal</th><th>Kini/gr</th><th>Nilai</th><th>P&L</th><th></th></tr></thead>
     <tbody>${rows.map((e,i)=>`<tr>
-      <td>${e.tgl}</td><td>${e.lokasi}</td><td>${F(e.gram,4)}</td><td>${Rp(e.beli)}</td><td>${Rp(R(e.m))}</td>
-      <td><input class="cell-input" type="number" value="${e.now}" onchange="upd('emas',${i},'now',+this.value)"></td>
+      <td style="font-size:11px">${e.tgl}</td>
+      <td><span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${e.jenis==='fisik'?'#fef3c7':'#eff6ff'};color:${e.jenis==='fisik'?'#92400e':'#1e40af'}">${e.jenis||'digital'}</span></td>
+      <td>${e.lokasi}</td><td>${F(e.gram,4)}</td><td>${Rp(e.beli)}</td><td>${Rp(R(e.m))}</td>
+      <td><input class="cell-input" type="number" value="${e.now}" onchange="upd('emas',${i},'now',+this.value)" style="width:80px"></td>
       <td>${Rp(R(e.v))}</td><td class="${Cls(e.pl)}">${Rp(R(e.pl))}</td>
-      <td><button class="btn btn-icon" onclick="del('emas',${i})">🗑</button></td>
+      <td><div class="row-actions"><button class="btn btn-icon-edit" onclick="openEdit('emas',${i})">✏️</button><button class="btn btn-icon" onclick="del('emas',${i})">🗑</button></div></td>
     </tr>`).join('')}</tbody>
-    <tfoot><tr class="tr-total"><td colspan="4">TOTAL</td><td>${Rp(R(tM))}</td><td></td><td>${Rp(R(tV))}</td><td class="${Cls(tPL)}">${Rp(R(tPL))}</td><td></td></tr></tfoot>
+    <tfoot><tr class="tr-total"><td colspan="5">TOTAL</td><td>${Rp(R(tM))}</td><td></td><td>${Rp(R(tV))}</td><td class="${Cls(tPL)}">${Rp(R(tPL))}</td><td></td></tr></tfoot>
   </table></div>`;
 }
 
 function vBtc() {
   const rows=cBtc(), tM=rows.reduce((a,r)=>a+r.m,0), tV=rows.reduce((a,r)=>a+r.v,0), tPL=tV-tM;
   return `
-  <div class="section-header"><span class="section-title">₿ Bitcoin</span><button class="btn btn-success btn-sm" onclick="openModal('btc')">+ Tambah</button></div>
+  <div class="section-header"><span class="section-title">🪙 Crypto</span><button class="btn btn-success btn-sm" onclick="openModal('btc')">+ Tambah</button></div>
   <div class="metric-grid" style="grid-template-columns:repeat(3,1fr)">
     <div class="metric-card"><div class="metric-label">Modal</div><div class="metric-value" style="font-size:15px">${Rp(R(tM))}</div></div>
     <div class="metric-card"><div class="metric-label">Nilai Kini</div><div class="metric-value" style="font-size:15px">${Rp(R(tV))}</div></div>
     <div class="metric-card"><div class="metric-label">P&L</div><div class="metric-value ${Cls(tPL)}" style="font-size:15px">${Rp(R(tPL))}</div></div>
   </div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Tanggal</th><th>Jumlah BTC</th><th>Hrg Beli (Rp)</th><th>Modal</th><th>Hrg Kini (Rp)</th><th>Nilai</th><th>P&L</th><th></th></tr></thead>
+    <thead><tr><th>Tanggal</th><th>Jenis</th><th>Jumlah</th><th>Hrg Beli (Rp)</th><th>Modal</th><th>Hrg Kini (Rp)</th><th>Nilai</th><th>P&L</th><th></th></tr></thead>
     <tbody>${rows.map((b,i)=>`<tr>
-      <td>${b.tgl}</td><td>${F(b.jumlah,8)}</td><td>${Rp(b.beli)}</td><td>${Rp(R(b.m))}</td>
-      <td><input class="cell-input" type="number" value="${b.now}" onchange="upd('btc',${i},'now',+this.value)"></td>
+      <td style="font-size:11px">${b.tgl}</td>
+      <td><b>${b.jenis||'BTC'}</b></td>
+      <td>${F(b.jumlah,8)}</td><td>${Rp(b.beli)}</td><td>${Rp(R(b.m))}</td>
+      <td><input class="cell-input" type="number" value="${b.now}" onchange="upd('btc',${i},'now',+this.value)" style="width:90px"></td>
       <td>${Rp(R(b.v))}</td><td class="${Cls(b.pl)}">${Rp(R(b.pl))}</td>
-      <td><button class="btn btn-icon" onclick="del('btc',${i})">🗑</button></td>
+      <td><div class="row-actions"><button class="btn btn-icon-edit" onclick="openEdit('btc',${i})">✏️</button><button class="btn btn-icon" onclick="del('btc',${i})">🗑</button></div></td>
     </tr>`).join('')}</tbody>
+    <tfoot><tr class="tr-total"><td colspan="4">TOTAL</td><td>${Rp(R(tM))}</td><td></td><td>${Rp(R(tV))}</td><td class="${Cls(tPL)}">${Rp(R(tPL))}</td><td></td></tr></tfoot>
   </table></div>`;
 }
 
@@ -801,7 +813,7 @@ function vDiv() {
   return `
   <div class="metric-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:16px">
     <div class="metric-card"><div class="metric-label">Total Dividen BEI</div><div class="metric-value pos">${Rp(R(tBei))}</div><div class="metric-sub">bruto</div></div>
-    <div class="metric-card"><div class="metric-label">Total Dividen ETF</div><div class="metric-value pos">${Rp(R(tEtf))}</div><div class="metric-sub">dalam IDR</div></div>
+    <div class="metric-card"><div class="metric-label">Total Dividen US</div><div class="metric-value pos">${Rp(R(tEtf))}</div><div class="metric-sub">dalam IDR</div></div>
   </div>
   <div class="section-header"><span class="section-title">Dividen BEI</span><button class="btn btn-success btn-sm" onclick="openModal('divBei')">+ Tambah</button></div>
   <div class="table-wrap"><table>
@@ -809,7 +821,7 @@ function vDiv() {
     <tbody>${bei.map((d,i)=>`<tr><td>${d.tgl}</td><td><b>${d.saham}</b></td><td>${Rp(d.bruto)}</td><td>${Rp(R(d.bruto*.1))}</td><td>${Rp(R(d.bruto*.9))}</td><td>${d.ket}</td><td><button class="btn btn-icon" onclick="del('divBei',${i})">🗑</button></td></tr>`).join('')}</tbody>
     <tfoot><tr class="tr-total"><td colspan="2">TOTAL</td><td>${Rp(R(tBei))}</td><td>${Rp(R(tBei*.1))}</td><td>${Rp(R(tBei*.9))}</td><td colspan="2"></td></tr></tfoot>
   </table></div>
-  <div class="section-header" style="margin-top:16px"><span class="section-title">Dividen ETF</span><button class="btn btn-success btn-sm" onclick="openModal('divEtf')">+ Tambah</button></div>
+  <div class="section-header" style="margin-top:16px"><span class="section-title">Dividen US</span><button class="btn btn-success btn-sm" onclick="openModal('divEtf')">+ Tambah</button></div>
   <div class="table-wrap"><table>
     <thead><tr><th>Tanggal</th><th>ETF</th><th>Bruto USD</th><th>Bruto IDR</th><th>Pajak 30%</th><th>Bersih IDR</th><th>Keterangan</th><th></th></tr></thead>
     <tbody>${etf.map((d,i)=>`<tr><td>${d.tgl}</td><td><b>${d.kode}</b></td><td>${Usd(d.bruto,2)}</td><td>${Rp(R(d.bruto*k))}</td><td>${Rp(R(d.bruto*k*.3))}</td><td>${Rp(R(d.bruto*k*.7))}</td><td>${d.ket}</td><td><button class="btn btn-icon" onclick="del('divEtf',${i})">🗑</button></td></tr>`).join('')}</tbody>
@@ -873,6 +885,74 @@ function vSaveUmur() {
   render();
 }
 
+function vRdana() {
+  const rd = APP.data.rdana||[];
+  const tM = rd.reduce((a,r)=>a+(r.masuk||0),0), tV = tRdana(), tPL = tV-tM;
+  return `
+  <div class="section-header"><span class="section-title">📊 Reksadana</span><button class="btn btn-success btn-sm" onclick="openModal('rdana')">+ Tambah</button></div>
+  <div class="metric-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="metric-card"><div class="metric-label">Modal</div><div class="metric-value" style="font-size:15px">${Rp(R(tM))}</div></div>
+    <div class="metric-card"><div class="metric-label">Nilai Kini</div><div class="metric-value" style="font-size:15px">${Rp(R(tV))}</div></div>
+    <div class="metric-card"><div class="metric-label">P&L</div><div class="metric-value ${Cls(tPL)}" style="font-size:15px">${Rp(R(tPL))}</div></div>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Item / Nama RD</th><th>Modal Masuk</th><th>Nilai Sekarang</th><th>Keuntungan</th><th>%</th><th></th></tr></thead>
+    <tbody>${rd.map((r,i)=>{
+      const now = r.now||r.masuk||0, pl = now-(r.masuk||0), pct = r.masuk ? pl/r.masuk : 0;
+      return `<tr>
+        <td><b>${r.item}</b></td><td>${Rp(r.masuk)}</td>
+        <td><input class="cell-input" style="width:130px" type="number" value="${now}" onchange="upd('rdana',${i},'now',+this.value)"></td>
+        <td class="${Cls(pl)}">${Rp(R(pl))}</td>
+        <td class="${Cls(pct)}">${Pct(pct)}</td>
+        <td><div class="row-actions"><button class="btn btn-icon-edit" onclick="openEdit('rdana',${i})">✏️</button><button class="btn btn-icon" onclick="del('rdana',${i})">🗑</button></div></td>
+      </tr>`;
+    }).join('')}</tbody>
+    <tfoot><tr class="tr-total"><td>TOTAL</td><td>${Rp(R(tM))}</td><td>${Rp(R(tV))}</td><td class="${Cls(tPL)}">${Rp(R(tPL))}</td><td class="${Cls(tPL)}">${Pct(tM?tPL/tM:0)}</td><td></td></tr></tfoot>
+  </table></div>`;
+}
+
+function vObligasi() {
+  const ob = APP.data.obligasi||[];
+  const tNominal = ob.reduce((a,r)=>a+(r.nilaiNominal||0),0);
+  const tBunga   = ob.reduce((a,r)=>a+(r.bungaAkrual||0),0);
+  const tTotal   = tNominal + tBunga;
+  const tModal   = ob.reduce((a,r)=>a+(r.modal||r.nilaiNominal||0),0);
+  const tPL      = tTotal - tModal;
+  return `
+  <div class="section-header"><span class="section-title">🏦 Obligasi / SBN</span><button class="btn btn-success btn-sm" onclick="openModal('obligasi')">+ Tambah</button></div>
+  <div class="metric-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="metric-card"><div class="metric-label">Total Nominal</div><div class="metric-value" style="font-size:14px">${Rp(R(tNominal))}</div></div>
+    <div class="metric-card"><div class="metric-label">Bunga Akrual</div><div class="metric-value pos" style="font-size:14px">${Rp(R(tBunga))}</div></div>
+    <div class="metric-card"><div class="metric-label">Total Nilai</div><div class="metric-value" style="font-size:14px">${Rp(R(tTotal))}</div></div>
+    <div class="metric-card"><div class="metric-label">P&L</div><div class="metric-value ${Cls(tPL)}" style="font-size:14px">${Rp(R(tPL))}</div></div>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Nama/Seri</th><th>Tgl Beli</th><th>Jatuh Tempo</th><th>Nominal (Rp)</th><th>Kupon/th</th><th>Bunga Akrual</th><th>Total Nilai</th><th>P&L</th><th></th></tr></thead>
+    <tbody>${ob.map((r,i)=>{
+      const nominal = r.nilaiNominal||0;
+      const bunga   = r.bungaAkrual||0;
+      const total   = nominal + bunga;
+      const modal   = r.modal||nominal;
+      const pl      = total - modal;
+      return `<tr>
+        <td><b>${r.nama}</b><br><small style="color:var(--text2)">${r.jenis||'SBN'}</small></td>
+        <td style="font-size:11px">${r.tgl}</td>
+        <td style="font-size:11px">${r.jatuhTempo||'-'}</td>
+        <td>${Rp(nominal)}</td>
+        <td><span style="color:var(--green);font-weight:600">${r.kupon||0}%</span></td>
+        <td><input class="cell-input" type="number" value="${bunga}" onchange="upd('obligasi',${i},'bungaAkrual',+this.value)" style="width:100px"></td>
+        <td>${Rp(R(total))}</td>
+        <td class="${Cls(pl)}">${Rp(R(pl))}</td>
+        <td><div class="row-actions"><button class="btn btn-icon-edit" onclick="openEdit('obligasi',${i})">✏️</button><button class="btn btn-icon" onclick="del('obligasi',${i})">🗑</button></div></td>
+      </tr>`;
+    }).join('')}</tbody>
+    <tfoot><tr class="tr-total"><td colspan="3">TOTAL</td><td>${Rp(R(tNominal))}</td><td></td><td>${Rp(R(tBunga))}</td><td>${Rp(R(tTotal))}</td><td class="${Cls(tPL)}">${Rp(R(tPL))}</td><td></td></tr></tfoot>
+  </table></div>
+  <div style="margin-top:12px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);font-size:12px;color:var(--text2)">
+    💡 <b>Cara pakai:</b> Input Nominal & Kupon saat beli. Update <b>Bunga Akrual</b> secara berkala (nominal × kupon × hari/365). Jatuh Tempo isi format <i>YYYY-MM-DD</i>.
+  </div>`;
+}
+
 function sptSimpleRow(label, value, colorText) {
   const barPct = Math.max(0, Math.min(100, value));
   return `<div style="margin-bottom:10px">
@@ -886,9 +966,9 @@ function sptSimpleRow(label, value, colorText) {
 function vSpt() {
   const rows = [
     {kat:'HARTA',item:'Saham BEI (31 Des)',modal:cSaham().reduce((a,r)=>a+r.m,0),nilai:tSaham()},
-    {kat:'HARTA ASING',item:'ETF LN (31 Des)',modal:cEtf().reduce((a,r)=>a+r.mi,0),nilai:tEtf()},
+    {kat:'HARTA ASING',item:'US (31 Des)',modal:cEtf().reduce((a,r)=>a+r.mi,0),nilai:tEtf()},
     {kat:'HARTA',item:'Emas Digital',modal:cEmas().reduce((a,r)=>a+r.m,0),nilai:tEmas()},
-    {kat:'HARTA',item:'Bitcoin',modal:cBtc().reduce((a,r)=>a+r.m,0),nilai:tBtc()},
+    {kat:'HARTA',item:'Crypto',modal:cBtc().reduce((a,r)=>a+r.m,0),nilai:tBtc()},
     {kat:'DANA DARURAT',item:'Reksadana + Bank Digital',modal:(APP.data.dana||[]).reduce((a,r)=>a+r.masuk,0),nilai:tDana()},
     {kat:'GOALS',item:'Tujuan Keuangan',modal:(APP.data.goals||[]).reduce((a,g)=>a+g.terkumpul,0),nilai:(APP.data.goals||[]).reduce((a,g)=>a+g.terkumpul,0)},
   ];
@@ -903,7 +983,7 @@ function vSpt() {
   const mGoals = (APP.data.goals||[]).reduce((a,g)=>a+g.terkumpul,0);
   const totalModalAlokasi = mSaham + mEtf + mEmas + mBtc + mDana + mGoals;
 
-  const riskTinggi = mSaham + mEtf + mBtc; // Saham BEI + ETF LN + Bitcoin
+  const riskTinggi = mSaham + mEtf + mBtc; // Saham BEI + US + Crypto
   const moderat = mEmas;                    // Emas: hedge, bukan risiko tinggi murni
   const aman = mDana + mGoals;              // Dana Darurat + Goals
 
@@ -926,14 +1006,14 @@ function vSpt() {
     </div>
 
     ${batasRisk!==null
-      ? taRow('spt_risk', 'Aset Risiko Tinggi (Saham BEI + ETF LN + Bitcoin)', pctRisk, 0, batasRisk, false)
+      ? taRow('spt_risk', 'Aset Risiko Tinggi (Saham BEI + US + Crypto)', pctRisk, 0, batasRisk, false)
       : `<div style="font-size:12px;color:var(--text2);margin-bottom:10px">Isi umur di atas untuk melihat batas aturan investasi (100 − umur)%.</div>`
     }
 
     <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 10px">Komposisi Total Modal</div>
     ${sptSimpleRow('Saham BEI', totalModalAlokasi>0?(mSaham/totalModalAlokasi*100):0, 'var(--blue)')}
-    ${sptSimpleRow('ETF LN', totalModalAlokasi>0?(mEtf/totalModalAlokasi*100):0, 'var(--blue)')}
-    ${sptSimpleRow('Bitcoin', totalModalAlokasi>0?(mBtc/totalModalAlokasi*100):0, 'var(--blue)')}
+    ${sptSimpleRow('US', totalModalAlokasi>0?(mEtf/totalModalAlokasi*100):0, 'var(--blue)')}
+    ${sptSimpleRow('Crypto', totalModalAlokasi>0?(mBtc/totalModalAlokasi*100):0, 'var(--blue)')}
     ${sptSimpleRow('Emas (moderat)', pctModerat, 'var(--amber)')}
     ${sptSimpleRow('Dana Darurat', totalModalAlokasi>0?(mDana/totalModalAlokasi*100):0, 'var(--green)')}
     ${sptSimpleRow('Goals', totalModalAlokasi>0?(mGoals/totalModalAlokasi*100):0, 'var(--green)')}
@@ -961,10 +1041,12 @@ const MODAL_DEF = {
   kurs:   {t:'Update Kurs USD/IDR', f:[{id:'kurs',l:'1 USD = Rp',type:'number'}]},
   saham:  {t:'Tambah Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text',ph:'BBCA'},{id:'kategori',l:'Kategori Risiko',type:'select',opts:KATEGORI_OPTS},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'eps',l:'EPS TTM (Rp)',type:'number',ph:'0'},{id:'pbvRatio',l:'PBV Ratio (misal: 0.84)',type:'number',ph:'0',step:'0.01'},{id:'wajarBawah',l:'Wajar Bawah (otomatis)',type:'number'},{id:'wajarAtas',l:'Wajar Atas (otomatis)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
   etf:    {t:'Tambah ETF', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode ETF',type:'text',ph:'QQQ'},{id:'unit',l:'Unit',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli (USD)',type:'number',step:'0.01'},{id:'now',l:'Harga Kini (USD)',type:'number',step:'0.01'},{id:'ket',l:'Keterangan (isi "hold" utk tampil di preview)',type:'text'}]},
-  emas:   {t:'Tambah Emas', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'lokasi',l:'Lokasi',type:'text',ph:'DANA/TRINGS'},{id:'gram',l:'Gram',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli/gr',type:'number'},{id:'now',l:'Harga Kini/gr',type:'number'}]},
-  btc:    {t:'Tambah Bitcoin', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'jumlah',l:'Jumlah BTC',type:'number',step:'0.00000001'},{id:'beli',l:'Harga Beli (Rp)',type:'number'},{id:'now',l:'Harga Kini (Rp)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
+  emas:   {t:'Tambah Emas', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'jenis',l:'Jenis',type:'text',ph:'digital / fisik'},{id:'lokasi',l:'Lokasi/Platform',type:'text',ph:'DANA / Pegadaian / dll'},{id:'gram',l:'Gram',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli/gr',type:'number'},{id:'now',l:'Harga Kini/gr',type:'number'}]},
+  btc:    {t:'Tambah Crypto', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'jenis',l:'Jenis Crypto',type:'text',ph:'BTC / ETH / USDT / dll'},{id:'jumlah',l:'Jumlah',type:'number',step:'0.00000001'},{id:'beli',l:'Harga Beli (Rp)',type:'number'},{id:'now',l:'Harga Kini (Rp)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
+  rdana:  {t:'Tambah Reksadana', f:[{id:'item',l:'Nama Reksadana',type:'text',ph:'RDPU Majoris / RDPU TRIM...'},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
+  obligasi:{t:'Tambah Obligasi/SBN', f:[{id:'tgl',l:'Tanggal Beli',type:'date'},{id:'nama',l:'Nama/Seri',type:'text',ph:'SBR013 / ORI025 / SR020'},{id:'jenis',l:'Jenis',type:'text',ph:'SBR / ORI / SR / SUN'},{id:'nilaiNominal',l:'Nilai Nominal (Rp)',type:'number'},{id:'modal',l:'Modal Beli (Rp)',type:'number'},{id:'kupon',l:'Kupon/Tahun (%)',type:'number',step:'0.01'},{id:'bungaAkrual',l:'Bunga Akrual s.d. Sekarang (Rp)',type:'number'},{id:'jatuhTempo',l:'Jatuh Tempo',type:'date'}]},
   divBei: {t:'Tambah Dividen BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'saham',l:'Kode Saham',type:'text'},{id:'bruto',l:'Dividen Bruto (Rp)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
-  divEtf: {t:'Tambah Dividen ETF', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode ETF',type:'text'},{id:'bruto',l:'Bruto (USD)',type:'number',step:'0.01'},{id:'ket',l:'Keterangan',type:'text'}]},
+  divEtf: {t:'Tambah Dividen US', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode ETF',type:'text'},{id:'bruto',l:'Bruto (USD)',type:'number',step:'0.01'},{id:'ket',l:'Keterangan',type:'text'}]},
   dana:   {t:'Tambah Dana Darurat', f:[{id:'item',l:'Nama Instrumen',type:'text',ph:'RDPU Majoris...'},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
   goals:  {t:'Tambah Goal', f:[{id:'nama',l:'Nama Tujuan',type:'text'},{id:'target',l:'Target Dana',type:'number'},{id:'deadline',l:'Deadline (Tahun)',type:'text',ph:'2028'},{id:'terkumpul',l:'Dana Terkumpul',type:'number'}]},
 };
@@ -975,7 +1057,11 @@ function closeModal() { APP.modal=null; render(); }
 // ── EDIT MODAL ────────────────────────────────────────────
 const EDIT_DEF = {
   saham:  {t:'Edit Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text'},{id:'kategori',l:'Kategori Risiko',type:'select',opts:KATEGORI_OPTS},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'eps',l:'EPS TTM (Rp)',type:'number'},{id:'pbvRatio',l:'PBV Ratio (misal: 0.84)',type:'number',step:'0.01'},{id:'wajarBawah',l:'Wajar Bawah (otomatis)',type:'number'},{id:'wajarAtas',l:'Wajar Atas (otomatis)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
-  etf:    {t:'Edit ETF LN', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode ETF',type:'text'},{id:'unit',l:'Unit',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli (USD)',type:'number',step:'0.01'},{id:'now',l:'Harga Kini (USD)',type:'number',step:'0.01'},{id:'ket',l:'Keterangan (isi "hold" utk tampil di preview)',type:'text'}]},
+  etf:    {t:'Edit US (ETF/Saham)', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode ETF',type:'text'},{id:'unit',l:'Unit',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli (USD)',type:'number',step:'0.01'},{id:'now',l:'Harga Kini (USD)',type:'number',step:'0.01'},{id:'ket',l:'Keterangan (isi "hold" utk tampil di preview)',type:'text'}]},
+  emas:   {t:'Edit Emas', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'jenis',l:'Jenis',type:'text',ph:'digital / fisik'},{id:'lokasi',l:'Lokasi/Platform',type:'text'},{id:'gram',l:'Gram',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli/gr',type:'number'},{id:'now',l:'Harga Kini/gr',type:'number'}]},
+  btc:    {t:'Edit Crypto', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'jenis',l:'Jenis Crypto',type:'text'},{id:'jumlah',l:'Jumlah',type:'number',step:'0.00000001'},{id:'beli',l:'Harga Beli (Rp)',type:'number'},{id:'now',l:'Harga Kini (Rp)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
+  rdana:  {t:'Edit Reksadana', f:[{id:'item',l:'Nama Reksadana',type:'text'},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
+  obligasi:{t:'Edit Obligasi/SBN', f:[{id:'tgl',l:'Tanggal Beli',type:'date'},{id:'nama',l:'Nama/Seri',type:'text'},{id:'jenis',l:'Jenis',type:'text'},{id:'nilaiNominal',l:'Nilai Nominal (Rp)',type:'number'},{id:'modal',l:'Modal Beli (Rp)',type:'number'},{id:'kupon',l:'Kupon/Tahun (%)',type:'number',step:'0.01'},{id:'bungaAkrual',l:'Bunga Akrual s.d. Sekarang (Rp)',type:'number'},{id:'jatuhTempo',l:'Jatuh Tempo',type:'date'}]},
   dana:   {t:'Edit Dana Darurat', f:[{id:'item',l:'Nama Instrumen',type:'text'},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
   goals:  {t:'Edit Goal Keuangan', f:[{id:'nama',l:'Nama Tujuan',type:'text'},{id:'target',l:'Target Dana',type:'number'},{id:'deadline',l:'Deadline (Tahun)',type:'text'},{id:'terkumpul',l:'Dana Terkumpul',type:'number'}]},
 };
@@ -1374,8 +1460,8 @@ function doExport() {
 
   // SUMMARY
   c += '\nSUMMARY\nAset,Nilai IDR\n';
-  c += `Saham BEI,${R(tSaham())}\nETF LN,${R(tEtf())}\nEmas,${R(tEmas())}\nBitcoin,${R(tBtc())}\nDana Darurat,${R(tDana())}\nTotal Investasi,${R(tSaham()+tEtf()+tEmas()+tBtc())}\nGrand Total,${R(tSaham()+tEtf()+tEmas()+tBtc()+tDana())}\n`;
-  c += `\nDividen BEI (YTD),${R(tDivBei())}\nDividen ETF (YTD),${R(tDivEtf())}\n`;
+  c += `Saham BEI,${R(tSaham())}\nUS,${R(tEtf())}\nEmas,${R(tEmas())}\nCrypto,${R(tBtc())}\nDana Darurat,${R(tDana())}\nTotal Investasi,${R(tSaham()+tEtf()+tEmas()+tBtc())}\nGrand Total,${R(tSaham()+tEtf()+tEmas()+tBtc()+tDana())}\n`;
+  c += `\nDividen BEI (YTD),${R(tDivBei())}\nDividen US (YTD),${R(tDivEtf())}\n`;
 
   const blob = new Blob(['\uFEFF'+c], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
@@ -1386,12 +1472,13 @@ function doExport() {
 
 // ── MAIN RENDER ───────────────────────────────────────────
 const TABS = [
-  {id:'dash',l:'🏠 Dashboard'},{id:'saham',l:'📈 Saham BEI'},{id:'etf',l:'🌍 ETF LN'},
-  {id:'emas',l:'🥇 Emas'},{id:'btc',l:'₿ Bitcoin'},{id:'div',l:'💰 Dividen'},
+  {id:'dash',l:'🏠 Dashboard'},{id:'saham',l:'📈 Saham BEI'},{id:'etf',l:'🌍 US'},
+  {id:'emas',l:'🥇 Emas'},{id:'btc',l:'🪙 Crypto'},{id:'rdana',l:'📊 Reksadana'},
+  {id:'obligasi',l:'🏦 Obligasi'},{id:'div',l:'💰 Dividen'},
   {id:'dana',l:'🛡 Dana & Goals'},{id:'spt',l:'🏦 Rekap Harta'},
 ];
 
-const VIEWS = {dash:vDash, saham:vSaham, etf:vEtf, emas:vEmas, btc:vBtc, div:vDiv, dana:vDana, spt:vSpt};
+const VIEWS = {dash:vDash, saham:vSaham, etf:vEtf, emas:vEmas, btc:vBtc, rdana:vRdana, obligasi:vObligasi, div:vDiv, dana:vDana, spt:vSpt};
 
 function render() {
   const root = document.getElementById('root');
