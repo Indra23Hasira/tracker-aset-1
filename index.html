@@ -1430,44 +1430,49 @@ const CORS_PROXIES = [
   url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
   url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
   url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-  url => `https://thingproxy.freeboard.io/fetch/${url}`,
 ];
 
+async function fetchOneProxy(buildProxyUrl, targetUrl) {
+  try {
+    const res = await fetch(buildProxyUrl(targetUrl), {signal: AbortSignal.timeout(7000)});
+    if (!res.ok) return null;
+    const text = await res.text();
+    if (!text || text.trim().startsWith('<')) return null;
+    let parsed;
+    try { parsed = JSON.parse(text); } catch(e) { return null; }
+    if (parsed && typeof parsed.contents === 'string') {
+      try { parsed = JSON.parse(parsed.contents); } catch(e) { return null; }
+    }
+    if (parsed && (parsed.chart || parsed.quoteResponse)) return parsed;
+    return null;
+  } catch(e) { return null; }
+}
+
 async function fetchViaCorsProxy(targetUrl) {
-  for (const buildProxyUrl of CORS_PROXIES) {
-    try {
-      const res = await fetch(buildProxyUrl(targetUrl), {signal: AbortSignal.timeout(12000)});
-      if (!res.ok) continue;
-      const text = await res.text();
-      if (!text || text.trim().startsWith('<')) continue; // HTML error page
-      let parsed;
-      try { parsed = JSON.parse(text); } catch(e) { continue; }
-      // allorigins /get wraps in {contents:"..."}
-      if (parsed && typeof parsed.contents === 'string') {
-        try { parsed = JSON.parse(parsed.contents); } catch(e) { continue; }
-      }
-      if (parsed && parsed.chart) return parsed;
-    } catch(e) { continue; }
-  }
-  return null;
+  // Coba semua proxy secara paralel — ambil yang pertama berhasil
+  return new Promise(resolve => {
+    let done = false;
+    let pending = CORS_PROXIES.length;
+    CORS_PROXIES.forEach(buildProxyUrl => {
+      fetchOneProxy(buildProxyUrl, targetUrl).then(result => {
+        if (result && !done) { done = true; resolve(result); }
+        pending--;
+        if (pending === 0 && !done) resolve(null);
+      });
+    });
+  });
 }
 
 async function fetchHargaSaham(kode) {
   const symbol = kode + '.JK';
-  // Coba 2 endpoint Yahoo Finance (v8 dan v7)
   const urls = [
     `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`,
     `https://query2.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`,
-    `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbol}`,
   ];
   for (const url of urls) {
     const data = await fetchViaCorsProxy(url);
-    // v8 response
-    const priceV8 = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-    if (priceV8 && priceV8 > 0) return Math.round(priceV8);
-    // v7 response
-    const priceV7 = data?.quoteResponse?.result?.[0]?.regularMarketPrice;
-    if (priceV7 && priceV7 > 0) return Math.round(priceV7);
+    const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+    if (price && price > 0) return Math.round(price);
   }
   return null;
 }
@@ -1485,7 +1490,7 @@ async function updateHargaOtomatis() {
 
   // Batch per 4 supaya tidak overload proxy
   let berhasil = 0, gagal = [];
-  const batchSize = 4;
+  const batchSize = 6;
   for (let i = 0; i < kodes.length; i += batchSize) {
     const batch = kodes.slice(i, i + batchSize);
     const results = await Promise.allSettled(batch.map(k => fetchHargaSaham(k)));
@@ -1502,8 +1507,7 @@ async function updateHargaOtomatis() {
         gagal.push(kode);
       }
     });
-    // Jeda antar batch
-    if (i + batchSize < kodes.length) await new Promise(r => setTimeout(r, 600));
+    if (i + batchSize < kodes.length) await new Promise(r => setTimeout(r, 300));
   }
 
   scheduleSave();
@@ -1634,14 +1638,11 @@ async function fetchHargaEtf(kode) {
   const urls = [
     `https://query1.finance.yahoo.com/v8/finance/chart/${kode}?interval=1d&range=1d`,
     `https://query2.finance.yahoo.com/v8/finance/chart/${kode}?interval=1d&range=1d`,
-    `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${kode}`,
   ];
   for (const url of urls) {
     const data = await fetchViaCorsProxy(url);
-    const priceV8 = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-    if (priceV8 && priceV8 > 0) return priceV8;
-    const priceV7 = data?.quoteResponse?.result?.[0]?.regularMarketPrice;
-    if (priceV7 && priceV7 > 0) return priceV7;
+    const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+    if (price && price > 0) return price;
   }
   return null;
 }
