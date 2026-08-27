@@ -262,6 +262,7 @@ let APP = {
   auth: null,
   error: null,
   taEditing: false,
+  compoundAutoMsg: null,
 };
 
 // ── FIREBASE INIT ─────────────────────────────────────────
@@ -1099,6 +1100,185 @@ function vSpt() {
   ${alokasiCard}`;
 }
 
+// ── COMPOUNDING CALCULATOR ─────────────────────────────────
+function ensureCompoundDefaults(tot) {
+  if (!APP.data.compound) {
+    const totVal = (typeof tot === 'number') ? tot : (tSaham()+tEtf()+tEmas()+tBtc()+tRdana()+tObligasi());
+    APP.data.compound = { modalAwal: R(totVal), kontribusi: 0, returnPct: 8, tahun: 10 };
+  }
+}
+
+function updCompound(field, val) {
+  ensureCompoundDefaults();
+  APP.data.compound[field] = val;
+  APP.compoundAutoMsg = null;
+  scheduleSave();
+  render();
+}
+
+function syncModalAwalCompound() {
+  ensureCompoundDefaults();
+  const tot = tSaham()+tEtf()+tEmas()+tBtc()+tRdana()+tObligasi();
+  APP.data.compound.modalAwal = R(tot);
+  scheduleSave();
+  render();
+}
+
+// Estimasi return tahunan blended, berdasarkan data histori portofolio yang sudah ada
+// (tanggal beli & modal vs nilai kini) di Saham BEI, US, Emas, Crypto, dan Obligasi.
+function computeAutoReturn() {
+  const today = new Date();
+  let totalModal = 0, totalNilai = 0, weightedDaysNum = 0;
+  function addItem(tglStr, modal, nilai) {
+    if (!tglStr || !(modal > 0)) return;
+    const tgl = new Date(tglStr);
+    if (isNaN(tgl.getTime())) return;
+    const days = Math.floor((today - tgl) / (1000*60*60*24));
+    if (days <= 0) return;
+    totalModal += modal;
+    totalNilai += nilai;
+    weightedDaysNum += modal * days;
+  }
+  cSaham().forEach(s => addItem(s.tgl, s.m, s.v));
+  cEtf().forEach(e => addItem(e.tgl, e.mi, e.vi));
+  cEmas().forEach(e => addItem(e.tgl, e.m, e.v));
+  cBtc().forEach(b => addItem(b.tgl, b.m, b.v));
+  (APP.data.obligasi||[]).forEach(r => {
+    const modal = getModalBeli(r), nominal = getNilaiNominal(r), bunga = hitungBungaAkrual(r);
+    addItem(r.tgl, modal, nominal + bunga);
+  });
+  if (totalModal <= 0 || weightedDaysNum <= 0) return null;
+  const avgDays = weightedDaysNum / totalModal;
+  const totalReturn = (totalNilai - totalModal) / totalModal;
+  const base = 1 + totalReturn;
+  if (base <= 0) return { rate: null, avgDays, totalModal, totalNilai, totalReturn };
+  const annualized = Math.pow(base, 365/avgDays) - 1;
+  return { rate: annualized, avgDays, totalModal, totalNilai, totalReturn };
+}
+
+function autoReturnCompound() {
+  ensureCompoundDefaults();
+  const res = computeAutoReturn();
+  if (!res || res.rate === null) {
+    APP.compoundAutoMsg = '⚠️ Data belum cukup untuk menghitung otomatis (butuh tanggal beli & modal pada Saham BEI/US/Emas/Crypto/Obligasi). Silakan isi return manual.';
+  } else {
+    APP.data.compound.returnPct = Math.round(res.rate*1000)/10;
+    APP.compoundAutoMsg = `✅ Terisi ${Pct(res.rate)}/tahun — dihitung dari return total ${Pct(res.totalReturn)} selama rata-rata ${Math.round(res.avgDays)} hari (~${(res.avgDays/365).toFixed(1)} th) masa pegang seluruh Saham BEI, US, Emas, Crypto & Obligasi yang tercatat tanggal belinya. Angka ini murni histori portofolio kamu sendiri, bukan proyeksi pasar — silakan sesuaikan manual bila perlu.`;
+    scheduleSave();
+  }
+  render();
+}
+
+// Simulasi bulanan: kontribusi ditambahkan di awal bulan, lalu seluruh saldo tumbuh sebesar return bulan itu
+function simulateCompounding(modalAwal, kontribusiBulanan, returnPctAnnual, tahun) {
+  const rAnnual = returnPctAnnual/100;
+  const rMonthly = Math.pow(1+rAnnual, 1/12) - 1;
+  const months = Math.max(1, Math.round(tahun*12));
+  let balance = modalAwal, totalSetor = modalAwal;
+  const yearly = [];
+  for (let m=1; m<=months; m++) {
+    balance = (balance + kontribusiBulanan) * (1+rMonthly);
+    totalSetor += kontribusiBulanan;
+    if (m % 12 === 0 || m === months) {
+      yearly.push({ tahunKe: Math.round(m/12*10)/10, totalSetor, nilai: balance, growth: balance-totalSetor });
+    }
+  }
+  return yearly;
+}
+
+function fAxisRp(v) {
+  if (v >= 1e9) return F(v/1e9,2)+'M';
+  if (v >= 1e6) return F(v/1e6,1)+'jt';
+  if (v >= 1e3) return F(v/1e3,0)+'rb';
+  return F(v);
+}
+
+function lineChartCompound(yearly, modalAwal) {
+  const W=600, H=220, PAD_L=64, PAD_R=16, PAD_TOP=16, PAD_BOT=28;
+  const chartW=W-PAD_L-PAD_R, chartH=H-PAD_TOP-PAD_BOT;
+  const points = [{tahunKe:0, totalSetor:modalAwal, nilai:modalAwal}, ...yearly];
+  const n = points.length-1 || 1;
+  const maxVal = Math.max(...points.map(p=>p.nilai), 1);
+  const xAt = i => PAD_L + (chartW*i/n);
+  const yAt = v => PAD_TOP + chartH - Math.max(0,Math.min(1,v/maxVal))*chartH;
+  const nilaiPath = points.map((p,i)=>`${i===0?'M':'L'} ${xAt(i).toFixed(1)} ${yAt(p.nilai).toFixed(1)}`).join(' ');
+  const setorPath = points.map((p,i)=>`${i===0?'M':'L'} ${xAt(i).toFixed(1)} ${yAt(p.totalSetor).toFixed(1)}`).join(' ');
+  const ticks=[0, maxVal/2, maxVal];
+  const yLines = ticks.map(t=>{
+    const y=yAt(t);
+    return `<line x1="${PAD_L}" y1="${y.toFixed(1)}" x2="${W-PAD_R}" y2="${y.toFixed(1)}" stroke="#e5e7eb" stroke-width="1"/><text x="${PAD_L-6}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="9" fill="#9ca3af">${fAxisRp(t)}</text>`;
+  }).join('');
+  const step = n > 12 ? Math.ceil(n/12) : 1;
+  const xLabels = points.map((p,i)=>({p,i})).filter(({i})=>i%step===0||i===n)
+    .map(({p,i})=>`<text x="${xAt(i).toFixed(1)}" y="${PAD_TOP+chartH+16}" text-anchor="middle" font-size="9" fill="#6b7280">${i===0?'Now':'Th '+p.tahunKe}</text>`).join('');
+  return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:14px 16px;margin-bottom:16px">
+    <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">📈 Grafik Pertumbuhan</div>
+    <div style="overflow-x:auto">
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:320px;display:block">
+      ${yLines}
+      <path d="${setorPath}" fill="none" stroke="#9ca3af" stroke-width="1.75" stroke-dasharray="4 3"/>
+      <path d="${nilaiPath}" fill="none" stroke="#185FA5" stroke-width="2.5"/>
+      <line x1="${PAD_L}" y1="${PAD_TOP}" x2="${PAD_L}" y2="${PAD_TOP+chartH}" stroke="#d1d5db" stroke-width="1"/>
+      <line x1="${PAD_L}" y1="${PAD_TOP+chartH}" x2="${W-PAD_R}" y2="${PAD_TOP+chartH}" stroke="#d1d5db" stroke-width="1"/>
+      ${xLabels}
+    </svg>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:8px;font-size:11px;color:var(--text2)">
+      <span><span style="display:inline-block;width:14px;height:2px;background:#185FA5;vertical-align:middle;margin-right:4px"></span>Nilai Portfolio</span>
+      <span><span style="display:inline-block;width:14px;height:0;border-top:2px dashed #9ca3af;vertical-align:middle;margin-right:4px"></span>Total Disetor</span>
+    </div>
+  </div>`;
+}
+
+function vCompound() {
+  const tot = tSaham()+tEtf()+tEmas()+tBtc()+tRdana()+tObligasi();
+  ensureCompoundDefaults(tot);
+  const c = APP.data.compound;
+  const modalAwal = c.modalAwal || 0;
+  const kontribusi = c.kontribusi || 0;
+  const returnPct = c.returnPct || 0;
+  const tahun = Math.max(1, Math.round(c.tahun || 1));
+
+  const yearly = simulateCompounding(modalAwal, kontribusi, returnPct, tahun);
+  const last = yearly[yearly.length-1] || {totalSetor:modalAwal, nilai:modalAwal, growth:0};
+  const totalGrowthPct = last.totalSetor > 0 ? last.growth/last.totalSetor : 0;
+  const autoMsg = APP.compoundAutoMsg || `💡 Klik "Hitung Otomatis" untuk mengisi return berdasarkan histori portofolio kamu di aplikasi ini, atau isi manual sesuai asumsi sendiri.`;
+
+  return `
+  <div class="section-header"><span class="section-title">🧮 Kalkulator Compounding (Bunga Majemuk + DCA)</span></div>
+  <div class="donut-container" style="margin-bottom:16px">
+    <div class="form-grid">
+      <div class="form-group"><label>Modal Awal (Rp)</label><input class="cell-input" style="width:100%" type="number" value="${modalAwal}" onchange="updCompound('modalAwal',+this.value||0)"></div>
+      <div class="form-group"><label>Kontribusi Bulanan / DCA (Rp)</label><input class="cell-input" style="width:100%" type="number" value="${kontribusi}" onchange="updCompound('kontribusi',+this.value||0)"></div>
+      <div class="form-group"><label>Return / Tahun (%)</label><input class="cell-input" style="width:100%" type="number" step="0.1" value="${returnPct}" onchange="updCompound('returnPct',+this.value||0)"></div>
+      <div class="form-group"><label>Jangka Waktu (Tahun)</label><input class="cell-input" style="width:100%" type="number" value="${tahun}" onchange="updCompound('tahun',+this.value||1)"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+      <button class="btn btn-sm" onclick="syncModalAwalCompound()">🔄 Pakai Total Investasi Saat Ini (${Rp(R(tot))})</button>
+      <button class="btn btn-sm" onclick="autoReturnCompound()" style="background:#6d28d9;color:#fff;border:none">🧮 Hitung Otomatis dari Data Portfolio</button>
+    </div>
+    <div style="font-size:11px;color:var(--text2);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">${autoMsg}</div>
+  </div>
+
+  <div class="metric-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="metric-card"><div class="metric-label">Nilai Akhir (Th ${tahun})</div><div class="metric-value" style="font-size:16px">${Rp(R(last.nilai))}</div></div>
+    <div class="metric-card"><div class="metric-label">Total Disetor</div><div class="metric-value" style="font-size:16px">${Rp(R(last.totalSetor))}</div></div>
+    <div class="metric-card"><div class="metric-label">Growth dari Bunga Majemuk</div><div class="metric-value pos" style="font-size:16px">${Rp(R(last.growth))}</div><div class="metric-sub">${Pct(totalGrowthPct)}</div></div>
+  </div>
+
+  ${lineChartCompound(yearly, modalAwal)}
+
+  <div class="section-header"><span class="section-title">Proyeksi per Tahun</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tahun</th><th>Total Disetor</th><th>Nilai Portfolio</th><th>Growth (Rp)</th><th>Growth (%)</th></tr></thead>
+    <tbody>${yearly.map(y=>`<tr>
+      <td>Tahun ${y.tahunKe}</td><td>${Rp(R(y.totalSetor))}</td><td><b>${Rp(R(y.nilai))}</b></td><td class="pos">${Rp(R(y.growth))}</td><td class="pos">${Pct(y.totalSetor>0?y.growth/y.totalSetor:0)}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>
+  <div style="font-size:11px;color:var(--text3);margin-top:8px">Catatan: proyeksi ini pakai asumsi return tahunan konstan (compounding bulanan) dan bukan jaminan hasil investasi di masa depan. Kondisi pasar riil bisa lebih tinggi atau lebih rendah dari asumsi ini.</div>
+  `;
+}
+
 // ── MODAL DEFINITIONS ─────────────────────────────────────
 const MODAL_DEF = {
   kurs:   {t:'Update Kurs USD/IDR', f:[{id:'kurs',l:'1 USD = Rp',type:'number'}]},
@@ -1538,10 +1718,10 @@ const TABS = [
   {id:'dash',l:'🏠 Dashboard'},{id:'saham',l:'📈 Saham BEI'},{id:'etf',l:'🌍 US'},
   {id:'emas',l:'🥇 Emas'},{id:'btc',l:'🪙 Crypto'},{id:'rdana',l:'📊 Reksadana'},
   {id:'obligasi',l:'🏦 Obligasi'},{id:'div',l:'💰 Dividen'},
-  {id:'dana',l:'🛡 Dana & Goals'},{id:'spt',l:'🏦 Rekap Harta'},
+  {id:'dana',l:'🛡 Dana & Goals'},{id:'compound',l:'🧮 Compounding'},{id:'spt',l:'🏦 Rekap Harta'},
 ];
 
-const VIEWS = {dash:vDash, saham:vSaham, etf:vEtf, emas:vEmas, btc:vBtc, rdana:vRdana, obligasi:vObligasi, div:vDiv, dana:vDana, spt:vSpt};
+const VIEWS = {dash:vDash, saham:vSaham, etf:vEtf, emas:vEmas, btc:vBtc, rdana:vRdana, obligasi:vObligasi, div:vDiv, dana:vDana, compound:vCompound, spt:vSpt};
 
 function render() {
   const root = document.getElementById('root');
