@@ -736,7 +736,7 @@ function vSaham() {
       <button class="btn btn-success btn-sm" onclick="openModal('saham')">+ Tambah</button>
     </div>
   </div>
-  <div id="updateStatus" style="display:none;font-size:11px;color:var(--text2);padding:4px 0;margin-bottom:4px"></div>
+  <div id="updateStatus" style="display:none;font-size:11px;padding:6px 10px;margin-bottom:6px;border-radius:6px;background:var(--bg2);border:1px solid var(--border)"></div>
   <div class="metric-grid" style="grid-template-columns:repeat(3,1fr)">
     <div class="metric-card"><div class="metric-label">Modal</div><div class="metric-value" style="font-size:15px">${Rp(R(tM))}</div></div>
     <div class="metric-card"><div class="metric-label">Nilai Kini</div><div class="metric-value" style="font-size:15px">${Rp(R(tV))}</div></div>
@@ -788,7 +788,7 @@ function vEtf() {
       <button class="btn btn-success btn-sm" onclick="openModal('etf')">+ Tambah</button>
     </div>
   </div>
-  <div id="updateStatusEtf" style="display:none;font-size:11px;color:var(--text2);padding:4px 0;margin-bottom:4px"></div>
+  <div id="updateStatusEtf" style="display:none;font-size:11px;padding:6px 10px;margin-bottom:6px;border-radius:6px;background:var(--bg2);border:1px solid var(--border)"></div>
   <div class="metric-grid" style="grid-template-columns:repeat(3,1fr)">
     <div class="metric-card"><div class="metric-label">Modal (IDR)</div><div class="metric-value" style="font-size:15px">${Rp(R(tM))}</div></div>
     <div class="metric-card"><div class="metric-label">Nilai Kini (IDR)</div><div class="metric-value" style="font-size:15px">${Rp(R(tV))}</div></div>
@@ -1484,7 +1484,10 @@ async function updateHargaOtomatis() {
   const btn = document.getElementById('btnUpdateHarga');
   const statusEl = document.getElementById('updateStatus');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Mengambil...'; }
-  if (statusEl) { statusEl.style.display = 'block'; statusEl.textContent = '⏳ Mengambil harga semua saham...'; }
+  if (statusEl) {
+    statusEl.innerHTML = '⏳ Mengambil harga semua saham...';
+    statusEl.style.cssText = 'display:block;font-size:11px;padding:6px 10px;margin-bottom:6px;border-radius:6px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af';
+  }
 
   const kodes = [...new Set(saham.map(s => s.kode.toUpperCase()))];
 
@@ -1515,10 +1518,19 @@ async function updateHargaOtomatis() {
 
   const el = document.getElementById('updateStatus');
   if (el) {
-    let msg = `✅ ${berhasil}/${kodes.length} saham berhasil diupdate`;
-    if (gagal.length > 0) msg += ` | ⚠️ Gagal: ${gagal.join(', ')}`;
-    msg += ` — ${new Date().toLocaleTimeString('id-ID')}`;
-    el.textContent = msg;
+    const semua = kodes.length;
+    const isOk = gagal.length === 0;
+    const isPartial = berhasil > 0 && gagal.length > 0;
+    const isFail = berhasil === 0;
+    let icon = isOk ? '✅' : isPartial ? '⚠️' : '❌';
+    let bg = isOk ? '#f0fdf4' : isPartial ? '#fffbeb' : '#fef2f2';
+    let border = isOk ? '#bbf7d0' : isPartial ? '#fde68a' : '#fecaca';
+    let color = isOk ? '#065f46' : isPartial ? '#92400e' : '#991b1b';
+    let msg = `${icon} <b>${berhasil}/${semua} saham berhasil diupdate</b>`;
+    if (gagal.length > 0) msg += ` &nbsp;|&nbsp; ⚠️ Gagal: <b>${gagal.join(', ')}</b>`;
+    msg += ` &nbsp;—&nbsp; ${new Date().toLocaleTimeString('id-ID')}`;
+    el.innerHTML = msg;
+    el.style.cssText = `display:block;font-size:11px;padding:6px 10px;margin-bottom:6px;border-radius:6px;background:${bg};border:1px solid ${border};color:${color}`;
   }
   const b = document.getElementById('btnUpdateHarga');
   if (b) { b.disabled = false; b.textContent = '🔄 Update Harga'; }
@@ -1654,7 +1666,10 @@ async function updateHargaEtf() {
   const btn = document.getElementById('btnUpdateEtf');
   const statusEl = document.getElementById('updateStatusEtf');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Mengambil...'; }
-  if (statusEl) { statusEl.style.display = 'block'; statusEl.textContent = '⏳ Mengambil harga US/ETF...'; }
+  if (statusEl) {
+    statusEl.innerHTML = '⏳ Mengambil harga US/ETF...';
+    statusEl.style.cssText = 'display:block;font-size:11px;padding:6px 10px;margin-bottom:6px;border-radius:6px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af';
+  }
 
   const kodes = [...new Set(etf.map(e => e.kode.toUpperCase()))];
   let berhasil = 0, gagal = [];
@@ -1685,10 +1700,18 @@ async function updateHargaEtf() {
 
   const el = document.getElementById('updateStatusEtf');
   if (el) {
-    let msg = `✅ ${berhasil}/${kodes.length} ETF berhasil diupdate`;
-    if (gagal.length > 0) msg += ` | ⚠️ Gagal: ${gagal.join(', ')}`;
-    msg += ` — ${new Date().toLocaleTimeString('id-ID')}`;
-    el.textContent = msg;
+    const semua = kodes.length;
+    const isOk = gagal.length === 0;
+    const isPartial = berhasil > 0 && gagal.length > 0;
+    let icon = isOk ? '✅' : isPartial ? '⚠️' : '❌';
+    let bg = isOk ? '#f0fdf4' : isPartial ? '#fffbeb' : '#fef2f2';
+    let border = isOk ? '#bbf7d0' : isPartial ? '#fde68a' : '#fecaca';
+    let color = isOk ? '#065f46' : isPartial ? '#92400e' : '#991b1b';
+    let msg = `${icon} <b>${berhasil}/${semua} ETF berhasil diupdate</b>`;
+    if (gagal.length > 0) msg += ` &nbsp;|&nbsp; ⚠️ Gagal: <b>${gagal.join(', ')}</b>`;
+    msg += ` &nbsp;—&nbsp; ${new Date().toLocaleTimeString('id-ID')}`;
+    el.innerHTML = msg;
+    el.style.cssText = `display:block;font-size:11px;padding:6px 10px;margin-bottom:6px;border-radius:6px;background:${bg};border:1px solid ${border};color:${color}`;
   }
   const b = document.getElementById('btnUpdateEtf');
   if (b) { b.disabled = false; b.textContent = '🔄 Update Harga'; }
