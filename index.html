@@ -1425,56 +1425,17 @@ function del(arr, i) {
 // Catatan: ini semua layanan gratis pihak ketiga di luar kendali kita, jadi bisa saja
 // berhenti berfungsi lagi kapan pun (persis yang terjadi pada corsproxy.io & allorigins sebelumnya).
 // Kalau semua proxy di bawah suatu saat mati bareng, isi harga manual di kolom "Hrg Kini" tetap bisa dipakai.
-const CORS_PROXIES = [
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-];
-
-async function fetchOneProxy(buildProxyUrl, targetUrl) {
-  try {
-    const res = await fetch(buildProxyUrl(targetUrl), {signal: AbortSignal.timeout(7000)});
-    if (!res.ok) return null;
-    const text = await res.text();
-    if (!text || text.trim().startsWith('<')) return null;
-    let parsed;
-    try { parsed = JSON.parse(text); } catch(e) { return null; }
-    if (parsed && typeof parsed.contents === 'string') {
-      try { parsed = JSON.parse(parsed.contents); } catch(e) { return null; }
-    }
-    if (parsed && (parsed.chart || parsed.quoteResponse)) return parsed;
-    return null;
-  } catch(e) { return null; }
-}
-
-async function fetchViaCorsProxy(targetUrl) {
-  // Coba semua proxy secara paralel — ambil yang pertama berhasil
-  return new Promise(resolve => {
-    let done = false;
-    let pending = CORS_PROXIES.length;
-    CORS_PROXIES.forEach(buildProxyUrl => {
-      fetchOneProxy(buildProxyUrl, targetUrl).then(result => {
-        if (result && !done) { done = true; resolve(result); }
-        pending--;
-        if (pending === 0 && !done) resolve(null);
-      });
-    });
-  });
-}
+// ── CLOUDFLARE WORKER PROXY (stabil, milik sendiri) ──────
+const CF_WORKER = 'https://yahoo-proxy.indraanggriawan17.workers.dev';
 
 async function fetchHargaSaham(kode) {
   const symbol = kode + '.JK';
-  const urls = [
-    `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`,
-    `https://query2.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`,
-  ];
-  for (const url of urls) {
-    const data = await fetchViaCorsProxy(url);
-    const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-    if (price && price > 0) return Math.round(price);
-  }
-  return null;
+  try {
+    const res = await fetch(`${CF_WORKER}/?symbol=${symbol}`, {signal: AbortSignal.timeout(8000)});
+    if (!res.ok) return null;
+    const data = await res.json();
+    return (data.price && data.price > 0) ? Math.round(data.price) : null;
+  } catch(e) { return null; }
 }
 
 async function updateHargaOtomatis() {
@@ -1647,16 +1608,12 @@ function hitungWajarSemua() {
 }
 
 async function fetchHargaEtf(kode) {
-  const urls = [
-    `https://query1.finance.yahoo.com/v8/finance/chart/${kode}?interval=1d&range=1d`,
-    `https://query2.finance.yahoo.com/v8/finance/chart/${kode}?interval=1d&range=1d`,
-  ];
-  for (const url of urls) {
-    const data = await fetchViaCorsProxy(url);
-    const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-    if (price && price > 0) return price;
-  }
-  return null;
+  try {
+    const res = await fetch(`${CF_WORKER}/?symbol=${kode}`, {signal: AbortSignal.timeout(8000)});
+    if (!res.ok) return null;
+    const data = await res.json();
+    return (data.price && data.price > 0) ? data.price : null;
+  } catch(e) { return null; }
 }
 
 async function updateHargaEtf() {
