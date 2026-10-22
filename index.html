@@ -81,6 +81,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .user-pill{font-size:12px;color:var(--text2);background:var(--bg3);padding:3px 10px;border-radius:20px;border:1px solid var(--border)}
 .save-status{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px}
 .save-status.saved{color:var(--green)}
+.demo-pill{background:var(--amber-bg);color:var(--amber);border-color:#fcd34d;font-weight:600}
+.privacy-btn{color:var(--text2)}
+.privacy-btn svg{width:16px;height:16px}
+.privacy-btn.on{background:var(--blue-bg);color:var(--blue);border-color:#bfdbfe}
 /* SIDEBAR */
 .app-body{display:flex;align-items:flex-start;flex:1}
 .sidebar{position:sticky;top:52px;height:calc(100vh - 52px);height:calc(100dvh - 52px);width:200px;flex-shrink:0;display:flex;flex-direction:column;background:var(--bg2);border-right:1px solid var(--border);transition:width .2s ease;z-index:5}
@@ -200,6 +204,7 @@ tbody tr:hover td{background:var(--bg3)}
   .header{padding:0 12px}
   .user-pill{display:none}
   .save-status{white-space:nowrap}
+  .privacy-label{display:none}
 }
 @media(max-width:480px){
   .logo-text{display:none}
@@ -330,6 +335,7 @@ if (IS_CONFIGURED) {
     APP.auth = firebase.auth();
     APP.db = firebase.firestore();
     APP.auth.onAuthStateChanged(async (user) => {
+      if (APP.demo) return; // mode demo tidak boleh tertimpa/terganggu login
       if (user) {
         APP.user = user;
         APP.data = await loadFromFirestore(user.uid);
@@ -357,6 +363,7 @@ async function loadFromFirestore(uid) {
 }
 
 function scheduleSave() {
+  if (APP.demo) return; // MODE DEMO: tidak pernah menyimpan apa pun ke database
   if (!IS_CONFIGURED || !APP.user || !APP.data) return;
   clearTimeout(APP.saveTimer);
   APP.saving = true;
@@ -406,6 +413,7 @@ async function doGoogleLogin() {
 }
 
 function doLogout() {
+  if (APP.demo) { exitDemo(); return; }
   if (IS_CONFIGURED) APP.auth.signOut();
   else { APP.user = null; APP.data = null; render(); }
 }
@@ -413,8 +421,10 @@ function doLogout() {
 // ── FORMATTERS ────────────────────────────────────────────
 const R = n => Math.round(n || 0);
 const F = (n, d=0) => (isNaN(n)||n==null) ? '-' : new Intl.NumberFormat('id-ID',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
-const Rp = n => (n==null||isNaN(n)) ? '-' : 'Rp ' + F(n);
-const Usd = (n, d=2) => '$' + F(n, d);
+const MASK = '••••••';
+const Rp = n => (n==null||isNaN(n)) ? '-' : (APP.privacy ? 'Rp '+MASK : 'Rp ' + F(n));
+const Usd = (n, d=2) => APP.privacy ? '$'+MASK : '$' + F(n, d);
+const Q = v => APP.privacy ? '•••' : v; // jumlah lot/unit/gram/koin
 const Pct = n => n==null ? '-' : (n>=0?'+':'') + F(n*100,2) + '%';
 const Cls = n => n > 0 ? 'pos' : n < 0 ? 'neg' : '';
 
@@ -519,6 +529,9 @@ function vLogin() {
       Masuk dengan Google
     </button>
     <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:12px">Email baru? Otomatis daftar saat klik masuk</p>
+    <div class="login-divider">atau</div>
+    <button class="btn btn-full" onclick="startDemo()">👀 Lihat Demo</button>
+    <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:8px">Tanpa login · berisi data contoh · tidak disimpan</p>
   </div></div>`;
 }
 
@@ -686,14 +699,14 @@ function vDash() {
     const yLines = ticks.map(t => {
       const y = PAD_TOP + chartH - (t/max)*chartH;
       return `<line x1="${PAD_L}" y1="${y}" x2="${W-PAD_R}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>
-              <text x="${PAD_L-6}" y="${y+4}" text-anchor="end" font-size="9" fill="#9ca3af">${t>=1000?F(t/1000,0)+'rb':F(t)}</text>`;
+              <text x="${PAD_L-6}" y="${y+4}" text-anchor="end" font-size="9" fill="#9ca3af">${APP.privacy?'•••':(t>=1000?F(t/1000,0)+'rb':F(t))}</text>`;
     }).join('');
 
     const bars = monthly.map((v, i) => {
       const x = PAD_L + gap*i + gap/2 - barW/2;
       const bh = max > 0 ? (v/max)*chartH : 0;
       const y = PAD_TOP + chartH - bh;
-      const label = v > 0 ? `<text x="${x+barW/2}" y="${y-4}" text-anchor="middle" font-size="8" fill="${color}" font-weight="600">${v>=1000?F(v/1000,1)+'rb':F(v)}</text>` : '';
+      const label = (v > 0 && !APP.privacy) ? `<text x="${x+barW/2}" y="${y-4}" text-anchor="middle" font-size="8" fill="${color}" font-weight="600">${v>=1000?F(v/1000,1)+'rb':F(v)}</text>` : '';
       return `<rect x="${x}" y="${y}" width="${barW}" height="${bh}" rx="2" fill="${color}" opacity="0.85"/>
               ${label}
               <text x="${PAD_L+gap*i+gap/2}" y="${PAD_TOP+chartH+14}" text-anchor="middle" font-size="9" fill="#6b7280">${MONTHS[i]}</text>`;
@@ -734,7 +747,7 @@ function vDash() {
           <circle cx="48" cy="48" r="38" fill="none" stroke="#e5e7eb" stroke-width="18"/>
           ${donut}
           <text x="48" y="44" text-anchor="middle" font-size="9" fill="#6b7280">Total</text>
-  <text x="48" y="57" text-anchor="middle" font-size="9" font-weight="600" fill="#1a1a1a">${(tot/1e6).toFixed(1)}Jt</text>
+  <text x="48" y="57" text-anchor="middle" font-size="9" font-weight="600" fill="#1a1a1a">${APP.privacy?'•••':(tot/1e6).toFixed(1)+'Jt'}</text>
         </svg>
         <div>${items.map(([l,v,c])=>`<div class="legend-item"><div class="legend-dot" style="background:${c}"></div><span style="flex:1">${l}</span><span style="font-weight:600;margin-left:8px">${tot>0?F(v/tot*100,1)+'%':'-'}</span></div>`).join('')}</div>
       </div>
@@ -763,9 +776,9 @@ function vDash() {
       const combined = [...holdSaham, ...holdEtf].slice(0,6);
       if (combined.length === 0) {
         const fallback = cSaham().slice(0,6);
-        return fallback.map(s=>`<tr><td><b>${s.kode}</b></td><td><span class="badge badge-blue">BEI</span></td><td>${s.lot}</td><td>${Rp(R(s.m))}</td><td>${Rp(R(s.v))}</td><td class="${Cls(s.pl)}">${Rp(R(s.pl))}</td><td class="${Cls(s.pct)}">${Pct(s.pct)}</td></tr>`).join('');
+        return fallback.map(s=>`<tr><td><b>${s.kode}</b></td><td><span class="badge badge-blue">BEI</span></td><td>${Q(s.lot)}</td><td>${Rp(R(s.m))}</td><td>${Rp(R(s.v))}</td><td class="${Cls(s.pl)}">${Rp(R(s.pl))}</td><td class="${Cls(s.pct)}">${Pct(s.pct)}</td></tr>`).join('');
       }
-      return combined.map(r=>`<tr><td><b>${r.kode}</b></td><td><span class="badge ${r.tipe==='ETF'?'badge-green':'badge-blue'}">${r.tipe}</span></td><td>${F(r.lotUnit,r.tipe==='ETF'?4:0)}</td><td>${Rp(R(r.m))}</td><td>${Rp(R(r.v))}</td><td class="${Cls(r.pl)}">${Rp(R(r.pl))}</td><td class="${Cls(r.pct)}">${Pct(r.pct)}</td></tr>`).join('');
+      return combined.map(r=>`<tr><td><b>${r.kode}</b></td><td><span class="badge ${r.tipe==='ETF'?'badge-green':'badge-blue'}">${r.tipe}</span></td><td>${Q(F(r.lotUnit,r.tipe==='ETF'?4:0))}</td><td>${Rp(R(r.m))}</td><td>${Rp(R(r.v))}</td><td class="${Cls(r.pl)}">${Rp(R(r.pl))}</td><td class="${Cls(r.pct)}">${Pct(r.pct)}</td></tr>`).join('');
     })()}</tbody>
   </table>
   ${(cSaham().filter(s=>(s.ket||'').toLowerCase().includes('hold')).length + cEtf().filter(e=>(e.ket||'').toLowerCase().includes('hold')).length) === 0 && (cSaham().length > 0 || cEtf().length > 0) ? '<div style="font-size:11px;color:var(--text2);padding:6px 0">💡 Tip: isi keterangan "hold" di tab Saham BEI atau US untuk filter otomatis di sini (maks. 6)</div>' : ''}
@@ -809,7 +822,7 @@ function vSaham() {
         }
       }
       return `<tr>
-      <td style="font-size:11px">${s.tgl}</td><td><b>${s.kode}</b></td><td><span class="badge" title="${katObj.l}" style="font-size:10px;background:${katObj.bg};color:${katObj.fg}">${katObj.s||katObj.l}</span></td><td>${s.lot}</td><td>${F(s.beli)}</td><td style="font-size:11px">${Rp(R(s.m))}</td>
+      <td style="font-size:11px">${s.tgl}</td><td><b>${s.kode}</b></td><td><span class="badge" title="${katObj.l}" style="font-size:10px;background:${katObj.bg};color:${katObj.fg}">${katObj.s||katObj.l}</span></td><td>${Q(s.lot)}</td><td>${F(s.beli)}</td><td style="font-size:11px">${Rp(R(s.m))}</td>
       <td><input class="cell-input" type="number" value="${s.now}" onchange="upd('saham',${i},'now',+this.value)" style="width:62px"></td>
       <td style="font-size:11px">${Rp(R(s.v))}</td><td class="${Cls(s.pl)}" style="font-size:11px">${Rp(R(s.pl))}</td><td class="${Cls(s.pct)}" style="font-size:11px">${Pct(s.pct)}</td>
       <td>
@@ -845,7 +858,7 @@ function vEtf() {
   <div class="table-wrap"><table>
     <thead><tr><th>Tanggal</th><th>ETF</th><th>Unit</th><th>Beli (USD)</th><th>Kini (USD)</th><th>Nilai (USD)</th><th>Nilai (IDR)</th><th>P&L (IDR)</th><th>%</th><th></th></tr></thead>
     <tbody>${rows.map((e,i)=>`<tr>
-      <td>${e.tgl}</td><td><b>${e.kode}</b></td><td>${F(e.unit,4)}</td><td>${Usd(e.beli)}</td>
+      <td>${e.tgl}</td><td><b>${e.kode}</b></td><td>${Q(F(e.unit,4))}</td><td>${Usd(e.beli)}</td>
       <td><input class="cell-input" type="number" step="0.01" value="${e.now}" onchange="upd('etf',${i},'now',+this.value)"></td>
       <td>${Usd(e.vu,2)}</td><td>${Rp(R(e.vi))}</td><td class="${Cls(e.pl)}">${Rp(R(e.pl))}</td><td class="${Cls(e.pct)}">${Pct(e.pct)}</td>
       <td><div class="row-actions"><button class="btn btn-icon-edit" title="Edit" onclick="openEdit('etf',${i})">✏️</button><button class="btn btn-icon" onclick="del('etf',${i})">🗑</button></div></td>
@@ -871,7 +884,7 @@ function vEmas() {
     <tbody>${rows.map((e,i)=>`<tr>
       <td style="font-size:11px">${e.tgl}</td>
       <td><span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${e.jenis==='fisik'?'#fef3c7':'#eff6ff'};color:${e.jenis==='fisik'?'#92400e':'#1e40af'}">${e.jenis||'digital'}</span></td>
-      <td>${e.lokasi}</td><td>${F(e.gram,4)}</td><td>${Rp(e.beli)}</td><td>${Rp(R(e.m))}</td>
+      <td>${e.lokasi}</td><td>${Q(F(e.gram,4))}</td><td>${Rp(e.beli)}</td><td>${Rp(R(e.m))}</td>
       <td><input class="cell-input" type="number" value="${e.now}" onchange="upd('emas',${i},'now',+this.value)" style="width:80px"></td>
       <td>${Rp(R(e.v))}</td><td class="${Cls(e.pl)}">${Rp(R(e.pl))}</td>
       <td><div class="row-actions"><button class="btn btn-icon-edit" onclick="openEdit('emas',${i})">✏️</button><button class="btn btn-icon" onclick="del('emas',${i})">🗑</button></div></td>
@@ -894,7 +907,7 @@ function vBtc() {
     <tbody>${rows.map((b,i)=>`<tr>
       <td style="font-size:11px">${b.tgl}</td>
       <td><b>${b.jenis||'BTC'}</b></td>
-      <td>${F(b.jumlah,8)}</td><td>${Rp(b.beli)}</td><td>${Rp(R(b.m))}</td>
+      <td>${Q(F(b.jumlah,8))}</td><td>${Rp(b.beli)}</td><td>${Rp(R(b.m))}</td>
       <td><input class="cell-input" type="number" value="${b.now}" onchange="upd('btc',${i},'now',+this.value)" style="width:90px"></td>
       <td>${Rp(R(b.v))}</td><td class="${Cls(b.pl)}">${Rp(R(b.pl))}</td>
       <td><div class="row-actions"><button class="btn btn-icon-edit" onclick="openEdit('btc',${i})">✏️</button><button class="btn btn-icon" onclick="del('btc',${i})">🗑</button></div></td>
@@ -934,7 +947,7 @@ function vDana() {
     <thead><tr><th>Item</th><th>Modal Masuk</th><th>Nilai Sekarang</th><th>Keuntungan</th><th></th></tr></thead>
     <tbody>${dd.map((d,i)=>`<tr>
       <td>${d.item}</td><td>${Rp(d.masuk)}</td>
-      <td><input class="cell-input" style="width:130px" type="number" value="${d.now||d.masuk}" onchange="upd('dana',${i},'now',+this.value)"></td>
+      <td>${APP.privacy?Rp(0):`<input class="cell-input" style="width:130px" type="number" value="${d.now||d.masuk}" onchange="upd('dana',${i},'now',+this.value)">`}</td>
       <td class="${Cls((d.now||d.masuk)-d.masuk)}">${Rp(R((d.now||d.masuk)-d.masuk))}</td>
       <td><div class="row-actions"><button class="btn btn-icon-edit" title="Edit" onclick="openEdit('dana',${i})">✏️</button><button class="btn btn-icon" onclick="del('dana',${i})">🗑</button></div></td>
     </tr>`).join('')}</tbody>
@@ -997,7 +1010,7 @@ function vRdana() {
       const now = r.now||r.masuk||0, pl = now-(r.masuk||0), pct = r.masuk ? pl/r.masuk : 0;
       return `<tr>
         <td><b>${r.item}</b></td><td>${Rp(r.masuk)}</td>
-        <td><input class="cell-input" style="width:130px" type="number" value="${now}" onchange="upd('rdana',${i},'now',+this.value)"></td>
+        <td>${APP.privacy?Rp(0):`<input class="cell-input" style="width:130px" type="number" value="${now}" onchange="upd('rdana',${i},'now',+this.value)">`}</td>
         <td class="${Cls(pl)}">${Rp(R(pl))}</td>
         <td class="${Cls(pct)}">${Pct(pct)}</td>
         <td><div class="row-actions"><button class="btn btn-icon-edit" onclick="openEdit('rdana',${i})">✏️</button><button class="btn btn-icon" onclick="del('rdana',${i})">🗑</button></div></td>
@@ -1039,7 +1052,7 @@ function vObligasi() {
         <td><span style="font-size:10px;padding:2px 6px;border-radius:4px;background:#eff6ff;color:#1e40af">${r.jenis||'SBN'}</span></td>
         <td style="font-size:11px">${r.tgl||'-'}</td>
         <td style="font-size:11px">${r.jatuhTempo||'-'}${sisaHari!==null?`<br><small style="color:${sisaHari<90?'var(--red)':'var(--text2)'}">sisa ${sisaHari}hr</small>`:''}</td>
-        <td style="font-size:12px">${r.unit||0} unit</td>
+        <td style="font-size:12px">${Q(r.unit||0)} unit</td>
         <td style="font-size:12px">${r.hargaPct||100}%</td>
         <td style="font-size:12px">${Rp(R(modal))}</td>
         <td>${Rp(R(nominal))}</td>
@@ -1266,7 +1279,7 @@ function lineChartCompound(yearly, modalAwal) {
   const ticks=[0, maxVal/2, maxVal];
   const yLines = ticks.map(t=>{
     const y=yAt(t);
-    return `<line x1="${PAD_L}" y1="${y.toFixed(1)}" x2="${W-PAD_R}" y2="${y.toFixed(1)}" stroke="#e5e7eb" stroke-width="1"/><text x="${PAD_L-6}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="9" fill="#9ca3af">${fAxisRp(t)}</text>`;
+    return `<line x1="${PAD_L}" y1="${y.toFixed(1)}" x2="${W-PAD_R}" y2="${y.toFixed(1)}" stroke="#e5e7eb" stroke-width="1"/><text x="${PAD_L-6}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="9" fill="#9ca3af">${APP.privacy?'•••':fAxisRp(t)}</text>`;
   }).join('');
   const step = n > 12 ? Math.ceil(n/12) : 1;
   const xLabels = points.map((p,i)=>({p,i})).filter(({i})=>i%step===0||i===n)
@@ -1308,8 +1321,8 @@ function vCompound() {
   <div class="section-header"><span class="section-title">🧮 Kalkulator Compounding (Bunga Majemuk + DCA)</span></div>
   <div class="donut-container" style="margin-bottom:16px">
     <div class="form-grid">
-      <div class="form-group"><label>Modal Awal (Rp)</label><input class="cell-input" style="width:100%" type="number" value="${modalAwal}" onchange="updCompound('modalAwal',+this.value||0)"></div>
-      <div class="form-group"><label>Kontribusi Bulanan / DCA (Rp)</label><input class="cell-input" style="width:100%" type="number" value="${kontribusi}" onchange="updCompound('kontribusi',+this.value||0)"></div>
+      <div class="form-group"><label>Modal Awal (Rp)</label>${APP.privacy?`<input class="cell-input" style="width:100%" type="text" value="Rp ${MASK}" disabled>`:`<input class="cell-input" style="width:100%" type="number" value="${modalAwal}" onchange="updCompound('modalAwal',+this.value||0)">`}</div>
+      <div class="form-group"><label>Kontribusi Bulanan / DCA (Rp)</label>${APP.privacy?`<input class="cell-input" style="width:100%" type="text" value="Rp ${MASK}" disabled>`:`<input class="cell-input" style="width:100%" type="number" value="${kontribusi}" onchange="updCompound('kontribusi',+this.value||0)">`}</div>
       <div class="form-group"><label>Return / Tahun (%)</label><input class="cell-input" style="width:100%" type="number" step="0.1" value="${returnPct}" onchange="updCompound('returnPct',+this.value||0)"></div>
       <div class="form-group"><label>Jangka Waktu (Tahun)</label><input class="cell-input" style="width:100%" type="number" value="${tahun}" onchange="updCompound('tahun',+this.value||1)"></div>
     </div>
@@ -1800,6 +1813,8 @@ const ICONS = {
   chevLeft:'<path d="m15 18-6-6 6-6"/>',
   export:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
   logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  eyeOff:'<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c6.5 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3.5 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/>',
   menu:'<line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>',
 };
 const icon = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[n]||''}</svg>`;
@@ -1845,6 +1860,105 @@ const VIEWS = {dash:vDash, saham:vSaham, etf:vEtf, emas:vEmas, btc:vBtc, rdana:v
 // Posisi buka/tutup sidebar diingat per browser (bukan disimpan ke Firestore)
 APP.sidebarCollapsed = (() => { try { return localStorage.getItem('pt_sb_collapsed') === '1'; } catch(e) { return false; } })();
 APP.sidebarOpen = false; // khusus HP
+APP.privacy = (() => { try { return localStorage.getItem('pt_privacy') === '1'; } catch(e) { return false; } })();
+APP.demo = false;
+
+function togglePrivacy() {
+  APP.privacy = !APP.privacy;
+  try { localStorage.setItem('pt_privacy', APP.privacy ? '1' : '0'); } catch(e) {}
+  render();
+}
+
+// ── MODE DEMO ─────────────────────────────────────────────
+// Hanya bisa dibuka dari halaman login (tidak ada tombolnya di dalam akun).
+// Data hanya ada di memori browser; scheduleSave() menolak menyimpan selama mode demo.
+function startDemo() {
+  APP.demo = true;
+  APP.user = {email:'demo', uid:'demo'};
+  APP.data = getDemoData();
+  APP.tab = 'dash';
+  APP.sidebarOpen = false;
+  render();
+  window.scrollTo(0, 0);
+}
+function exitDemo() {
+  APP.demo = false;
+  APP.user = null;
+  APP.data = null;
+  APP.tab = 'dash';
+  render();
+}
+
+function getDemoData() {
+  const today = new Date();
+  const Y = today.getFullYear(), M = today.getMonth() + 1;
+  const ago = days => new Date(today.getTime() - days*864e5).toISOString().slice(0,10);
+  const ahead = years => `${Y+years}-${String(M).padStart(2,'0')}-15`;
+  // dividen dibuat di tahun berjalan, hanya bulan yang sudah lewat
+  const dv = (m, rest) => m <= M ? [{tgl:`${Y}-${String(m).padStart(2,'0')}-${m===M?'01':'15'}`, ...rest}] : [];
+  return {
+    kurs: 17800, umur: 35,
+    saham: [
+      {tgl:ago(420), kode:'BBCA', kategori:'blue',      lot:15, beli:6450,  now:6700,  wajarBawah:6200, wajarAtas:7800,  ket:'hold'},
+      {tgl:ago(380), kode:'BMRI', kategori:'blue',      lot:20, beli:4380,  now:4420,  wajarBawah:4590, wajarAtas:6900,  ket:''},
+      {tgl:ago(300), kode:'BBRI', kategori:'blue',      lot:25, beli:3520,  now:3390,  wajarBawah:2900, wajarAtas:4400,  ket:'hold'},
+      {tgl:ago(260), kode:'TLKM', kategori:'blue',      lot:18, beli:2750,  now:2610,  wajarBawah:2500, wajarAtas:3400,  ket:''},
+      {tgl:ago(240), kode:'ASII', kategori:'blue',      lot:10, beli:4650,  now:4900,  wajarBawah:4400, wajarAtas:5800,  ket:''},
+      {tgl:ago(200), kode:'ICBP', kategori:'menengah',  lot:4,  beli:10200, now:10850, wajarBawah:9800, wajarAtas:12500, ket:''},
+      {tgl:ago(150), kode:'ADRO', kategori:'komoditas', lot:12, beli:2300,  now:2720,  wajarBawah:2000, wajarAtas:3200,  ket:''},
+      {tgl:ago(90),  kode:'ANTM', kategori:'komoditas', lot:15, beli:1850,  now:1720,  wajarBawah:1500, wajarAtas:2300,  ket:''},
+    ],
+    etf: [
+      {tgl:ago(400), kode:'VTI', unit:3.0,  beli:345.20, now:379.73, ket:'hold'},
+      {tgl:ago(330), kode:'QQQ', unit:1.1,  beli:640.50, now:706.84, ket:'hold'},
+      {tgl:ago(280), kode:'VEA', unit:10.0, beli:66.10,  now:73.06,  ket:''},
+      {tgl:ago(180), kode:'VWO', unit:8.0,  beli:57.40,  now:60.79,  ket:''},
+    ],
+    emas: [
+      {tgl:ago(500), jenis:'fisik',   lokasi:'Antam',     gram:3,   beli:1500000, now:2400000},
+      {tgl:ago(210), jenis:'digital', lokasi:'Pegadaian', gram:3, beli:1950000, now:2327084},
+    ],
+    btc: [
+      {tgl:ago(350), jenis:'BTC', jumlah:0.0026, beli:1050000000, now:1187815703, ket:'hold'},
+      {tgl:ago(120), jenis:'ETH', jumlah:0.08,  beli:45000000,   now:52000000,   ket:''},
+    ],
+    rdana: [
+      {item:'Sucorinvest Sharia Equity', masuk:5000000, now:5320000},
+      {item:'Schroder Dana Prestasi',    masuk:3000000, now:3150000},
+    ],
+    obligasi: [
+      {tgl:ago(160), nama:'ORI025', jenis:'ORI', unit:10, hargaPct:100,  kupon:6.25,  jatuhTempo:ahead(3)},
+      {tgl:ago(90),  nama:'FR0100', jenis:'FR',  unit:4,  hargaPct:98.3, kupon:6.625, jatuhTempo:ahead(8)},
+    ],
+    divBei: [
+      ...dv(1,{saham:'ADRO', bruto:96000,  ket:'Re invest'}),
+      ...dv(3,{saham:'BBCA', bruto:405000, ket:'Re invest'}),
+      ...dv(4,{saham:'BBRI', bruto:487500, ket:'Re invest'}),
+      ...dv(5,{saham:'ASII', bruto:308000, ket:'Re invest'}),
+      ...dv(5,{saham:'BMRI', bruto:466000, ket:'Re invest'}),
+      ...dv(6,{saham:'TLKM', bruto:320000, ket:'Re invest'}),
+      ...dv(9,{saham:'ICBP', bruto:68000,  ket:'Re invest'}),
+      ...dv(10,{saham:'ADRO', bruto:114000, ket:'Re invest'}),
+    ],
+    divEtf: [
+      ...dv(3,{kode:'VTI', bruto:2.85, ket:'Re invest'}),
+      ...dv(3,{kode:'VEA', bruto:1.20, ket:'Re invest'}),
+      ...dv(6,{kode:'VTI', bruto:2.95, ket:'Re invest'}),
+      ...dv(6,{kode:'VWO', bruto:1.10, ket:'Re invest'}),
+      ...dv(9,{kode:'VTI', bruto:3.05, ket:'Re invest'}),
+      ...dv(9,{kode:'QQQ', bruto:0.85, ket:'Re invest'}),
+    ],
+    dana: [
+      {item:'RDPU Majoris',  masuk:8000000, now:8152000},
+      {item:'Bank Digital',  masuk:6000000, now:6021000},
+    ],
+    goals: [
+      {nama:'Dana Pendidikan Anak', target:150000000, deadline:String(Y+8), terkumpul:32500000},
+      {nama:'Liburan Keluarga',     target:25000000,  deadline:String(Y+1), terkumpul:18200000},
+      {nama:'DP Rumah',             target:200000000, deadline:String(Y+4), terkumpul:45000000},
+    ],
+  };
+}
 
 function toggleSidebar() {
   APP.sidebarCollapsed = !APP.sidebarCollapsed;
@@ -1873,7 +1987,7 @@ function vSidebar() {
       ${grp.g ? `<div class="sb-group">${grp.g}</div>` : ''}
       ${grp.items.map(sbItem).join('')}
     `).join('')}</nav>
-    <div class="sb-footer">${sbItem(NAV_LOGOUT)}</div>
+    <div class="sb-footer">${sbItem(APP.demo ? {...NAV_LOGOUT, l:'Keluar Demo'} : NAV_LOGOUT)}</div>
   </aside>
   <div class="sb-backdrop" onclick="toggleMobileSidebar(false)"></div>`;
 }
@@ -1895,9 +2009,11 @@ function render() {
           <div class="header-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
           <span class="logo-text">Portfolio Tracker</span>
         </div>
-        <span class="user-pill">${APP.user.email}</span>
-        <span id="save-status" class="save-status saved">✓ Tersimpan</span>
+        ${APP.demo
+          ? `<span class="user-pill demo-pill">Mode Demo</span><span class="save-status">Data contoh · tidak disimpan</span>`
+          : `<span class="user-pill">${APP.user.email}</span><span id="save-status" class="save-status saved">✓ Tersimpan</span>`}
       </div>
+      <button class="btn btn-sm privacy-btn${APP.privacy?' on':''}" onclick="togglePrivacy()" title="${APP.privacy?'Tampilkan nominal':'Sembunyikan nominal'}">${icon(APP.privacy?'eyeOff':'eye')}<span class="privacy-label">${APP.privacy?'Tampilkan nominal':'Sembunyikan nominal'}</span></button>
     </div>
     <div class="app-body${APP.sidebarCollapsed?' sb-collapsed':''}${APP.sidebarOpen?' sb-open':''}">
       ${vSidebar()}
