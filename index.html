@@ -81,12 +81,43 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .user-pill{font-size:12px;color:var(--text2);background:var(--bg3);padding:3px 10px;border-radius:20px;border:1px solid var(--border)}
 .save-status{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px}
 .save-status.saved{color:var(--green)}
-.tabs-bar{display:flex;gap:2px;padding:8px 16px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0}
-.tabs-bar::-webkit-scrollbar{display:none}
-.tab-btn{padding:6px 14px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;color:var(--text2);border:none;background:transparent;transition:all .15s}
-.tab-btn:hover{background:var(--bg3);color:var(--text)}
-.tab-btn.active{background:var(--blue);color:#fff}
-.main{padding:20px;flex:1;max-width:1200px;width:100%;margin:0 auto}
+/* SIDEBAR */
+.app-body{display:flex;align-items:flex-start;flex:1}
+.sidebar{position:sticky;top:52px;height:calc(100vh - 52px);width:200px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);transition:width .2s ease;z-index:5}
+.sb-scroll{height:100%;overflow-y:auto;overflow-x:hidden;padding:12px 10px 24px;scrollbar-width:thin}
+.sb-toggle{position:absolute;top:14px;right:-13px;width:26px;height:26px;border-radius:50%;border:1px solid var(--border2);background:var(--bg2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);box-shadow:0 1px 3px rgba(0,0,0,.08);z-index:6;padding:0}
+.sb-toggle:hover{color:var(--blue);border-color:var(--blue)}
+.sb-toggle svg{width:14px;height:14px;transition:transform .2s}
+.sb-group{font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;padding:16px 10px 6px;white-space:nowrap}
+.sb-item{display:flex;align-items:center;gap:11px;width:100%;padding:9px 10px;margin-bottom:2px;border:none;background:transparent;border-radius:var(--radius);font-size:13.5px;font-weight:500;color:var(--text2);cursor:pointer;text-align:left;white-space:nowrap;position:relative;transition:background .15s,color .15s}
+.sb-item svg{width:18px;height:18px;flex-shrink:0}
+.sb-item:hover{background:var(--bg3);color:var(--text)}
+.sb-item.active{background:var(--blue-bg);color:var(--blue);font-weight:600}
+.sb-item.active::before{content:'';position:absolute;left:-10px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--blue)}
+.sb-label{overflow:hidden;text-overflow:ellipsis}
+.sb-backdrop{display:none}
+.hamburger{display:none;align-items:center;justify-content:center;width:34px;height:34px;padding:0;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg2);color:var(--text);cursor:pointer}
+.hamburger svg{width:18px;height:18px}
+@media(min-width:769px){
+  .sb-collapsed .sidebar{width:64px}
+  .sb-collapsed .sb-scroll{padding:12px 8px 24px}
+  .sb-collapsed .sb-item{justify-content:center;padding:10px 0}
+  .sb-collapsed .sb-label{display:none}
+  .sb-collapsed .sb-group{font-size:0;padding:0;margin:12px 6px;border-top:1px solid var(--border)}
+  .sb-collapsed .sb-item.active::before{left:-8px}
+  .sb-collapsed .sb-toggle svg{transform:rotate(180deg)}
+}
+@media(max-width:768px){
+  .sidebar{position:fixed;top:52px;left:0;width:250px;transform:translateX(-100%);transition:transform .22s ease;z-index:40}
+  .sb-open .sidebar{transform:translateX(0);box-shadow:4px 0 24px rgba(0,0,0,.12)}
+  .sb-toggle{display:none}
+  .sb-backdrop{display:block;position:fixed;inset:52px 0 0 0;background:rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:opacity .2s;z-index:35}
+  .sb-open .sb-backdrop{opacity:1;pointer-events:auto}
+  .hamburger{display:inline-flex}
+}
+.main{padding:20px;flex:1;min-width:0;width:100%}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:900px){.chart-row{grid-template-columns:1fr}}
 
 /* CARDS */
 .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
@@ -100,13 +131,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .section-title{font-size:15px;font-weight:600}
 .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius2);background:var(--bg2);margin-bottom:16px}
 table{width:100%;border-collapse:collapse;font-size:13px}
-thead th{background:var(--bg3);padding:9px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);white-space:nowrap}
-tbody td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--text);white-space:nowrap}
+thead th{background:var(--bg3);padding:9px 8px;text-align:left;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);white-space:nowrap}
+tbody td{padding:9px 8px;border-bottom:1px solid var(--border);color:var(--text);white-space:nowrap}
+tfoot td{padding:9px 8px;white-space:nowrap}
+thead th:first-child,tbody td:first-child,tfoot td:first-child{padding-left:12px}
 tbody tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:var(--bg3)}
 .tr-total td{font-weight:600;background:var(--bg3)!important;border-top:2px solid var(--border2)}
 .cell-input{padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;width:100px;color:var(--text);background:var(--bg2)}
 .cell-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(24,95,165,.1)}
+.cell-input::-webkit-outer-spin-button,.cell-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.cell-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
 /* COLORS */
 .pos{color:var(--green);font-weight:500}
@@ -158,6 +193,11 @@ tbody tr:hover td{background:var(--bg3)}
   .main{padding:12px}
   .metric-grid{grid-template-columns:repeat(2,1fr)}
   .header{padding:0 12px}
+  .user-pill{display:none}
+  .save-status{white-space:nowrap}
+}
+@media(max-width:480px){
+  .logo-text{display:none}
 }
 </style>
 </head>
@@ -221,10 +261,10 @@ const DEFAULT_TARGET = {
   }
 };
 const KATEGORI_OPTS = [
-  {v:'blue', l:'Blue Chip', bg:'#EFF6FF', fg:'#185FA5'},
-  {v:'menengah', l:'Menengah / Wajar', bg:'#F0FDF4', fg:'#3B6D11'},
-  {v:'komoditas', l:'Komoditas / Siklikal', bg:'#F1F3F5', fg:'#1a1a1a'},
-  {v:'spekulatif', l:'Spekulatif', bg:'#FEF2F2', fg:'#A32D2D'}
+  {v:'blue', l:'Blue Chip', s:'Blue Chip', bg:'#EFF6FF', fg:'#185FA5'},
+  {v:'menengah', l:'Menengah / Wajar', s:'Menengah', bg:'#F0FDF4', fg:'#3B6D11'},
+  {v:'komoditas', l:'Komoditas / Siklikal', s:'Komoditas', bg:'#F1F3F5', fg:'#1a1a1a'},
+  {v:'spekulatif', l:'Spekulatif', s:'Spekulatif', bg:'#FEF2F2', fg:'#A32D2D'}
 ];
 // Lookup bantu untuk tombol "Auto-kategori" — silakan tambah/ubah sesuai penilaian sendiri
 const KATEGORI_MAP = {
@@ -705,9 +745,11 @@ function vDash() {
     </div>
   </div>
   ${vTargetAlokasi(tot, ts, te, tem, tb)}
-  ${barChart(divBeiMonthly, '📈 Dividen BEI', '#185FA5', yearBei)}
-  ${barChart(divEtfMonthly, '🌍 Dividen US (IDR)', '#3B6D11', yearEtf)}
-  <div class="section-header"><span class="section-title">📌 Hold Portfolio (preview)</span><button class="btn btn-sm" onclick="APP.tab='saham';render()">Lihat semua →</button></div>
+  <div class="chart-row">
+    ${barChart(divBeiMonthly, '📈 Dividen BEI', '#185FA5', yearBei)}
+    ${barChart(divEtfMonthly, '🌍 Dividen US (IDR)', '#3B6D11', yearEtf)}
+  </div>
+  <div class="section-header"><span class="section-title">📌 Hold Portfolio (preview)</span><button class="btn btn-sm" onclick="setTab('saham')">Lihat semua →</button></div>
   <div class="table-wrap"><table>
     <thead><tr><th>Kode</th><th>Tipe</th><th>Lot/Unit</th><th>Modal</th><th>Nilai</th><th>P&L</th><th>%</th></tr></thead>
     <tbody>${(()=>{
@@ -762,14 +804,14 @@ function vSaham() {
         }
       }
       return `<tr>
-      <td style="font-size:11px">${s.tgl}</td><td><b>${s.kode}</b></td><td><span class="badge" style="font-size:10px;background:${katObj.bg};color:${katObj.fg}">${katObj.l}</span></td><td>${s.lot}</td><td>${F(s.beli)}</td><td style="font-size:11px">${Rp(R(s.m))}</td>
-      <td><input class="cell-input" type="number" value="${s.now}" onchange="upd('saham',${i},'now',+this.value)" style="width:70px"></td>
+      <td style="font-size:11px">${s.tgl}</td><td><b>${s.kode}</b></td><td><span class="badge" title="${katObj.l}" style="font-size:10px;background:${katObj.bg};color:${katObj.fg}">${katObj.s||katObj.l}</span></td><td>${s.lot}</td><td>${F(s.beli)}</td><td style="font-size:11px">${Rp(R(s.m))}</td>
+      <td><input class="cell-input" type="number" value="${s.now}" onchange="upd('saham',${i},'now',+this.value)" style="width:62px"></td>
       <td style="font-size:11px">${Rp(R(s.v))}</td><td class="${Cls(s.pl)}" style="font-size:11px">${Rp(R(s.pl))}</td><td class="${Cls(s.pct)}" style="font-size:11px">${Pct(s.pct)}</td>
       <td>
         <div style="display:flex;gap:2px;align-items:center">
-          <input class="cell-input" type="number" placeholder="Bwh" value="${wb||''}" onchange="upd('saham',${i},'wajarBawah',+this.value)" style="width:55px;font-size:10px">
+          <input class="cell-input" type="number" placeholder="Bwh" value="${wb||''}" onchange="upd('saham',${i},'wajarBawah',+this.value)" style="width:50px;font-size:10px;padding:5px 6px">
           <span style="font-size:10px;color:var(--text2)">-</span>
-          <input class="cell-input" type="number" placeholder="Atas" value="${wa||''}" onchange="upd('saham',${i},'wajarAtas',+this.value)" style="width:55px;font-size:10px">
+          <input class="cell-input" type="number" placeholder="Atas" value="${wa||''}" onchange="upd('saham',${i},'wajarAtas',+this.value)" style="width:50px;font-size:10px;padding:5px 6px">
         </div>
       </td>
       <td style="text-align:center">${statusEl}</td>
@@ -1227,7 +1269,7 @@ function lineChartCompound(yearly, modalAwal) {
   return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:14px 16px;margin-bottom:16px">
     <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">📈 Grafik Pertumbuhan</div>
     <div style="overflow-x:auto">
-    <svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:320px;display:block">
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:320px;max-height:340px;display:block">
       ${yLines}
       <path d="${setorPath}" fill="none" stroke="#9ca3af" stroke-width="1.75" stroke-dasharray="4 3"/>
       <path d="${nilaiPath}" fill="none" stroke="#185FA5" stroke-width="2.5"/>
@@ -1738,24 +1780,81 @@ function doExport() {
 }
 
 // ── MAIN RENDER ───────────────────────────────────────────
-const TABS = [
-  {id:'dash',l:'🏠 Dashboard'},{id:'saham',l:'📈 Saham BEI'},{id:'etf',l:'🌍 US'},
-  {id:'emas',l:'🥇 Emas'},{id:'btc',l:'🪙 Crypto'},{id:'rdana',l:'📊 Reksadana'},
-  {id:'obligasi',l:'🏦 Obligasi'},{id:'div',l:'💰 Dividen'},
-  {id:'dana',l:'🛡 Dana & Goals'},{id:'compound',l:'🧮 Compounding'},{id:'spt',l:'🏦 Rekap Harta'},
+const ICONS = {
+  dash:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+  saham:'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+  etf:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+  emas:'<path d="M3 20h8l-1.5-5h-5z"/><path d="M13 20h8l-1.5-5h-5z"/><path d="M8 13h8l-1.5-5h-5z"/>',
+  btc:'<path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/>',
+  rdana:'<path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>',
+  obligasi:'<line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/>',
+  div:'<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>',
+  dana:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  compound:'<rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01M12 10h.01M8 10h.01M12 14h.01M8 14h.01M12 18h.01M8 18h.01"/>',
+  spt:'<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/>',
+  chevLeft:'<path d="m15 18-6-6 6-6"/>',
+  menu:'<line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>',
+};
+const icon = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[n]||''}</svg>`;
+
+const NAV = [
+  {g:null,          items:[{id:'dash',l:'Dashboard'}]},
+  {g:'Aset',        items:[{id:'saham',l:'Saham BEI'},{id:'etf',l:'US'},{id:'emas',l:'Emas'},{id:'btc',l:'Crypto'},{id:'rdana',l:'Reksadana'},{id:'obligasi',l:'Obligasi'}]},
+  {g:'Pendapatan',  items:[{id:'div',l:'Dividen'}]},
+  {g:'Perencanaan', items:[{id:'dana',l:'Dana & Goals'},{id:'compound',l:'Compounding'},{id:'spt',l:'Rekap Harta'}]},
 ];
 
 const VIEWS = {dash:vDash, saham:vSaham, etf:vEtf, emas:vEmas, btc:vBtc, rdana:vRdana, obligasi:vObligasi, div:vDiv, dana:vDana, compound:vCompound, spt:vSpt};
+
+// ── SIDEBAR STATE ─────────────────────────────────────────
+// Posisi buka/tutup sidebar diingat per browser (bukan disimpan ke Firestore)
+APP.sidebarCollapsed = (() => { try { return localStorage.getItem('pt_sb_collapsed') === '1'; } catch(e) { return false; } })();
+APP.sidebarOpen = false; // khusus HP
+
+function toggleSidebar() {
+  APP.sidebarCollapsed = !APP.sidebarCollapsed;
+  try { localStorage.setItem('pt_sb_collapsed', APP.sidebarCollapsed ? '1' : '0'); } catch(e) {}
+  const body = document.querySelector('.app-body');
+  if (body) body.classList.toggle('sb-collapsed', APP.sidebarCollapsed);
+  const t = document.querySelector('.sb-toggle');
+  if (t) t.title = APP.sidebarCollapsed ? 'Buka menu' : 'Tutup menu';
+}
+function toggleMobileSidebar(force) {
+  APP.sidebarOpen = (typeof force === 'boolean') ? force : !APP.sidebarOpen;
+  const body = document.querySelector('.app-body');
+  if (body) body.classList.toggle('sb-open', APP.sidebarOpen);
+}
+function setTab(id) {
+  APP.tab = id;
+  APP.sidebarOpen = false;
+  render();
+  window.scrollTo(0, 0);
+}
+
+function vSidebar() {
+  return `<aside class="sidebar">
+    <button class="sb-toggle" onclick="toggleSidebar()" title="${APP.sidebarCollapsed?'Buka menu':'Tutup menu'}">${icon('chevLeft')}</button>
+    <nav class="sb-scroll">${NAV.map(grp => `
+      ${grp.g ? `<div class="sb-group">${grp.g}</div>` : ''}
+      ${grp.items.map(t => `<button class="sb-item${APP.tab===t.id?' active':''}" onclick="setTab('${t.id}')" title="${t.l}">${icon(t.id)}<span class="sb-label">${t.l}</span></button>`).join('')}
+    `).join('')}</nav>
+  </aside>
+  <div class="sb-backdrop" onclick="toggleMobileSidebar(false)"></div>`;
+}
 
 function render() {
   const root = document.getElementById('root');
   if (!root) return;
   if (!IS_CONFIGURED || !APP.user) { root.innerHTML = vLogin(); return; }
   const content = (VIEWS[APP.tab] || vDash)();
+  // simpan posisi scroll sidebar supaya tidak loncat ke atas setiap render
+  const prevSb = document.querySelector('.sb-scroll');
+  const sbTop = prevSb ? prevSb.scrollTop : 0;
   root.innerHTML = `
   <div class="app">
     <div class="header">
       <div class="header-left">
+        <button class="hamburger" onclick="toggleMobileSidebar()" aria-label="Menu">${icon('menu')}</button>
         <div class="header-logo">
           <div class="header-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
           <span class="logo-text">Portfolio Tracker</span>
@@ -1768,11 +1867,15 @@ function render() {
         <button class="btn btn-sm" onclick="doLogout()">Keluar</button>
       </div>
     </div>
-    <div class="tabs-bar">${TABS.map(t=>`<button class="tab-btn${APP.tab===t.id?' active':''}" onclick="APP.tab='${t.id}';render()">${t.l}</button>`).join('')}</div>
-    <div class="main">${content}</div>
+    <div class="app-body${APP.sidebarCollapsed?' sb-collapsed':''}${APP.sidebarOpen?' sb-open':''}">
+      ${vSidebar()}
+      <main class="main">${content}</main>
+    </div>
   </div>
   ${vModal()}
   ${vEditModal()}`;
+  const newSb = document.querySelector('.sb-scroll');
+  if (newSb) newSb.scrollTop = sbTop;
 }
 </script>
 </body>
