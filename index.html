@@ -44,6 +44,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .login-sub{font-size:13px;color:var(--text2)}
 .form-group{margin-bottom:14px}
 .form-group label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.form-group select{width:100%;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--radius);font-size:14px;color:var(--text);background:var(--bg2);font-family:inherit}
+.form-group select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.12)}
 .form-group input{width:100%;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--radius);font-size:14px;color:var(--text);background:var(--bg2);transition:border .2s,box-shadow .2s}
 .form-group input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.12)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;border:1px solid var(--border2);border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;background:var(--bg2);color:var(--text);transition:all .15s;white-space:nowrap}
@@ -1020,21 +1022,158 @@ function vDiv() {
   </table></div>`;
 }
 
+// ── ATURAN DANA DARURAT ──────────────────────────────────
+// Aturan: Bank maks 65% (kuning mulai 60%), USD maks 10% (total semua item USD),
+// sisanya RDPU dibagi rata (tiap RDPU dibandingkan dengan rata-rata RDPU).
+const DANA_JENIS = {
+  bank: {l:'Bank / Cash', s:'Bank',  max:65, warn:60, c:'#185FA5', bg:'#EFF6FF'},
+  rdpu: {l:'RDPU',        s:'RDPU',  rata:true,       c:'#7C3AED', bg:'#F5F3FF'},
+  usd:  {l:'USD / Valas', s:'USD',   max:10, warn:9,  c:'#3B6D11', bg:'#F0FDF4', group:true},
+};
+const RDPU_TOLERANSI = 0.2; // ±20% dari rata-rata RDPU masih dianggap seimbang
+const DANA_JENIS_OPTS = [
+  {v:'',     l:'Otomatis (dari nama)'},
+  {v:'bank', l:'Bank / Cash'},
+  {v:'rdpu', l:'RDPU / Pasar Uang'},
+  {v:'usd',  l:'USD / Valas'},
+];
+function danaJenis(d) {
+  if (d.jenis && DANA_JENIS[d.jenis]) return d.jenis;
+  const n = (d.item||'').toLowerCase();
+  if (/\busd\b|dolar|dollar|valas/.test(n)) return 'usd';
+  if (/rdpu|reksa|pasar uang|money market/.test(n)) return 'rdpu';
+  return 'bank';
+}
+const fPct = v => F(v, 1) + '%';
+
 function vDana() {
   const dd=APP.data.dana||[], gl=APP.data.goals||[];
   const tM=dd.reduce((a,r)=>a+r.masuk,0), tV=tDana();
+  const rows = dd.map((d,i) => {
+    const now = d.now||d.masuk||0;
+    return {d, i, now, jenis:danaJenis(d), pct: tV>0 ? now/tV*100 : 0};
+  });
+  const sumJenis = j => rows.filter(r=>r.jenis===j).reduce((a,r)=>a+r.pct,0);
+  const grp = {bank:sumJenis('bank'), rdpu:sumJenis('rdpu'), usd:sumJenis('usd')};
+  const rdpuRows = rows.filter(r=>r.jenis==='rdpu');
+  const rdpuAvgPct = rdpuRows.length ? grp.rdpu / rdpuRows.length : 0; // target rata per RDPU
+  rows.forEach(r => {
+    const J = DANA_JENIS[r.jenis];
+    if (J.rata) {
+      const dev = rdpuAvgPct > 0 ? (r.pct - rdpuAvgPct) / rdpuAvgPct : 0;
+      r.status = rdpuRows.length < 2 ? 'ok' : dev > RDPU_TOLERANSI ? 'above' : dev < -RDPU_TOLERANSI ? 'below' : 'ok';
+      return;
+    }
+    const cmp = J.group ? grp[r.jenis] : r.pct;
+    r.status = cmp > J.max ? 'over' : cmp >= J.warn ? 'near' : 'ok';
+  });
+  const ST = {
+    ok:    {t:'✅ Aman',               c:'var(--green)', bar:'var(--green)'},
+    near:  {t:'⚠️ Mendekati batas',    c:'var(--amber)', bar:'var(--amber)'},
+    over:  {t:'⛔ Lewat batas',         c:'var(--red)',   bar:'var(--red)'},
+    above: {t:'⚠️ Di atas rata-rata',  c:'var(--amber)', bar:'var(--amber)'},
+    below: {t:'⬇️ Di bawah rata-rata', c:'var(--blue)',  bar:'var(--blue)'},
+  };
+  const stOf = r => (r.jenis==='rdpu' && r.status==='ok') ? {...ST.ok, t:'✅ Seimbang'} : ST[r.status];
+  const porsiCell = r => {
+    const J = DANA_JENIS[r.jenis], st = stOf(r);
+    const mark = J.rata ? rdpuAvgPct : J.max;
+    const ket = J.rata ? `rata-rata ${fPct(rdpuAvgPct)}` : `maks ${J.max}%${J.group&&rows.filter(x=>x.jenis===r.jenis).length>1?' (total)':''}`;
+    return `<div style="display:flex;align-items:center;gap:8px">
+      <b style="min-width:46px;color:${st.c}">${fPct(r.pct)}</b>
+      <div style="position:relative;width:90px;height:6px;background:var(--bg3);border-radius:3px">
+        <div style="width:${Math.min(100,r.pct)}%;height:6px;border-radius:3px;background:${st.bar}"></div>
+        <div style="position:absolute;top:-3px;left:${Math.min(100,mark)}%;width:2px;height:12px;background:var(--text3);border-radius:1px" title="${ket}"></div>
+      </div>
+      <span style="font-size:11px;color:var(--text3)">${ket}</span>
+    </div>`;
+  };
+
+  // ── saran setoran berikutnya
+  const saran = [];
+  if (tV > 0 && rows.length) {
+    const sudah = new Set();
+    rows.filter(r=>r.status==='over').forEach(r => {
+      const J = DANA_JENIS[r.jenis];
+      if (J.group) {
+        if (sudah.has(r.jenis)) return; sudah.add(r.jenis);
+        const nilai = rows.filter(x=>x.jenis===r.jenis).reduce((a,x)=>a+x.now,0);
+        saran.push(`⛔ <b>${J.l}</b> ${fPct(grp[r.jenis])}, di atas batas ${J.max}% (lebih ${Rp(R(nilai - J.max/100*tV))}). Jangan tambah dulu.`);
+      } else {
+        saran.push(`⛔ <b>${r.d.item}</b> ${fPct(r.pct)}, di atas batas ${J.max}% (lebih ${Rp(R(r.now - J.max/100*tV))}). Jangan tambah dulu.`);
+      }
+    });
+    const banks = rows.filter(r=>r.jenis==='bank');
+    const rdpuKecil = [...rdpuRows].sort((a,b)=>a.now-b.now)[0];
+    const bankNames = banks.map(r=>r.d.item).join(' / ');
+    const rdpuAtas = rdpuRows.filter(r=>r.status==='above').map(r=>r.d.item);
+    const catatanRata = rdpuAtas.length ? ` (${rdpuAtas.join(', ')} sedang di atas rata-rata, tidak perlu dipindah)` : '';
+    if (banks.length && grp.bank < DANA_JENIS.bank.warn && !banks.some(r=>r.status==='over')) {
+      saran.push(`👉 Setoran berikutnya ke <b>${bankNames}</b>: porsinya ${fPct(grp.bank)}, masih di bawah ${DANA_JENIS.bank.warn}%.`);
+      if (rdpuKecil && rdpuRows.length > 1) saran.push(`↳ Kalau mau setor ke RDPU, pilih <b>${rdpuKecil.d.item}</b> (paling kecil, ${fPct(rdpuKecil.pct)}) supaya RDPU makin rata${catatanRata}.`);
+    } else if (rdpuKecil) {
+      saran.push(`👉 Setoran berikutnya ke <b>${rdpuKecil.d.item}</b>: RDPU paling kecil (${fPct(rdpuKecil.pct)}), supaya RDPU makin rata${catatanRata}.`);
+    } else if (banks.length) {
+      saran.push(`👉 Setoran berikutnya ke <b>${bankNames}</b>.`);
+    }
+    const usdNilai = rows.filter(r=>r.jenis==='usd').reduce((a,r)=>a+r.now,0);
+    const ruangUsd = DANA_JENIS.usd.max/100*tV - usdNilai;
+    if (rows.some(r=>r.jenis==='usd') && ruangUsd > 0) {
+      saran.push(`💵 USD masih bisa ditambah sekitar ${Rp(R(ruangUsd))} (sampai ${DANA_JENIS.usd.max}%), dibeli dari porsi cash saat kurs sedang turun.`);
+    }
+  }
+
+  // ── komposisi (stacked bar)
+  const shade = (hex, k, n) => n<=1 ? hex : hexA(hex, 1 - k*(0.55/(n-1)));
+  const byJenis = j => rows.filter(r=>r.jenis===j);
+  const segs = ['bank','rdpu','usd'].flatMap(j => byJenis(j).map((r,k,arr)=>({...r, col:shade(DANA_JENIS[j].c,k,arr.length)})));
+  const komposisi = tV>0 && rows.length ? `
+  <div class="donut-container" style="margin-top:12px">
+    <div class="donut-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <span>Komposisi Dana Darurat</span>
+      <span style="display:flex;gap:6px;flex-wrap:wrap">${['bank','rdpu','usd'].filter(j=>byJenis(j).length).map(j=>{
+        const J=DANA_JENIS[j]; const v=grp[j];
+        const st = byJenis(j).some(r=>r.status==='over')?'over':byJenis(j).some(r=>r.status==='near'||r.status==='above')?'near':'ok';
+        const ket = J.rata ? `dibagi rata${byJenis(j).length>1?' ('+byJenis(j).length+' item)':''}` : `maks ${J.max}%`;
+        return `<span class="badge" style="background:${J.bg};color:${J.c};font-size:11px">${J.s} ${fPct(v)} <span style="color:${ST[st].c};margin-left:4px">· ${ket}</span></span>`;
+      }).join('')}</span>
+    </div>
+    <div style="display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--bg3);margin:4px 0 10px">
+      ${segs.map(r=>`<div title="${r.d.item} ${fPct(r.pct)}" style="width:${r.pct}%;background:${r.col}"></div>`).join('')}
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px 16px;margin-bottom:12px">
+      ${segs.map(r=>`<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px"><span class="legend-dot" style="background:${r.col}"></span>${r.d.item} <b>${fPct(r.pct)}</b></span>`).join('')}
+    </div>
+    ${saran.length ? `<div style="border-top:1px solid var(--border);padding-top:10px;display:flex;flex-direction:column;gap:6px;font-size:12.5px">${saran.map(t=>`<div>${t}</div>`).join('')}</div>` : ''}
+    <details style="margin-top:10px;font-size:12px;color:var(--text2)">
+      <summary style="cursor:pointer;font-weight:600">Aturan yang dipakai</summary>
+      <ul style="margin:8px 0 0 18px;line-height:1.7">
+        <li>Bank / cash (Krom) tidak lebih dari ${DANA_JENIS.bank.max}% (kuning mulai ${DANA_JENIS.bank.warn}%). Kalau sudah penuh, setoran berikutnya ke RDPU.</li>
+        <li>USD tidak lebih dari ${DANA_JENIS.usd.max}%, dan dibeli dari porsi cash saat kurs sedang turun.</li>
+        <li>Sisanya RDPU dibagi rata. RDPU yang selisihnya masih dalam ±${RDPU_TOLERANSI*100}% dari rata-rata dianggap seimbang; meratakannya cukup lewat setoran berikutnya ke RDPU yang paling kecil.</li>
+        <li>Kalau bunga Krom turun jauh di bawah 6% (misalnya mendekati imbal hasil RDPU), tinjau ulang.</li>
+        <li>Jenis tiap item dibaca otomatis dari namanya (RDPU, USD, selain itu dianggap bank). Bisa diubah lewat ✏️ Edit.</li>
+      </ul>
+    </details>
+  </div>` : '';
+
   return `
   <div class="section-header"><span class="section-title">🛡 Dana Darurat</span><button class="btn btn-success btn-sm" onclick="openModal('dana')">+ Tambah</button></div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Item</th><th>Modal Masuk</th><th>Nilai Sekarang</th><th>Keuntungan</th><th></th></tr></thead>
-    <tbody>${dd.map((d,i)=>`<tr>
-      <td>${d.item}</td><td>${Rp(d.masuk)}</td>
-      <td>${APP.privacy?Rp(0):`<input class="cell-input" style="width:130px" type="number" value="${d.now||d.masuk}" onchange="upd('dana',${i},'now',+this.value)">`}</td>
+    <thead><tr><th>Item</th><th>Jenis</th><th>Modal Masuk</th><th>Nilai Sekarang</th><th>Keuntungan</th><th>Porsi</th><th>Status</th><th></th></tr></thead>
+    <tbody>${rows.map(r=>{ const d=r.d, i=r.i, J=DANA_JENIS[r.jenis]; return `<tr>
+      <td>${d.item}</td>
+      <td><span class="badge" style="font-size:10px;background:${J.bg};color:${J.c}">${J.s}</span></td>
+      <td>${Rp(d.masuk)}</td>
+      <td>${APP.privacy?Rp(0):`<input class="cell-input" style="width:120px" type="number" value="${d.now||d.masuk}" onchange="upd('dana',${i},'now',+this.value)">`}</td>
       <td class="${Cls((d.now||d.masuk)-d.masuk)}">${Rp(R((d.now||d.masuk)-d.masuk))}</td>
+      <td>${porsiCell(r)}</td>
+      <td><span style="font-size:12px;font-weight:600;color:${stOf(r).c}">${stOf(r).t}</span></td>
       <td><div class="row-actions"><button class="btn btn-icon-edit" title="Edit" onclick="openEdit('dana',${i})">✏️</button><button class="btn btn-icon" onclick="del('dana',${i})">🗑</button></div></td>
-    </tr>`).join('')}</tbody>
-    <tfoot><tr class="tr-total"><td>TOTAL</td><td>${Rp(R(tM))}</td><td>${Rp(R(tV))}</td><td class="${Cls(tV-tM)}">${Rp(R(tV-tM))}</td><td></td></tr></tfoot>
+    </tr>`;}).join('')}</tbody>
+    <tfoot><tr class="tr-total"><td colspan="2">TOTAL</td><td>${Rp(R(tM))}</td><td>${Rp(R(tV))}</td><td class="${Cls(tV-tM)}">${Rp(R(tV-tM))}</td><td>${tV>0?'<b>100%</b>':''}</td><td colspan="2"></td></tr></tfoot>
   </table></div>
+  ${komposisi}
   <div class="section-header" style="margin-top:16px"><span class="section-title">🎯 Goals Keuangan</span><button class="btn btn-success btn-sm" onclick="openModal('goals')">+ Tambah</button></div>
   ${gl.map((g,i)=>{
     const p = g.target > 0 ? Math.min(100, g.terkumpul/g.target*100) : 0;
@@ -1445,7 +1584,7 @@ const MODAL_DEF = {
   obligasi:{t:'Tambah Obligasi/SBN', f:[{id:'tgl',l:'Tanggal Beli',type:'date'},{id:'nama',l:'Nama/Seri',type:'text',ph:'FR0100 / ORI025 / SBR013'},{id:'jenis',l:'Jenis',type:'text',ph:'FR / ORI / SBR / SR / SUN'},{id:'unit',l:'Jumlah Unit (1 unit = Rp 1 juta)',type:'number',ph:'10'},{id:'hargaPct',l:'Harga Beli (%)',type:'number',step:'0.01',ph:'98.30 atau 100'},{id:'kupon',l:'Kupon/Tahun (%)',type:'number',step:'0.01',ph:'6.5'},{id:'jatuhTempo',l:'Jatuh Tempo',type:'date'}]},
   divBei: {t:'Tambah Dividen BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'saham',l:'Kode Saham',type:'text'},{id:'bruto',l:'Dividen Bruto (Rp)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
   divEtf: {t:'Tambah Dividen US', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode ETF',type:'text'},{id:'bruto',l:'Bruto (USD)',type:'number',step:'0.01'},{id:'ket',l:'Keterangan',type:'text'}]},
-  dana:   {t:'Tambah Dana Darurat', f:[{id:'item',l:'Nama Instrumen',type:'text',ph:'RDPU Majoris...'},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
+  dana:   {t:'Tambah Dana Darurat', f:[{id:'item',l:'Nama Instrumen',type:'text',ph:'RDPU Majoris...'},{id:'jenis',l:'Jenis',type:'select',opts:DANA_JENIS_OPTS},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
   goals:  {t:'Tambah Goal', f:[{id:'nama',l:'Nama Tujuan',type:'text'},{id:'target',l:'Target Dana',type:'number'},{id:'deadline',l:'Deadline (Tahun)',type:'text',ph:'2028'},{id:'terkumpul',l:'Dana Terkumpul',type:'number'}]},
 };
 
@@ -1460,7 +1599,7 @@ const EDIT_DEF = {
   btc:    {t:'Edit Crypto', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'jenis',l:'Jenis Crypto',type:'text'},{id:'jumlah',l:'Jumlah',type:'number',step:'0.00000001'},{id:'beli',l:'Harga Beli (Rp)',type:'number'},{id:'now',l:'Harga Kini (Rp)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
   rdana:  {t:'Edit Reksadana', f:[{id:'item',l:'Nama Reksadana',type:'text'},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
   obligasi:{t:'Edit Obligasi/SBN', f:[{id:'tgl',l:'Tanggal Beli',type:'date'},{id:'nama',l:'Nama/Seri',type:'text'},{id:'jenis',l:'Jenis',type:'text'},{id:'unit',l:'Jumlah Unit (1 unit = Rp 1 juta)',type:'number'},{id:'hargaPct',l:'Harga Beli (%)',type:'number',step:'0.01'},{id:'kupon',l:'Kupon/Tahun (%)',type:'number',step:'0.01'},{id:'jatuhTempo',l:'Jatuh Tempo',type:'date'}]},
-  dana:   {t:'Edit Dana Darurat', f:[{id:'item',l:'Nama Instrumen',type:'text'},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
+  dana:   {t:'Edit Dana Darurat', f:[{id:'item',l:'Nama Instrumen',type:'text'},{id:'jenis',l:'Jenis',type:'select',opts:DANA_JENIS_OPTS},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
   goals:  {t:'Edit Goal Keuangan', f:[{id:'nama',l:'Nama Tujuan',type:'text'},{id:'target',l:'Target Dana',type:'number'},{id:'deadline',l:'Deadline (Tahun)',type:'text'},{id:'terkumpul',l:'Dana Terkumpul',type:'number'}]},
 };
 
@@ -2044,8 +2183,10 @@ function getDemoData() {
       ...dv(9,{kode:'QQQ', bruto:0.85, ket:'Re invest'}),
     ],
     dana: [
-      {item:'RDPU Majoris',  masuk:8000000, now:8152000},
-      {item:'Bank Digital',  masuk:6000000, now:6021000},
+      {item:'Bank Digital',      masuk:9000000, now:9065000},
+      {item:'RDPU Majoris',      masuk:3000000, now:3061000},
+      {item:'RDPU Sucorinvest',  masuk:2500000, now:2548000},
+      {item:'USD Bank Jago',     masuk:1200000, now:1216000},
     ],
     goals: [
       {nama:'Dana Pendidikan Anak', target:150000000, deadline:String(Y+8), terkumpul:32500000},
