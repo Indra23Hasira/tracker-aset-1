@@ -575,7 +575,7 @@ function taRow(id, label, pctNow, min, max, editing, dotColor) {
     ? `<span style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px">Target
         <input id="ta_${id}_min" type="number" value="${min}" style="width:44px;padding:2px 4px;font-size:11px;border:1px solid var(--border2);border-radius:4px">–
         <input id="ta_${id}_max" type="number" value="${max}" style="width:44px;padding:2px 4px;font-size:11px;border:1px solid var(--border2);border-radius:4px">%</span>`
-    : `<span style="font-size:11px;color:var(--text2)">Target ${min}–${max}%</span>`;
+    : `<span style="font-size:11px;color:var(--text2)">Target ${min===max?min:min+'–'+max}%</span>`;
   return `<div style="margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:3px">
       <span>${dotHtml}${label}</span>
@@ -596,12 +596,13 @@ function toggleTaEdit() { APP.taEditing = !APP.taEditing; render(); }
 
 function saveTargetAlokasi() {
   ensureTargetDefaults();
-  ['saham','etf','emas','btc'].forEach(k => {
+  // Semua kelas aset diambil dari DEFAULT_TARGET (termasuk Reksadana & Obligasi)
+  Object.keys(DEFAULT_TARGET.kelas).forEach(k => {
     const minEl = document.getElementById('ta_kelas_'+k+'_min'), maxEl = document.getElementById('ta_kelas_'+k+'_max');
     if (minEl) APP.data.targetAlokasi.kelas[k].min = parseFloat(minEl.value)||0;
     if (maxEl) APP.data.targetAlokasi.kelas[k].max = parseFloat(maxEl.value)||0;
   });
-  ['blue','menengah','komoditas','spekulatif'].forEach(k => {
+  Object.keys(DEFAULT_TARGET.sahamKategori).forEach(k => {
     const minEl = document.getElementById('ta_sub_'+k+'_min'), maxEl = document.getElementById('ta_sub_'+k+'_max');
     if (minEl) APP.data.targetAlokasi.sahamKategori[k].min = parseFloat(minEl.value)||0;
     if (maxEl) APP.data.targetAlokasi.sahamKategori[k].max = parseFloat(maxEl.value)||0;
@@ -625,7 +626,7 @@ function vTargetAlokasi(tot, ts, te, tem, tb) {
     obligasi: tObligasi(),
   };
   const tot6 = Object.values(kelasVals).reduce((a,v)=>a+v, 0) || tot || 1;
-  const kelasRows = Object.keys(T.kelas).map(k => {
+  const kelasRows = Object.keys(DEFAULT_TARGET.kelas).map(k => {
     const val = kelasVals[k] || 0;
     const pct = tot6 > 0 ? (val/tot6*100) : 0;
     return taRow('kelas_'+k, T.kelas[k].label, pct, T.kelas[k].min, T.kelas[k].max, editing);
@@ -637,7 +638,7 @@ function vTargetAlokasi(tot, ts, te, tem, tb) {
     const k = s.kategori || 'menengah';
     sahamByKat[k] = (sahamByKat[k]||0) + s.v;
   });
-  const subRows = Object.keys(T.sahamKategori).map(k => {
+  const subRows = Object.keys(DEFAULT_TARGET.sahamKategori).map(k => {
     const val = sahamByKat[k] || 0;
     const pct = tot > 0 ? (val/tot*100) : 0;
     return taRow('sub_'+k, T.sahamKategori[k].label, pct, T.sahamKategori[k].min, T.sahamKategori[k].max, editing);
@@ -646,7 +647,7 @@ function vTargetAlokasi(tot, ts, te, tem, tb) {
   // Saran alokasi setoran bulanan untuk sub-kategori saham
   let saran = '';
   if (tot > 0 && ts > 0) {
-    const gaps = Object.keys(T.sahamKategori).map(k => {
+    const gaps = Object.keys(DEFAULT_TARGET.sahamKategori).map(k => {
       const val = sahamByKat[k] || 0;
       const pct = (val/tot*100);
       return {k, label:T.sahamKategori[k].label, gap: T.sahamKategori[k].min - pct};
