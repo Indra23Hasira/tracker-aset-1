@@ -189,6 +189,17 @@ tbody tr:hover td{background:var(--bg3)}
 .donut-title{font-size:13px;font-weight:600;margin-bottom:12px}
 .donut-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .legend-item{display:flex;align-items:center;gap:7px;font-size:12px;margin-bottom:6px}
+.al-wrap{flex:1 1 390px;min-width:0;overflow-x:auto}
+.al-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.al-tbl thead th{background:none;padding:0 6px 6px;font-size:10px;letter-spacing:.4px;border-bottom:1px solid var(--border)}
+.al-tbl tbody td,.al-tbl tfoot td{padding:5px 6px;border-bottom:1px solid var(--border);white-space:nowrap}
+.al-tbl tbody tr:hover td{background:none}
+.al-tbl td:first-child,.al-tbl th:first-child{padding-left:0}
+.al-tbl td:first-child .legend-dot{display:inline-block;vertical-align:-1px;margin-right:7px}
+.al-tbl tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--border2);padding-top:7px}
+.al-tbl .al-num{text-align:right}
+.al-tbl .al-empty td{color:var(--text3)}
+.al-note{font-size:11px;color:var(--text3);margin-top:10px}
 .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 
 /* GOALS */
@@ -668,6 +679,27 @@ function vDash() {
   const ts=tSaham(), te=tEtf(), tem=tEmas(), tb=tBtc(), td=tDana(), trd=tRdana(), tob=tObligasi();
   const tot = ts+te+tem+tb+trd+tob;
   const items = [['Saham BEI',ts,'#185FA5'],['US',te,'#3B6D11'],['Emas',tem,'#BA7517'],['Crypto',tb,'#A32D2D'],['Reksadana',trd,'#7c3aed'],['Obligasi',tob,'#0891b2']];
+  // Modal per kelas aset, untuk P&L belum terealisasi (dividen tidak dihitung)
+  const modalKelas = [
+    cSaham().reduce((a,r)=>a+r.m,0),
+    cEtf().reduce((a,r)=>a+r.mi,0),
+    cEmas().reduce((a,r)=>a+r.m,0),
+    cBtc().reduce((a,r)=>a+r.m,0),
+    (APP.data.rdana||[]).reduce((a,r)=>a+(r.masuk||0),0),
+    (APP.data.obligasi||[]).reduce((a,r)=>a+getModalBeli(r),0),
+  ];
+  const totModal = modalKelas.reduce((a,v)=>a+v,0), totPL = tot - totModal;
+  const sPct = v => (v>0?'+':'') + F(v,2) + '%';
+  const allocRows = items.map(([l,v,c],i) => {
+    const m = modalKelas[i], pl = v - m, ada = m > 0 || v > 0;
+    return `<tr${ada?'':' class="al-empty"'}>
+      <td><span class="legend-dot" style="background:${c}"></span>${l}</td>
+      <td class="al-num"><b>${tot>0?F(v/tot*100,1)+'%':'-'}</b></td>
+      <td class="al-num ${ada?Cls(pl):''}">${ada?Rp(R(pl)):'–'}</td>
+      <td class="al-num ${ada?Cls(pl):''}">${m>0?sPct(pl/m*100):'–'}</td>
+      <td class="al-num ${ada?Cls(pl):''}">${ada&&totModal>0?sPct(pl/totModal*100):'–'}</td>
+    </tr>`;
+  }).join('');
   const CIRC = 2*Math.PI*38;
   let donut=''; let cum=0;
   items.filter(x=>x[1]>0).forEach(([l,v,c])=>{
@@ -764,8 +796,13 @@ function vDash() {
           <text x="48" y="44" text-anchor="middle" font-size="9" fill="#6b7280">Total</text>
   <text x="48" y="57" text-anchor="middle" font-size="9" font-weight="600" fill="#1a1a1a">${APP.privacy?'•••':(tot/1e6).toFixed(1)+'Jt'}</text>
         </svg>
-        <div>${items.map(([l,v,c])=>`<div class="legend-item"><div class="legend-dot" style="background:${c}"></div><span style="flex:1">${l}</span><span style="font-weight:600;margin-left:8px">${tot>0?F(v/tot*100,1)+'%':'-'}</span></div>`).join('')}</div>
+        <div class="al-wrap"><table class="al-tbl">
+          <thead><tr><th>Aset</th><th class="al-num">Porsi</th><th class="al-num">P&amp;L</th><th class="al-num" title="P&L dibanding modal kelas aset itu sendiri">Thd Modal</th><th class="al-num" title="P&L dibanding total modal semua investasi. Kalau dijumlah = P&L total portofolio">Thd Total</th></tr></thead>
+          <tbody>${allocRows}</tbody>
+          <tfoot><tr><td>Total</td><td class="al-num">${tot>0?'100%':'-'}</td><td class="al-num ${Cls(totPL)}">${Rp(R(totPL))}</td><td class="al-num ${Cls(totPL)}">${totModal>0?sPct(totPL/totModal*100):'–'}</td><td class="al-num ${Cls(totPL)}">${totModal>0?sPct(totPL/totModal*100):'–'}</td></tr></tfoot>
+        </table></div>
       </div>
+      <div class="al-note">P&amp;L belum terealisasi (nilai kini − modal), dividen tidak dihitung · Modal total ${Rp(R(totModal))}</div>
     </div>
     <div class="donut-container">
       <div class="donut-title">Nilai per Aset</div>
