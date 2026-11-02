@@ -44,6 +44,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .login-sub{font-size:13px;color:var(--text2)}
 .form-group{margin-bottom:14px}
 .form-group label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.ex-box{max-width:560px}
+.alert-green{background:var(--green-bg);color:var(--green);border:1px solid #bbf7d0}
+.link-btn{border:none;background:none;padding:0;color:var(--blue);font-size:12.5px;font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.set-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:16px 18px;margin-bottom:14px;max-width:560px}
+.set-title{font-size:14px;font-weight:600;margin-bottom:12px}
+.set-row{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border)}
+.set-row:last-child{border-bottom:none}
+.set-row span{color:var(--text2)}
+.set-row b{font-weight:600;text-align:right;word-break:break-all}
+.set-form .form-group{margin-bottom:12px}
+.set-check{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text2);margin:2px 0 14px;cursor:pointer}
+.set-check input{accent-color:var(--blue)}
+.set-sub{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:12.5px;color:var(--text2)}
+.ex-all-row{display:flex;align-items:center;gap:8px;font-size:13px;padding:8px 10px;background:var(--bg3);border-radius:var(--radius);cursor:pointer}
+.ex-group{font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin:14px 0 6px}
+.ex-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+@media(max-width:480px){.ex-grid{grid-template-columns:1fr}}
+.ex-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;cursor:pointer;transition:border-color .15s,background .15s}
+.ex-item:hover{border-color:var(--border2)}
+.ex-item:has(input:checked){border-color:#bfdbfe;background:var(--blue-bg)}
+.ex-item input,.ex-all-row input{width:15px;height:15px;accent-color:var(--blue);cursor:pointer;flex-shrink:0}
+.ex-n{margin-left:auto;font-size:11px;color:var(--text3)}
+.ex-actions{flex-wrap:wrap;position:sticky;bottom:-1.5rem;background:var(--bg2);margin-bottom:-1.5rem;padding-bottom:1.5rem;z-index:1}
+.btn:disabled{opacity:.5;cursor:not-allowed}
 .form-group select{width:100%;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--radius);font-size:14px;color:var(--text);background:var(--bg2);font-family:inherit}
 .form-group select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.12)}
 .form-group input{width:100%;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--radius);font-size:14px;color:var(--text);background:var(--bg2);transition:border .2s,box-shadow .2s}
@@ -411,31 +435,68 @@ function renderSaveStatus() {
 }
 
 // ── AUTH ──────────────────────────────────────────────────
+// Pesan error Firebase Auth dalam bahasa Indonesia
+function authMsg(e) {
+  const M = {
+    'auth/invalid-email': 'Format email tidak valid.',
+    'auth/missing-password': 'Password belum diisi.',
+    'auth/wrong-password': 'Password salah.',
+    'auth/invalid-credential': 'Email atau password salah.',
+    'auth/invalid-login-credentials': 'Email atau password salah.',
+    'auth/weak-password': 'Password terlalu lemah, minimal 6 karakter.',
+    'auth/too-many-requests': 'Terlalu banyak percobaan. Tunggu beberapa menit lalu coba lagi.',
+    'auth/network-request-failed': 'Koneksi internet bermasalah. Coba lagi.',
+    'auth/requires-recent-login': 'Demi keamanan, silakan keluar lalu login ulang, kemudian coba lagi.',
+    'auth/user-disabled': 'Akun ini dinonaktifkan.',
+    'auth/popup-closed-by-user': 'Jendela login Google ditutup sebelum selesai.',
+  };
+  return M[e && e.code] || (e && e.message) || 'Terjadi kesalahan.';
+}
+function loginMsg(text, ok) {
+  const el = document.getElementById('login-err');
+  if (!el) return;
+  el.className = 'alert ' + (ok ? 'alert-blue' : 'alert-red');
+  el.textContent = text;
+  el.style.display = text ? 'block' : 'none';
+}
+
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass = document.getElementById('login-pass').value;
-  const errEl = document.getElementById('login-err');
-  errEl.style.display = 'none';
+  loginMsg('');
+  if (!email || !pass) { loginMsg('Isi email dan password dulu.'); return; }
   try {
     await APP.auth.signInWithEmailAndPassword(email, pass);
   } catch(e) {
-    if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
+    if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential' || e.code === 'auth/invalid-login-credentials') {
+      // email belum terdaftar → otomatis daftar
       try {
         await APP.auth.createUserWithEmailAndPassword(email, pass);
       } catch(e2) {
-        errEl.textContent = e2.message;
-        errEl.style.display = 'block';
+        if (e2.code === 'auth/email-already-in-use') loginMsg('Password salah. Lupa password? Klik "Lupa password?" di bawah kolom password.');
+        else loginMsg(authMsg(e2));
       }
     } else {
-      errEl.textContent = e.message;
-      errEl.style.display = 'block';
+      loginMsg(authMsg(e));
     }
+  }
+}
+
+async function doForgotPassword() {
+  const email = document.getElementById('login-email').value.trim();
+  if (!email) { loginMsg('Isi email dulu di kolom Email, lalu klik "Lupa password?" lagi.'); document.getElementById('login-email').focus(); return; }
+  try {
+    APP.auth.languageCode = 'id';
+    await APP.auth.sendPasswordResetEmail(email);
+    loginMsg(`Kalau ${email} terdaftar, link untuk membuat password baru sudah dikirim. Cek inbox (dan folder spam).`, true);
+  } catch(e) {
+    loginMsg(authMsg(e));
   }
 }
 
 async function doGoogleLogin() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  try { await APP.auth.signInWithPopup(provider); } catch(e) { alert(e.message); }
+  try { await APP.auth.signInWithPopup(provider); } catch(e) { loginMsg(authMsg(e)); }
 }
 
 function doLogout() {
@@ -548,6 +609,7 @@ function vLogin() {
     <div id="login-err" class="alert alert-red" style="display:none"></div>
     <div class="form-group"><label>Email</label><input id="login-email" type="email" placeholder="nama@email.com"></div>
     <div class="form-group"><label>Password</label><input id="login-pass" type="password" placeholder="min 6 karakter" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div style="text-align:right;margin:-6px 0 12px"><button class="link-btn" onclick="doForgotPassword()">Lupa password?</button></div>
     <button class="btn btn-primary btn-full" onclick="doLogin()">Masuk / Daftar</button>
     <div class="login-divider">atau</div>
     <button class="google-btn" onclick="doGoogleLogin()">
@@ -2005,67 +2067,178 @@ async function updateHargaEtf() {
   if (b) { b.disabled = false; b.textContent = '🔄 Update Harga'; }
 }
 
-function doExport() {
-  const k = APP.data.kurs;
-  let c = 'Portfolio Tracker Export\nKurs USD/IDR: '+k+'\n\n';
+// ── EXPORT CSV PER BAGIAN ────────────────────────────────
+const csvCell = v => {
+  if (v === null || v === undefined) return '';
+  const t = String(v);
+  return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+};
+const csvRow = arr => arr.map(csvCell).join(',');
+const pct2 = (a, b) => b ? ((a / b) * 100).toFixed(2) + '%' : '';
+const sumBy = (arr, f) => arr.reduce((a, x) => a + (f(x) || 0), 0);
 
-  // SAHAM BEI
-  c += 'SAHAM BEI\nTanggal,Kode,Lot,Hrg Beli,Modal,Hrg Kini,Nilai Market,P&L,% P&L\n';
-  cSaham().forEach(s => c+=`${s.tgl},${s.kode},${s.lot},${s.beli},${R(s.m)},${s.now},${R(s.v)},${R(s.pl)},${(s.pct*100).toFixed(2)}%\n`);
+// Tiap bagian: label, jumlah baris, dan isi CSV (header + baris + TOTAL)
+const EXPORT_SECTIONS = [
+  {id:'saham', l:'Saham BEI', g:'Aset', n:()=>(APP.data.saham||[]).length, rows:()=>{
+    const r = cSaham(), kat = v => (KATEGORI_OPTS.find(o=>o.v===v)||{}).l || '';
+    const tM = sumBy(r,x=>x.m), tV = sumBy(r,x=>x.v);
+    return [['Tanggal','Kode','Kategori','Lot','Harga Beli','Modal','Harga Kini','Nilai','P&L','% P&L','Wajar Bawah','Wajar Atas','Keterangan'],
+      ...r.map(x=>[x.tgl,x.kode,kat(x.kategori),x.lot,x.beli,R(x.m),x.now,R(x.v),R(x.pl),pct2(x.pl,x.m),x.wajarBawah||'',x.wajarAtas||'',x.ket||'']),
+      ['TOTAL','','','','',R(tM),'',R(tV),R(tV-tM),pct2(tV-tM,tM)]];
+  }},
+  {id:'etf', l:'US (ETF & Saham)', g:'Aset', n:()=>(APP.data.etf||[]).length, rows:()=>{
+    const r = cEtf(), tM = sumBy(r,x=>x.mi), tV = sumBy(r,x=>x.vi);
+    return [['Tanggal','Kode','Unit','Beli (USD)','Kini (USD)','Modal (IDR)','Nilai (USD)','Nilai (IDR)','P&L (IDR)','% P&L','Keterangan'],
+      ...r.map(x=>[x.tgl,x.kode,x.unit,x.beli,x.now,R(x.mi),x.vu.toFixed(2),R(x.vi),R(x.pl),pct2(x.pl,x.mi),x.ket||'']),
+      ['TOTAL','','','','',R(tM),sumBy(r,x=>x.vu).toFixed(2),R(tV),R(tV-tM),pct2(tV-tM,tM)]];
+  }},
+  {id:'emas', l:'Emas', g:'Aset', n:()=>(APP.data.emas||[]).length, rows:()=>{
+    const r = cEmas(), tM = sumBy(r,x=>x.m), tV = sumBy(r,x=>x.v);
+    return [['Tanggal','Jenis','Lokasi','Gram','Beli/gr','Modal','Kini/gr','Nilai','P&L','% P&L'],
+      ...r.map(x=>[x.tgl||'',x.jenis||'',x.lokasi||'',x.gram,x.beli,R(x.m),x.now,R(x.v),R(x.pl),pct2(x.pl,x.m)]),
+      ['TOTAL','','',sumBy(r,x=>x.gram),'',R(tM),'',R(tV),R(tV-tM),pct2(tV-tM,tM)]];
+  }},
+  {id:'btc', l:'Crypto', g:'Aset', n:()=>(APP.data.btc||[]).length, rows:()=>{
+    const r = cBtc(), tM = sumBy(r,x=>x.m), tV = sumBy(r,x=>x.v);
+    return [['Tanggal','Jenis','Jumlah','Harga Beli (IDR)','Modal','Harga Kini (IDR)','Nilai','P&L','% P&L','Keterangan'],
+      ...r.map(x=>[x.tgl||'',x.jenis||'BTC',x.jumlah,x.beli,R(x.m),x.now,R(x.v),R(x.pl),pct2(x.pl,x.m),x.ket||'']),
+      ['TOTAL','','','',R(tM),'',R(tV),R(tV-tM),pct2(tV-tM,tM)]];
+  }},
+  {id:'rdana', l:'Reksadana', g:'Aset', n:()=>(APP.data.rdana||[]).length, rows:()=>{
+    const r = APP.data.rdana||[], nv = x => x.now||x.masuk||0;
+    const tM = sumBy(r,x=>x.masuk), tV = sumBy(r,nv);
+    return [['Nama Reksadana','Modal Masuk','Nilai Sekarang','Keuntungan','% Keuntungan'],
+      ...r.map(x=>[x.item,x.masuk||0,nv(x),R(nv(x)-(x.masuk||0)),pct2(nv(x)-(x.masuk||0),x.masuk)]),
+      ['TOTAL',R(tM),R(tV),R(tV-tM),pct2(tV-tM,tM)]];
+  }},
+  {id:'obligasi', l:'Obligasi / SBN', g:'Aset', n:()=>(APP.data.obligasi||[]).length, rows:()=>{
+    const r = APP.data.obligasi||[];
+    const tMod = sumBy(r,getModalBeli), tNom = sumBy(r,getNilaiNominal), tB = sumBy(r,hitungBungaAkrual);
+    return [['Nama/Seri','Jenis','Tanggal Beli','Jatuh Tempo','Unit','Harga Beli (%)','Modal Beli','Nominal','Kupon/th (%)','Bunga Akrual','Total Nilai','P&L'],
+      ...r.map(x=>{const mod=getModalBeli(x), nom=getNilaiNominal(x), b=hitungBungaAkrual(x);
+        return [x.nama||'',x.jenis||'',x.tgl||'',x.jatuhTempo||'',x.unit||0,x.hargaPct||100,R(mod),R(nom),x.kupon||0,R(b),R(nom+b),R(nom+b-mod)];}),
+      ['TOTAL','','','',sumBy(r,x=>x.unit),'',R(tMod),R(tNom),'',R(tB),R(tNom+tB),R(tNom+tB-tMod)]];
+  }},
+  {id:'divBei', l:'Dividen BEI', g:'Pendapatan', n:()=>(APP.data.divBei||[]).length, rows:()=>{
+    const r = [...(APP.data.divBei||[])].sort((a,b)=>(a.tgl||'').localeCompare(b.tgl||'')), t = sumBy(r,x=>x.bruto);
+    return [['Tanggal','Saham','Bruto','Pajak 10%','Bersih','Keterangan'],
+      ...r.map(x=>[x.tgl,x.saham,x.bruto,R(x.bruto*.1),R(x.bruto*.9),x.ket||'']),
+      ['TOTAL','',R(t),R(t*.1),R(t*.9)]];
+  }},
+  {id:'divEtf', l:'Dividen US', g:'Pendapatan', n:()=>(APP.data.divEtf||[]).length, rows:()=>{
+    const k = APP.data.kurs||17800, r = [...(APP.data.divEtf||[])].sort((a,b)=>(a.tgl||'').localeCompare(b.tgl||'')), t = sumBy(r,x=>x.bruto);
+    return [['Tanggal','Kode','Bruto (USD)','Bruto (IDR)','Pajak 30%','Bersih (IDR)','Keterangan'],
+      ...r.map(x=>[x.tgl,x.kode,x.bruto,R(x.bruto*k),R(x.bruto*k*.3),R(x.bruto*k*.7),x.ket||'']),
+      ['TOTAL','',t.toFixed(2),R(t*k),R(t*k*.3),R(t*k*.7)]];
+  }},
+  {id:'dana', l:'Dana Darurat', g:'Perencanaan', n:()=>(APP.data.dana||[]).length, rows:()=>{
+    const r = APP.data.dana||[], nv = x => x.now||x.masuk||0;
+    const tM = sumBy(r,x=>x.masuk), tV = sumBy(r,nv);
+    return [['Item','Jenis','Modal Masuk','Nilai Sekarang','Keuntungan','Porsi'],
+      ...r.map(x=>[x.item,DANA_JENIS[danaJenis(x)].l,x.masuk||0,nv(x),R(nv(x)-(x.masuk||0)),pct2(nv(x),tV)]),
+      ['TOTAL','',R(tM),R(tV),R(tV-tM),tV?'100%':'']];
+  }},
+  {id:'goals', l:'Goals Keuangan', g:'Perencanaan', n:()=>(APP.data.goals||[]).length, rows:()=>{
+    const r = APP.data.goals||[];
+    return [['Nama','Target','Terkumpul','Kurang','Progress','Deadline'],
+      ...r.map(x=>[x.nama,x.target||0,x.terkumpul||0,Math.max(0,(x.target||0)-(x.terkumpul||0)),pct2(x.terkumpul||0,x.target),x.deadline||'']),
+      ['TOTAL',sumBy(r,x=>x.target),sumBy(r,x=>x.terkumpul),sumBy(r,x=>Math.max(0,(x.target||0)-(x.terkumpul||0))),pct2(sumBy(r,x=>x.terkumpul),sumBy(r,x=>x.target))]];
+  }},
+  {id:'ringkasan', l:'Ringkasan Portofolio', g:'Ringkasan', n:()=>null, rows:()=>{
+    const ob = APP.data.obligasi||[];
+    const kelas = [
+      ['Saham BEI', sumBy(cSaham(),x=>x.m), tSaham()],
+      ['US', sumBy(cEtf(),x=>x.mi), tEtf()],
+      ['Emas', sumBy(cEmas(),x=>x.m), tEmas()],
+      ['Crypto', sumBy(cBtc(),x=>x.m), tBtc()],
+      ['Reksadana', sumBy(APP.data.rdana||[],x=>x.masuk), tRdana()],
+      ['Obligasi / SBN', sumBy(ob,getModalBeli), tObligasi()],
+    ];
+    const tM = sumBy(kelas,x=>x[1]), tV = sumBy(kelas,x=>x[2]);
+    const dM = sumBy(APP.data.dana||[],x=>x.masuk), dV = tDana();
+    return [['Aset','Modal','Nilai','P&L','% P&L','Porsi'],
+      ...kelas.map(([l,m,v])=>[l,R(m),R(v),R(v-m),pct2(v-m,m),pct2(v,tV)]),
+      ['TOTAL INVESTASI',R(tM),R(tV),R(tV-tM),pct2(tV-tM,tM),tV?'100%':''],
+      ['Dana Darurat',R(dM),R(dV),R(dV-dM),pct2(dV-dM,dM),''],
+      ['GRAND TOTAL',R(tM+dM),R(tV+dV),R(tV+dV-tM-dM),pct2(tV+dV-tM-dM,tM+dM),''],
+      [],
+      ['Dividen BEI (YTD)','',R(tDivBei())],
+      ['Dividen US (YTD, IDR)','',R(tDivEtf())]];
+  }},
+];
 
-  // US (ETF)
-  c += '\nUS (ETF)\nTanggal,Kode,Unit,Beli USD,Kini USD,Nilai USD,Nilai IDR,P&L IDR\n';
-  cEtf().forEach(e => c+=`${e.tgl},${e.kode},${e.unit},${e.beli},${e.now},${e.vu.toFixed(2)},${R(e.vi)},${R(e.pl)}\n`);
+// Pilihan bagian diingat per browser
+APP.exportSel = (() => {
+  try { const v = JSON.parse(localStorage.getItem('pt_export_sel')); if (Array.isArray(v) && v.length) return v; } catch(e) {}
+  return EXPORT_SECTIONS.map(x=>x.id);
+})();
+APP.exportOpen = false;
 
-  // EMAS
-  c += '\nEMAS\nTanggal,Lokasi,Gram,Beli/gr,Modal,Kini/gr,Nilai,P&L\n';
-  cEmas().forEach(e => c+=`${e.tgl||''},${e.lokasi},${e.gram},${e.beli},${R(e.m)},${e.now},${R(e.v)},${R(e.pl)}\n`);
-
-  // BITCOIN
-  c += '\nBITCOIN\nTanggal,Amount (BTC),Harga Beli (IDR),Modal,Harga Kini (IDR),Nilai,P&L\n';
-  (APP.data.btc||[]).forEach(b => {
-    const modal = (b.amount||0)*(b.beli||0);
-    const nilai = (b.amount||0)*(b.now||0);
-    c+=`${b.tgl||''},${b.amount||0},${b.beli||0},${R(modal)},${b.now||0},${R(nilai)},${R(nilai-modal)}\n`;
+function openExport() { APP.exportOpen = true; render(); }
+function closeExport() { APP.exportOpen = false; render(); }
+function exportSelected() { return [...document.querySelectorAll('.ex-cb:checked')].map(e=>e.value); }
+function exportRefresh() {
+  const sel = exportSelected(), btn = document.getElementById('ex-go');
+  if (btn) { btn.disabled = !sel.length; btn.textContent = sel.length ? `⬇ Export Terpilih (${sel.length})` : '⬇ Pilih minimal 1 bagian'; }
+  const all = document.getElementById('ex-all');
+  if (all) { const n = document.querySelectorAll('.ex-cb').length; all.checked = sel.length === n; all.indeterminate = sel.length > 0 && sel.length < n; }
+}
+function exportToggleAll(on) {
+  document.querySelectorAll('.ex-cb').forEach(e => e.checked = on);
+  exportRefresh();
+}
+function runExport(ids) {
+  if (!ids || !ids.length) return;
+  const secs = EXPORT_SECTIONS.filter(x => ids.includes(x.id));
+  const semua = secs.length === EXPORT_SECTIONS.length;
+  APP.exportSel = secs.map(x=>x.id);
+  try { localStorage.setItem('pt_export_sel', JSON.stringify(APP.exportSel)); } catch(e) {}
+  const now = new Date();
+  const lines = [
+    csvRow(['Portfolio Tracker Export']),
+    csvRow(['Tanggal export', ymd(now) + ' ' + now.toTimeString().slice(0,5)]),
+    csvRow(['Kurs USD/IDR', APP.data.kurs||17800]),
+    csvRow(['Bagian', semua ? 'Semua' : secs.map(x=>x.l).join(' + ')]),
+  ];
+  secs.forEach(sec => {
+    lines.push('', csvRow([sec.l.toUpperCase()]));
+    sec.rows().forEach(r => lines.push(csvRow(r)));
   });
-
-  // DIVIDEN BEI
-  c += '\nDIVIDEN BEI\nTanggal,Kode,Lot,Bruto,Pajak,Neto\n';
-  (APP.data.divBei||[]).forEach(d => c+=`${d.tgl},${d.kode||''},${d.lot||''},${d.bruto||0},${d.pajak||0},${d.neto||0}\n`);
-
-  // DIVIDEN ETF
-  c += '\nDIVIDEN ETF\nTanggal,ETF,Unit,Bruto (USD),Neto (USD),Neto (IDR)\n';
-  (APP.data.divEtf||[]).forEach(d => {
-    const netoIdr = (d.neto||d.bruto||0)*(APP.data.kurs||17800);
-    c+=`${d.tgl},${d.kode||''},${d.unit||''},${d.bruto||0},${d.neto||d.bruto||0},${R(netoIdr)}\n`;
-  });
-
-  // DANA DARURAT
-  c += '\nDANA DARURAT\nItem,Modal Masuk,Nilai Sekarang,Keuntungan\n';
-  (APP.data.dana||[]).forEach(d => {
-    const now = d.now||d.masuk||0;
-    c+=`${d.item},${d.masuk||0},${now},${R(now-(d.masuk||0))}\n`;
-  });
-  const totDana = tDana(), modDana = (APP.data.dana||[]).reduce((a,d)=>a+(d.masuk||0),0);
-  c+=`TOTAL,${R(modDana)},${R(totDana)},${R(totDana-modDana)}\n`;
-
-  // GOALS KEUANGAN
-  c += '\nGOALS KEUANGAN\nNama,Target,Terkumpul,Progress (%),Deadline\n';
-  (APP.data.goals||[]).forEach(g => {
-    const pct = g.target > 0 ? ((g.terkumpul||0)/g.target*100).toFixed(1) : '0.0';
-    c+=`${g.nama},${g.target||0},${g.terkumpul||0},${pct}%,${g.deadline||''}\n`;
-  });
-
-  // SUMMARY
-  c += '\nSUMMARY\nAset,Nilai IDR\n';
-  c += `Saham BEI,${R(tSaham())}\nUS,${R(tEtf())}\nEmas,${R(tEmas())}\nCrypto,${R(tBtc())}\nDana Darurat,${R(tDana())}\nTotal Investasi,${R(tSaham()+tEtf()+tEmas()+tBtc())}\nGrand Total,${R(tSaham()+tEtf()+tEmas()+tBtc()+tDana())}\n`;
-  c += `\nDividen BEI (YTD),${R(tDivBei())}\nDividen US (YTD),${R(tDivEtf())}\n`;
-
-  const blob = new Blob(['\uFEFF'+c], {type:'text/csv;charset=utf-8'});
+  const slug = semua ? '' : secs.length === 1 ? '_' + secs[0].l.replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'') : '_Pilihan';
+  const blob = new Blob(['﻿' + lines.join('\n') + '\n'], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'Portfolio_'+new Date().toISOString().slice(0,10)+'.csv';
-  a.click();
+  a.download = `Portfolio${slug}_${ymd(now)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  closeExport();
+}
+// dipertahankan untuk kompatibilitas: export semua bagian
+function doExport() { runExport(EXPORT_SECTIONS.map(x=>x.id)); }
+
+function vExportModal() {
+  if (!APP.exportOpen || !APP.data) return '';
+  const groups = [...new Set(EXPORT_SECTIONS.map(x=>x.g))];
+  const sel = new Set(APP.exportSel);
+  const nSel = EXPORT_SECTIONS.filter(x=>sel.has(x.id)).length;
+  return `<div class="modal-overlay" onclick="if(event.target===this)closeExport()">
+  <div class="modal-box ex-box">
+    <div class="modal-title" style="margin-bottom:4px">Export CSV</div>
+    <div style="font-size:12.5px;color:var(--text2);margin-bottom:14px">Pilih bagian yang mau di-export. Semua bagian yang dipilih digabung dalam 1 file CSV.</div>
+    <label class="ex-all-row"><input type="checkbox" id="ex-all" onchange="exportToggleAll(this.checked)"> <b>Pilih semua</b></label>
+    ${groups.map(g=>`
+      <div class="ex-group">${g}</div>
+      <div class="ex-grid">${EXPORT_SECTIONS.filter(x=>x.g===g).map(x=>{ const n = x.n(); return `
+        <label class="ex-item"><input type="checkbox" class="ex-cb" value="${x.id}" ${sel.has(x.id)?'checked':''} onchange="exportRefresh()">
+          <span>${x.l}</span>${n===null?'':`<span class="ex-n">${n} baris</span>`}</label>`;}).join('')}
+      </div>`).join('')}
+    <div class="modal-actions ex-actions">
+      <button class="btn" onclick="closeExport()">Batal</button>
+      <span style="flex:1"></span>
+      <button class="btn" onclick="runExport(EXPORT_SECTIONS.map(x=>x.id))">Export Semua</button>
+      <button class="btn btn-primary" id="ex-go" onclick="runExport(exportSelected())" ${nSel?'':'disabled'}>⬇ Export Terpilih (${nSel})</button>
+    </div>
+  </div></div>`;
 }
 
 // ── MAIN RENDER ───────────────────────────────────────────
@@ -2086,6 +2259,7 @@ const ICONS = {
   logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
   eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   eyeOff:'<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c6.5 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3.5 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/>',
+  setting:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
   calendar:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
   menu:'<line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>',
 };
@@ -2095,7 +2269,7 @@ const icon = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const NAV = [
   {g:null, items:[
     {id:'dash',     l:'Dashboard',    c:'#4F46E5'},
-    {id:'export',   l:'Export CSV',   c:'#0284C7', act:'doExport();toggleMobileSidebar(false)'},
+    {id:'export',   l:'Export CSV',   c:'#0284C7', act:'toggleMobileSidebar(false);openExport()'},
   ]},
   {g:'Aset', items:[
     {id:'saham',    l:'Saham BEI',    c:'#185FA5'},
@@ -2116,6 +2290,96 @@ const NAV = [
 ];
 const NAV_LOGOUT = {id:'logout', l:'Keluar', c:'#DC2626', act:'doLogout()', cls:'sb-logout'};
 
+const NAV_SETTING = {id:'setting', l:'Pengaturan', c:'#64748B'};
+
+// ── PENGATURAN AKUN ───────────────────────────────────────
+function userHasPassword() {
+  const u = APP.user;
+  return !!(u && (u.providerData||[]).some(p => p && p.providerId === 'password'));
+}
+function userHasGoogle() {
+  const u = APP.user;
+  return !!(u && (u.providerData||[]).some(p => p && p.providerId === 'google.com'));
+}
+function setMsg(id, text, ok) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'alert ' + (ok ? 'alert-green' : 'alert-red');
+  el.innerHTML = text;
+  el.style.display = text ? 'block' : 'none';
+}
+function togglePwVisible(on) {
+  ['pw-old','pw-new','pw-new2'].forEach(id => { const el = document.getElementById(id); if (el) el.type = on ? 'text' : 'password'; });
+}
+async function changePassword() {
+  const oldPw = document.getElementById('pw-old').value;
+  const newPw = document.getElementById('pw-new').value;
+  const newPw2 = document.getElementById('pw-new2').value;
+  setMsg('pw-msg', '');
+  if (!oldPw || !newPw || !newPw2) return setMsg('pw-msg', 'Isi semua kolom dulu.');
+  if (newPw.length < 6) return setMsg('pw-msg', 'Password baru minimal 6 karakter.');
+  if (newPw !== newPw2) return setMsg('pw-msg', 'Ulangi password baru tidak sama.');
+  if (newPw === oldPw) return setMsg('pw-msg', 'Password baru sama dengan password lama.');
+  const btn = document.getElementById('pw-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Menyimpan...'; }
+  try {
+    const user = APP.auth.currentUser || APP.user;
+    // Firebase meminta verifikasi ulang password lama sebelum boleh mengganti password
+    const cred = firebase.auth.EmailAuthProvider.credential(user.email, oldPw);
+    await user.reauthenticateWithCredential(cred);
+    await user.updatePassword(newPw);
+    ['pw-old','pw-new','pw-new2'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    setMsg('pw-msg', '✅ Password berhasil diganti. Pakai password baru saat login berikutnya. Kalau aplikasi juga terbuka di perangkat lain, perangkat itu mungkin diminta login ulang.', true);
+  } catch(e) {
+    const code = e && e.code;
+    setMsg('pw-msg', (code === 'auth/wrong-password' || code === 'auth/invalid-credential' || code === 'auth/invalid-login-credentials') ? 'Password lama salah.' : authMsg(e));
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Simpan Password Baru'; }
+}
+async function sendResetFromSettings() {
+  setMsg('reset-msg', '');
+  try {
+    APP.auth.languageCode = 'id';
+    await APP.auth.sendPasswordResetEmail(APP.user.email);
+    setMsg('reset-msg', `✅ Link untuk membuat password baru sudah dikirim ke <b>${APP.user.email}</b>. Cek inbox (dan folder spam).`, true);
+  } catch(e) { setMsg('reset-msg', authMsg(e)); }
+}
+
+function vSetting() {
+  if (APP.demo) {
+    return `<div class="section-title" style="margin-bottom:14px">⚙️ Pengaturan</div>
+    <div class="set-card"><div style="font-size:13px;color:var(--text2)">Pengaturan akun tidak tersedia di <b>Mode Demo</b>. Login dengan akun sendiri untuk mengganti password.</div></div>`;
+  }
+  const u = APP.user, hasPw = userHasPassword(), hasG = userHasGoogle();
+  const metode = [hasPw && 'Email & password', hasG && 'Google'].filter(Boolean).join(' + ') || '-';
+  const dibuat = u.metadata && u.metadata.creationTime ? new Date(u.metadata.creationTime).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}) : '';
+  return `
+  <div class="section-title" style="margin-bottom:14px">⚙️ Pengaturan</div>
+  <div class="set-card">
+    <div class="set-title">Akun</div>
+    <div class="set-row"><span>Email</span><b>${u.email}</b></div>
+    <div class="set-row"><span>Metode masuk</span><b>${metode}</b></div>
+    ${dibuat ? `<div class="set-row"><span>Terdaftar sejak</span><b>${dibuat}</b></div>` : ''}
+  </div>
+  <div class="set-card">
+    <div class="set-title">Ganti Password</div>
+    ${hasPw ? `
+      <div id="pw-msg" class="alert" style="display:none"></div>
+      <div class="set-form">
+        <div class="form-group"><label>Password lama</label><input id="pw-old" type="password" autocomplete="current-password"></div>
+        <div class="form-group"><label>Password baru</label><input id="pw-new" type="password" autocomplete="new-password" placeholder="minimal 6 karakter"></div>
+        <div class="form-group"><label>Ulangi password baru</label><input id="pw-new2" type="password" autocomplete="new-password" onkeydown="if(event.key==='Enter')changePassword()"></div>
+        <label class="set-check"><input type="checkbox" onchange="togglePwVisible(this.checked)"> Tampilkan password</label>
+        <button class="btn btn-primary" id="pw-btn" onclick="changePassword()">Simpan Password Baru</button>
+      </div>
+      <div class="set-sub">
+        Lupa password lama? <button class="link-btn" onclick="sendResetFromSettings()">Kirim link reset ke email</button>
+        <div id="reset-msg" class="alert" style="display:none;margin-top:8px"></div>
+      </div>`
+    : `<div style="font-size:13px;color:var(--text2);line-height:1.6">Akun ini masuk dengan <b>Google</b>, jadi tidak memakai password di aplikasi ini. Keamanan login diatur dari akun Google kamu.</div>`}
+  </div>`;
+}
+
 function hexA(hex, a) {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
@@ -2126,7 +2390,7 @@ function sbItem(t) {
   return `<button class="sb-item${isActive?' active':''}${t.cls?' '+t.cls:''}" style="--c:${t.c};--t:${hexA(t.c,.12)};--t2:${hexA(t.c,.35)}" onclick="${click}" title="${t.l}"><span class="sb-ico">${icon(t.id)}</span><span class="sb-label">${t.l}</span></button>`;
 }
 
-const VIEWS = {dash:vDash, saham:vSaham, etf:vEtf, emas:vEmas, btc:vBtc, rdana:vRdana, obligasi:vObligasi, div:vDiv, dana:vDana, compound:vCompound, spt:vSpt};
+const VIEWS = {dash:vDash, saham:vSaham, etf:vEtf, emas:vEmas, btc:vBtc, rdana:vRdana, obligasi:vObligasi, div:vDiv, dana:vDana, compound:vCompound, spt:vSpt, setting:vSetting};
 
 // ── SIDEBAR STATE ─────────────────────────────────────────
 // Posisi buka/tutup sidebar diingat per browser (bukan disimpan ke Firestore)
@@ -2261,7 +2525,7 @@ function vSidebar() {
       ${grp.g ? `<div class="sb-group">${grp.g}</div>` : ''}
       ${grp.items.map(sbItem).join('')}
     `).join('')}</nav>
-    <div class="sb-footer">${sbItem(APP.demo ? {...NAV_LOGOUT, l:'Keluar Demo'} : NAV_LOGOUT)}</div>
+    <div class="sb-footer">${sbItem(NAV_SETTING)}${sbItem(APP.demo ? {...NAV_LOGOUT, l:'Keluar Demo'} : NAV_LOGOUT)}</div>
   </aside>
   <div class="sb-backdrop" onclick="toggleMobileSidebar(false)"></div>`;
 }
@@ -2295,9 +2559,11 @@ function render() {
     </div>
   </div>
   ${vModal()}
+  ${vExportModal()}
   ${vEditModal()}`;
   const newSb = document.querySelector('.sb-scroll');
   if (newSb) newSb.scrollTop = sbTop;
+  if (APP.exportOpen) exportRefresh();
 }
 </script>
 </body>
