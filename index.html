@@ -45,6 +45,75 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .form-group{margin-bottom:14px}
 .form-group label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
 .ex-box{max-width:560px}
+/* BELI BULANAN */
+.bb-intro{font-size:13px;color:var(--text2);margin:-4px 0 14px;max-width:820px;line-height:1.6}
+.bb-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:16px 18px;margin-bottom:14px}
+.bb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:4px 12px}
+.bb-grid .form-group input,.bb-grid .form-group select{padding:8px 10px}
+.bb-kurs{padding:9px 0;font-size:14px;font-weight:600}
+.bb-mode{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.bb-mode button{flex:1;min-width:180px;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg2);font-size:13px;font-weight:600;cursor:pointer;color:var(--text)}
+.bb-mode button span{font-weight:400;color:var(--text2);margin-left:4px;font-size:12px}
+.bb-mode button.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.bb-mode button.on span{color:#dbeafe}
+.bb-phead{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;margin-bottom:10px;font-size:14px}
+.bb-phead b{font-weight:600}
+.bb-muted{color:var(--text2)}
+.bb-small{font-size:11.5px}
+.bb-warn{color:var(--red);font-weight:600;font-size:12.5px}
+.bb-kelas{border-top:1px solid var(--border);padding:10px 0}
+.bb-kelas.off .bb-items{opacity:.5}
+.bb-khead{display:flex;align-items:center;gap:6px 16px;flex-wrap:wrap;font-size:12.5px}
+.bb-kname{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:13.5px;min-width:110px}
+.bb-tgt{margin-left:auto;display:inline-flex;align-items:center;gap:6px;color:var(--text2)}
+.cell-input.bb-num{width:62px;text-align:right;padding:5px 7px}
+.bb-i-po{white-space:nowrap}
+.bb-tg{border:1px solid;border-radius:20px;padding:3px 11px;font-size:11.5px;font-weight:600;cursor:pointer;min-width:58px}
+.bb-tg.on{background:var(--green-bg);border-color:#bbf7d0;color:var(--green)}
+.bb-tg.off{background:var(--amber-bg);border-color:#fcd34d;color:var(--amber)}
+.bb-items{margin:8px 0 0 18px;font-size:12.5px}
+.bb-ihead,.bb-irow{display:grid;grid-template-columns:70px minmax(140px,1.6fr) 1fr 1fr 110px;gap:8px;align-items:center;padding:5px 0}
+.bb-ihead{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;padding-bottom:2px}
+.bb-irow{border-top:1px dashed var(--border)}
+.bb-irow.off>span:not(:first-child){opacity:.5}
+.bb-items .r{text-align:right}
+.bb-ifoot{font-size:11.5px;color:var(--text2);padding-top:6px}
+.bb-badge{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--bg3);color:var(--text2);white-space:nowrap}
+.bb-badge.bad{background:var(--red-bg);color:var(--red)}
+.bb-badge.good{background:var(--green-bg);color:var(--green)}
+.bb-badge.warn{background:var(--amber-bg);color:var(--amber)}
+.bb-note{font-size:11.5px;color:var(--text3);margin-top:8px}
+.bb-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px}
+.bb-tiles div{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px}
+.bb-tiles span{display:block;font-size:10.5px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
+.bb-tiles b{font-size:16px}
+.bb-tbl .bb-crow td{background:var(--bg3)}
+.bb-mob{display:none}
+.bb-tbl .bb-ind{padding-left:30px}
+.bb-txt{width:100%;min-height:150px;font-family:ui-monospace,Menlo,monospace;font-size:12px;padding:10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);resize:vertical}
+.bb-empty{font-size:13px;color:var(--text2);padding:18px;text-align:center;background:var(--bg);border-radius:var(--radius)}
+@media(max-width:640px){
+  .bb-panel{padding:14px}
+  .bb-grid{grid-template-columns:1fr 1fr}
+  .bb-grid .bb-wide{grid-column:1/-1}
+  .bb-mode button{min-width:0}
+  .bb-items{margin-left:0}
+  .bb-ihead{display:none}
+  .bb-irow{grid-template-columns:62px auto minmax(0,1fr) auto;grid-template-areas:"tg n n po" "tg v p po";gap:1px 8px}
+  .bb-i-tg{grid-area:tg}.bb-i-n{grid-area:n;min-width:0}.bb-i-po{grid-area:po}
+  .bb-items .bb-i-v{grid-area:v;text-align:left;font-size:11.5px}
+  .bb-items .bb-i-p{grid-area:p;text-align:left;font-size:11.5px}
+  .bb-tgt{margin-left:0}
+  .bb-tiles{grid-template-columns:1fr 1fr;gap:8px}
+  .bb-tiles b{font-size:14px}
+  .bb-tbl th:nth-child(n+4),.bb-tbl td:nth-child(n+4){display:none}
+  .bb-tbl td{white-space:normal;padding:8px 6px}
+  .bb-tbl td.r{white-space:nowrap}
+  .bb-tbl .bb-crow td:first-child{white-space:nowrap;overflow:visible}
+  .bb-tbl .bb-badge{white-space:normal}
+  .bb-mob{display:inline}
+  .bb-tbl .bb-ind{padding-left:16px}
+}
 .alert-green{background:var(--green-bg);color:var(--green);border:1px solid #bbf7d0}
 .link-btn{border:none;background:none;padding:0;color:var(--blue);font-size:12.5px;font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .set-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:16px 18px;margin-bottom:14px;max-width:560px}
@@ -2259,6 +2328,7 @@ const ICONS = {
   logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
   eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   eyeOff:'<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c6.5 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3.5 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/>',
+  beli:'<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
   setting:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
   calendar:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
   menu:'<line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>',
@@ -2283,12 +2353,364 @@ const NAV = [
     {id:'div',      l:'Dividen',      c:'#059669'},
   ]},
   {g:'Perencanaan', items:[
+    {id:'beli',     l:'Beli Bulanan', c:'#0D9488'},
     {id:'dana',     l:'Dana & Goals', c:'#DB2777'},
     {id:'compound', l:'Compounding',  c:'#EA580C'},
     {id:'spt',      l:'Rekap Harta',  c:'#475569'},
   ]},
 ];
 const NAV_LOGOUT = {id:'logout', l:'Keluar', c:'#DC2626', act:'doLogout()', cls:'sb-logout'};
+
+// ── BELI BULANAN (Tahap 1) ───────────────────────────────
+// Dua level: (1) dana dibagi ke kelas aset sesuai target beli per kelas,
+// (2) jatah tiap kelas dibagi ke kode di dalamnya sesuai porsi (default rata),
+// lalu dibulatkan ke satuan beli (lot / lembar / gram / Rp 1.000 / unit SBN).
+const BB_KELAS = [
+  {k:'saham',    l:'Saham BEI', c:'#185FA5'},
+  {k:'etf',      l:'US',        c:'#3B6D11'},
+  {k:'emas',     l:'Emas',      c:'#BA7517'},
+  {k:'btc',      l:'Crypto',    c:'#A32D2D'},
+  {k:'rdana',    l:'Reksadana', c:'#7C3AED'},
+  {k:'obligasi', l:'Obligasi',  c:'#0891B2'},
+];
+
+const bbAttr = v => String(v).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+function bbState() {
+  if (!APP.data.beliBulanan) APP.data.beliBulanan = {};
+  const S = APP.data.beliBulanan;
+  if (S.dana == null) S.dana = 0;
+  if (S.feeBei == null) S.feeBei = 0.15;
+  if (S.feeUs == null) S.feeUs = 0;
+  if (!S.frac) S.frac = '1';
+  if (!S.mode) S.mode = 'rebal';
+  if (!S.skipMode) S.skipMode = 'kas';
+  if (!S.target) S.target = {};  // per kelas; kosong = titik tengah Target Alokasi
+  if (!S.porsi) S.porsi = {};    // per kode, % di dalam kelas; kosong = dibagi rata
+  if (!S.skip) S.skip = {};      // per kode, atau 'kelas:<k>'
+  return S;
+}
+function bbMid(k) {
+  ensureTargetDefaults();
+  const t = APP.data.targetAlokasi.kelas[k] || {min:0, max:0};
+  return ((+t.min||0) + (+t.max||0)) / 2;
+}
+function bbTarget(k) {
+  const S = bbState();
+  return S.target[k] != null ? +S.target[k] : bbMid(k);
+}
+
+// Daftar kode per kelas, diambil dari holding
+function bbItems() {
+  const isHold = x => (x.ket||'').toLowerCase().includes('hold');
+  const group = (arr, keyOf, make) => {
+    const m = new Map();
+    arr.forEach(x => { const k = keyOf(x); if (!m.has(k)) m.set(k, make(x)); m.get(k).rows.push(x); });
+    return [...m.values()];
+  };
+  const out = {};
+
+  const sh = cSaham(), shHold = sh.filter(isHold);
+  out.saham = {holdOnly: shHold.length > 0, hasAny: sh.length > 0, list: group(shHold.length ? shHold : sh, x => (x.kode||'').toUpperCase(), x => ({
+    key:'saham:'+(x.kode||'').toUpperCase(), n:(x.kode||'').toUpperCase(), rows:[], kind:'lot'}))};
+  out.saham.list.forEach(it => {
+    it.v = it.rows.reduce((a,r)=>a+r.v,0);
+    it.p = it.rows[it.rows.length-1].now || 0;
+    const w = it.rows.find(r => r.wajarBawah > 0 && r.wajarAtas > 0);
+    if (w && it.p) it.wajar = it.p < w.wajarBawah ? 'diskon' : it.p > w.wajarAtas ? 'mahal' : 'wajar';
+  });
+
+  const et = cEtf(), etHold = et.filter(isHold);
+  out.etf = {holdOnly: etHold.length > 0, hasAny: et.length > 0, list: group(etHold.length ? etHold : et, x => (x.kode||'').toUpperCase(), x => ({
+    key:'etf:'+(x.kode||'').toUpperCase(), n:(x.kode||'').toUpperCase(), rows:[], kind:'etf'}))};
+  out.etf.list.forEach(it => { it.v = it.rows.reduce((a,r)=>a+r.vi,0); it.p = it.rows[it.rows.length-1].now || 0; });
+
+  out.emas = {list: group(cEmas(), x => (x.lokasi||'Emas')+'|'+(x.jenis||'digital'), x => ({
+    key:'emas:'+(x.lokasi||'Emas')+'|'+(x.jenis||'digital'), n:`${x.lokasi||'Emas'} (${x.jenis||'digital'})`, rows:[], kind:(x.jenis==='fisik'?'gram':'rp'), est:'gram'}))};
+  out.emas.list.forEach(it => { it.v = it.rows.reduce((a,r)=>a+r.v,0); it.p = it.rows[it.rows.length-1].now || 0; });
+
+  out.btc = {list: group(cBtc(), x => (x.jenis||'BTC').toUpperCase(), x => ({
+    key:'btc:'+(x.jenis||'BTC').toUpperCase(), n:(x.jenis||'BTC').toUpperCase(), rows:[], kind:'rp', est:'koin'}))};
+  out.btc.list.forEach(it => { it.v = it.rows.reduce((a,r)=>a+r.v,0); it.p = it.rows[it.rows.length-1].now || 0; });
+
+  out.rdana = {list: (APP.data.rdana||[]).map(r => ({key:'rdana:'+r.item, n:r.item, v:(r.now||r.masuk||0), kind:'rp'}))};
+
+  // SBN dibeli per seri yang sedang ditawarkan, jadi cukup satu baris untuk kelasnya
+  out.obligasi = {list: [{key:'obligasi:_sbn', n:'SBN seri yang sedang ditawarkan', v:tObligasi(), kind:'sbn'}]};
+
+  // kelas tanpa holding tapi punya target → satu baris "pilih produk"
+  ['saham','etf','emas','btc','rdana'].forEach(k => {
+    if (!out[k].list.length) out[k].list = [{key:k+':_baru', n:'Produk baru (pilih sendiri)', v:0, kind:'rp', placeholder:true}];
+  });
+  return out;
+}
+
+// Pembagian dana (logika sama dengan prototipe): rebalance mengisi yang paling kurang dulu, DCA dibagi rata sesuai bobot.
+function bbDistribute(list, dana, total, mode, kas) {
+  const twA = list.reduce((s,a)=>s+(a.on?a.tw:0),0);
+  const w = a => !a.on ? 0 : (kas ? a.tw : (twA ? a.tw/twA : 0));
+  let alloc;
+  if (mode === 'dca') alloc = list.map(a => dana*w(a));
+  else {
+    const gapAll = list.map(a => Math.max(0, total*a.tw - a.v));
+    const gap = gapAll.map((g,i) => list[i].on ? g : 0);
+    const base = kas ? gapAll : gap;
+    const sg = base.reduce((s,g)=>s+g,0);
+    if (sg > 0 && sg >= dana) alloc = gap.map(g => dana*g/sg);
+    else { const rest = dana - sg; alloc = gap.map((g,i) => g + rest*w(list[i])); }
+  }
+  const used = alloc.reduce((s,x)=>s+x,0);
+  return {alloc, held: Math.max(0, dana - used)};
+}
+
+function bbCalc() {
+  const S = bbState(), kurs = APP.data.kurs || 17800, dana = Math.max(0, +S.dana || 0);
+  const kas = S.skipMode !== 'alih', mode = S.mode === 'dca' ? 'dca' : 'rebal', frac = S.frac === '1';
+  const items = bbItems();
+  const nilaiKelas = {saham:tSaham(), etf:tEtf(), emas:tEmas(), btc:tBtc(), rdana:tRdana(), obligasi:tObligasi()};
+  const cur = Object.values(nilaiKelas).reduce((a,v)=>a+v,0), total = cur + dana;
+
+  const K = BB_KELAS.map(c => ({...c, t: Math.max(0, bbTarget(c.k)), v: nilaiKelas[c.k], info: items[c.k]}));
+  const sumT = K.reduce((s,c)=>s+c.t,0);
+  K.forEach(c => {
+    c.tw = sumT > 0 ? c.t/sumT : 0;
+    c.skip = !!S.skip['kelas:'+c.k];
+    c.items = c.info.list.map(it => {
+      const fee = it.kind==='lot' ? (S.feeBei||0)/100 : it.kind==='etf' ? (S.feeUs||0)/100 : 0;
+      let unit, free = false, dec = 0;
+      if (it.kind === 'lot')      unit = (it.p||0) * 100 * (1+fee);
+      else if (it.kind === 'etf') { unit = (it.p||0) * kurs * (1+fee); if (frac) { free = true; dec = 4; } }
+      else if (it.kind === 'gram') unit = it.p || 0;
+      else if (it.kind === 'sbn') unit = 1000000;
+      else { unit = 1000; free = true; }   // beli per Rp 1.000
+      return {...it, fee, unit, free, dec, on: !c.skip && !S.skip[it.key]};
+    });
+    // porsi di dalam kelas (default rata)
+    const n = c.items.length;
+    c.items.forEach(it => { it.porsi = S.porsi[it.key] != null ? +S.porsi[it.key] : 100/n; });
+    const sp = c.items.reduce((s,it)=>s+Math.max(0,it.porsi),0);
+    c.sumPorsi = sp;
+    c.items.forEach(it => { it.w = sp > 0 ? Math.max(0,it.porsi)/sp : 0; });
+    c.on = !c.skip && c.items.some(it => it.on);
+  });
+
+  // Level 1: kelas
+  const L1 = bbDistribute(K.map(c => ({tw:c.tw, v:c.v, on:c.on})), dana, total, mode, kas);
+  let held = L1.held;
+  const all = [];
+  K.forEach((c,ci) => {
+    c.alloc = L1.alloc[ci];
+    const sumV = c.items.reduce((s,it)=>s+it.v,0);
+    c.itemsTotal = sumV + c.alloc;
+    // Level 2: kode di dalam kelas
+    const L2 = bbDistribute(c.items.map(it => ({tw:it.w, v:it.v, on:it.on})), c.alloc, c.itemsTotal, mode, kas);
+    held += L2.held;
+    c.items.forEach((it,ii) => {
+      it.alloc = L2.alloc[ii];
+      it.ideal = c.itemsTotal * it.w;
+      it.cls = c;
+      // bulatkan ke satuan
+      if (!it.unit || it.alloc <= 0) { it.units = 0; it.cost = 0; }
+      else if (it.free && it.kind === 'etf') { it.units = Math.floor(it.alloc/it.unit*1e4)/1e4; it.cost = it.units*it.unit; }
+      else if (it.free) { it.units = Math.floor(it.alloc/1000)*1000; it.cost = it.units; }
+      else { it.units = Math.floor(it.alloc/it.unit); it.cost = it.units*it.unit; }
+      all.push(it);
+    });
+  });
+  const allocSum = dana - held;
+  let left = allocSum - all.reduce((s,it)=>s+it.cost,0);
+
+  // sisa receh: +1 satuan ke kelas yang paling jauh di bawah targetnya (lalu kode yang paling kurang di kelas itu)
+  const kelasGap = c => total*c.tw - (c.v + c.items.reduce((s,it)=>s+it.cost,0));
+  for (let guard=0; guard<500; guard++) {
+    let best=null, bestK=0, bestI=-Infinity;
+    all.forEach(it => {
+      if (!it.on || it.free || !it.unit || it.unit > left + 0.5) return;
+      const gk = kelasGap(it.cls); if (gk <= 0) return;
+      const gi = it.ideal - (it.v + it.cost);
+      if (gk > bestK || (gk === bestK && gi > bestI)) { bestK = gk; bestI = gi; best = it; }
+    });
+    if (!best) break;
+    best.units += 1; best.cost += best.unit; left -= best.unit;
+  }
+  // sisa terakhir ke kode fraksional yang kelasnya masih di bawah target
+  all.forEach(it => {
+    if (!it.on || !it.free || !it.unit || left < 1000) return;
+    const g = kelasGap(it.cls); if (g <= 0) return;
+    if (it.kind === 'etf') { const add = Math.floor(Math.min(g,left)/it.unit*1e4)/1e4; it.units = +(it.units+add).toFixed(4); it.cost += add*it.unit; left -= add*it.unit; }
+    else { const add = Math.floor(Math.min(g,left)/1000)*1000; it.units += add; it.cost += add; left -= add; }
+  });
+  const spent = allocSum - left;
+  K.forEach(c => { c.spent = c.items.reduce((s,it)=>s+it.cost,0); });
+  return {S, K, dana, cur, total, spent, held, left, sumT, kurs, after: cur + spent};
+}
+
+// ── aksi ──
+function bbSet(f, v) { const S = bbState(); S[f] = v; scheduleSave(); render(); }
+function bbSetNum(f, el) { bbSet(f, Math.max(0, parseFloat(el.value) || 0)); }
+function bbSetTarget(k, el) { bbState().target[k] = Math.max(0, parseFloat(el.value) || 0); scheduleSave(); render(); }
+function bbResetTarget() { bbState().target = {}; scheduleSave(); render(); }
+function bbSetPorsi(k, key, el) {
+  const S = bbState(), items = bbItems()[k].list, n = items.length;
+  items.forEach(it => { if (S.porsi[it.key] == null) S.porsi[it.key] = +(100/n).toFixed(2); });
+  S.porsi[key] = Math.max(0, parseFloat(el.value) || 0);
+  scheduleSave(); render();
+}
+function bbBagiRata(k) { const S = bbState(); bbItems()[k].list.forEach(it => delete S.porsi[it.key]); scheduleSave(); render(); }
+function bbToggle(key) { const S = bbState(); if (S.skip[key]) delete S.skip[key]; else S.skip[key] = true; scheduleSave(); render(); }
+function bbCopy() {
+  const t = document.getElementById('bb-txt'), m = document.getElementById('bb-cpmsg');
+  navigator.clipboard.writeText(t.value).then(() => { if (m) m.textContent = '✓ Tersalin'; })
+    .catch(() => { t.select(); if (m) m.textContent = 'Tekan Ctrl/Cmd+C untuk menyalin'; });
+}
+
+function bbBeliText(it) {
+  const q = v => Q(v);
+  if (!it.units) return '';
+  if (it.kind === 'lot') return `${q(F(it.units))} lot (${q(F(it.units*100))} lembar)`;
+  if (it.kind === 'etf') return `${q(F(it.units, it.free?4:0))} lembar`;
+  if (it.kind === 'gram') return `${q(F(it.units))} gram`;
+  if (it.kind === 'sbn') return `${q(F(it.units))} unit (${Rp(it.units*1000000)})`;
+  return Rp(it.units);
+}
+function bbHarga(it, kurs) {
+  if (it.kind === 'lot') return `@ ${Rp(it.p)}`;
+  if (it.kind === 'etf') return `@ ${Usd(it.p)}`;
+  if (it.kind === 'gram') return `@ ${Rp(it.p)}/gr`;
+  if (it.est === 'gram' && it.p) return `≈ ${Q(F(it.units/it.p, 4))} gram`;
+  if (it.est === 'koin' && it.p) return `≈ ${Q(F(it.units/it.p, 6))} ${it.n}`;
+  return '';
+}
+
+function vBeli() {
+  const R0 = bbCalc(), {S, K} = R0;
+  const pctF = v => F(v*100, 1) + '%';
+  const sumOk = Math.abs(R0.sumT - 100) < 0.05;
+  const tog = (key, on, label) => `<button class="bb-tg ${on?'on':'off'}" onclick="bbToggle('${bbAttr(key)}')" title="${bbAttr(label)}">${on?'Aktif':'Skip'}</button>`;
+  const wajarBadge = w => !w ? '' : w==='mahal' ? `<span class="bb-badge bad" title="Harga kini di atas rentang wajar">⚠️ Mahal</span>` : w==='diskon' ? `<span class="bb-badge good" title="Harga kini di bawah rentang wajar">✅ Diskon</span>` : `<span class="bb-badge" title="Harga kini dalam rentang wajar">⚖️ Wajar</span>`;
+  const nilaiAll = R0.cur;
+
+  // ── blok target & kode per kelas
+  const kelasBlocks = K.map(c => {
+    ensureTargetDefaults();
+    const ta = APP.data.targetAlokasi.kelas[c.k] || {min:0,max:0};
+    const rentang = ta.min === ta.max ? `${ta.min}%` : `${ta.min}–${ta.max}%`;
+    const now = nilaiAll > 0 ? c.v/nilaiAll : 0;
+    const dipakai = c.t > 0;
+    const hint = (c.k==='saham'||c.k==='etf') && c.info.hasAny
+      ? (c.info.holdOnly ? `Hanya kode berketerangan <b>hold</b>.` : `Belum ada kode berketerangan <b>hold</b>, jadi semua kode dipakai. Isi keterangan "hold" di tab ${c.l} untuk memilih.`)
+      : '';
+    const rows = !dipakai ? '' : `
+      <div class="bb-items">
+        <div class="bb-ihead"><span></span><span>Kode</span><span class="r">Nilai sekarang</span><span class="r">Harga</span><span class="r">Porsi di kelas</span></div>
+        ${c.items.map(it => `<div class="bb-irow${it.on?'':' off'}">
+          <span class="bb-i-tg">${it.placeholder ? '' : tog(it.key, !S.skip[it.key], it.n)}</span>
+          <span class="bb-i-n"><b>${it.n}</b> ${wajarBadge(it.wajar)}</span>
+          <span class="r bb-i-v">${Rp(R(it.v))}</span>
+          <span class="r bb-muted bb-i-p">${it.kind==='lot'?Rp(it.p)+'/lbr':it.kind==='etf'?Usd(it.p):it.kind==='gram'||it.est==='gram'?(it.p?Rp(it.p)+'/gr':'–'):it.est==='koin'?(it.p?Rp(it.p):'–'):it.kind==='sbn'?'Rp 1 jt/unit':'–'}</span>
+          <span class="r bb-i-po">${c.items.length>1 ? `<input class="cell-input bb-num" type="number" min="0" step="1" value="${+it.porsi.toFixed(1)}" onchange="bbSetPorsi('${c.k}','${bbAttr(it.key)}',this)"> %` : '<span class="bb-muted">100%</span>'}</span>
+        </div>`).join('')}
+        <div class="bb-ifoot">${hint}${c.items.length>1?` <span class="${Math.abs(c.sumPorsi-100)>0.05?'bb-warn':''}">Total porsi ${F(c.sumPorsi,1)}%${Math.abs(c.sumPorsi-100)>0.05?' (dihitung proporsional)':''}</span> · <button class="link-btn" onclick="bbBagiRata('${c.k}')">Bagi rata</button>`:''}</div>
+      </div>`;
+    return `<div class="bb-kelas${c.on||!dipakai?'':' off'}">
+      <div class="bb-khead">
+        <span class="bb-kname"><span class="legend-dot" style="background:${c.c}"></span>${c.l}</span>
+        <span class="bb-muted">sekarang <b>${pctF(now)}</b></span>
+        <span class="bb-muted">Target Alokasi ${rentang}</span>
+        <span class="bb-tgt">Target beli <input class="cell-input bb-num" type="number" min="0" max="100" step="0.5" value="${+c.t.toFixed(2)}" onchange="bbSetTarget('${c.k}',this)"> %</span>
+        ${dipakai ? tog('kelas:'+c.k, !c.skip, 'Skip seluruh '+c.l) : `<span class="bb-muted bb-small">Target 0%, tidak dibeli</span>`}
+      </div>
+      ${rows}
+    </div>`;
+  }).join('');
+
+  // ── hasil
+  const statusText = (c, it) => {
+    if (c.skip) return `<span class="bb-badge warn">Kelas di-skip</span>`;
+    if (!it.on) return `<span class="bb-badge warn">Di-skip</span>`;
+    if (c.alloc <= 0) return mode1(c);
+    if (!it.units) return `<span class="bb-badge warn">${it.alloc>0?'Belum cukup untuk 1 '+(it.kind==='lot'?'lot':it.kind==='gram'?'gram':it.kind==='sbn'?'unit':'lembar'):'Sudah sesuai porsi'}</span>`;
+    return '';
+  };
+  const mode1 = c => `<span class="bb-badge warn">${S.mode!=='dca' && c.v > R0.total*c.tw ? 'Di atas target, dilewati' : 'Tidak dapat jatah'}</span>`;
+  const after = R0.after;
+  const hasil = R0.dana <= 0 ? `<div class="bb-empty">Isi <b>Dana bulan ini</b> di atas untuk melihat daftar belanja.</div>` : `
+    <div class="bb-tiles">
+      <div><span>Total setelah beli</span><b>${Rp(R(after))}</b></div>
+      <div><span>Terpakai</span><b>${Rp(R(R0.spent))}</b></div>
+      <div><span>Ditahan kas (di-skip)</span><b>${Rp(R(R0.held))}</b></div>
+      <div><span>Sisa</span><b>${Rp(R(R0.left))}</b></div>
+    </div>
+    ${R0.left >= 50000 ? `<div class="bb-note" style="margin:-4px 0 12px">Sisa ${Rp(R(R0.left))} belum terpakai karena harga 1 lot/lembar/gram berikutnya lebih besar dari kekurangan kelasnya. Bisa disimpan untuk bulan depan${S.frac!=='1'?', atau ubah ETF US ke <b>Bisa fraksional</b>':''}.</div>` : ''}
+    <div class="table-wrap"><table class="bb-tbl">
+      <thead><tr><th>Aset</th><th>Beli</th><th class="r">Biaya</th><th class="r">Bobot sekarang</th><th class="r">Setelah beli</th><th class="r">Target</th></tr></thead>
+      <tbody>${K.filter(c => c.t > 0 || c.spent > 0).map(c => {
+        const w0 = R0.cur ? c.v/R0.cur : 0, w1 = after ? (c.v+c.spent)/after : 0;
+        return `<tr class="bb-crow"><td><span class="legend-dot" style="background:${c.c};display:inline-block;margin-right:7px"></span><b>${c.l}</b></td><td><span class="bb-mob bb-muted bb-small">Bobot ${pctF(w0)} → <b>${pctF(w1)}</b> · target ${pctF(c.tw)}</span></td>
+          <td class="r"><b>${c.spent?Rp(R(c.spent)):'–'}</b></td><td class="r">${pctF(w0)}</td><td class="r"><b>${pctF(w1)}</b></td><td class="r">${pctF(c.tw)}</td></tr>`
+        + c.items.map(it => {
+          const st = statusText(c, it);
+          return `<tr><td class="bb-ind">${it.n} ${wajarBadge(it.wajar)}</td>
+            <td>${st || `<b>${bbBeliText(it)}</b> <span class="bb-muted bb-small">${bbHarga(it, R0.kurs)}</span>`}</td>
+            <td class="r">${it.cost?Rp(R(it.cost)):'–'}</td><td></td><td></td><td></td></tr>`;
+        }).join('');
+      }).join('')}</tbody>
+    </table></div>
+    <div class="form-group" style="margin-top:14px"><label>Ringkasan (bisa disalin)</label>
+      <textarea id="bb-txt" class="bb-txt" readonly>${bbSummary(R0)}</textarea></div>
+    <div style="display:flex;gap:10px;align-items:center"><button class="btn btn-primary btn-sm" onclick="bbCopy()">📋 Salin ringkasan</button><span id="bb-cpmsg" class="bb-muted bb-small"></span></div>`;
+
+  return `
+  <div class="section-header"><span class="section-title">🛒 Beli Bulanan</span></div>
+  <div class="bb-intro">Isi dana bulan ini. Dana dibagi ke kelas aset yang paling jauh di bawah target, lalu ke kode di dalamnya, dan dibulatkan ke lot, lembar, gram, atau kelipatan Rp 1.000. Nilai dan harga diambil dari holding; klik <b>Update Harga</b> di tab Saham BEI dan US dulu supaya harganya terbaru.</div>
+
+  <div class="bb-panel">
+    <div class="bb-grid">
+      <div class="form-group bb-wide"><label>Dana bulan ini (Rp)</label><input type="${APP.privacy?'password':'number'}" inputmode="numeric" autocomplete="off" min="0" step="100000" value="${S.dana||''}" placeholder="contoh 5000000" onchange="bbSetNum('dana',this)"></div>
+      <div class="form-group bb-wide"><label>Jatah aset yang di-skip</label><select onchange="bbSet('skipMode',this.value)"><option value="kas" ${S.skipMode!=='alih'?'selected':''}>Tahan jadi kas</option><option value="alih" ${S.skipMode==='alih'?'selected':''}>Alihkan ke aset aktif</option></select></div>
+      <div class="form-group"><label>Fee beli BEI (%)</label><input type="number" min="0" step="0.01" value="${S.feeBei}" onchange="bbSetNum('feeBei',this)"></div>
+      <div class="form-group"><label>Fee beli US (%)</label><input type="number" min="0" step="0.01" value="${S.feeUs}" onchange="bbSetNum('feeUs',this)"></div>
+      <div class="form-group"><label>ETF US</label><select onchange="bbSet('frac',this.value)"><option value="1" ${S.frac==='1'?'selected':''}>Bisa fraksional</option><option value="0" ${S.frac!=='1'?'selected':''}>Per lembar</option></select></div>
+      <div class="form-group"><label>Kurs USD/IDR</label><div class="bb-kurs">Rp ${F(R0.kurs)} <span class="bb-muted bb-small">· ubah di Dashboard</span></div></div>
+    </div>
+    <div class="bb-mode">
+      <button class="${S.mode!=='dca'?'on':''}" onclick="bbSet('mode','rebal')">Rebalance <span>isi yang paling kurang</span></button>
+      <button class="${S.mode==='dca'?'on':''}" onclick="bbSet('mode','dca')">DCA rata <span>bagi sesuai target</span></button>
+    </div>
+  </div>
+
+  <div class="bb-panel">
+    <div class="bb-phead"><b>Target &amp; kode per kelas</b>
+      <span class="${sumOk?'bb-muted':'bb-warn'}">Total target beli ${F(R0.sumT,1)}%${sumOk?'':' · harus 100%, sementara dihitung proporsional'}</span>
+      <button class="link-btn" onclick="bbResetTarget()">Isi dari titik tengah Target Alokasi</button></div>
+    ${kelasBlocks}
+    <div class="bb-note">Aset yang di-skip tetap dihitung di total portofolio, hanya tidak dibeli bulan ini. Label Mahal/Wajar/Diskon membandingkan harga kini dengan rentang Harga Wajar di tab Saham BEI.</div>
+  </div>
+
+  <div class="bb-panel">
+    <div class="bb-phead"><b>Daftar belanja</b><span class="bb-badge">${S.mode==='dca'?'Mode DCA rata':'Mode Rebalance'}</span></div>
+    ${hasil}
+  </div>`;
+}
+
+function bbSummary(R0) {
+  const tgl = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+  const L = [`Beli bulan ini (${tgl}) — dana ${Rp(R(R0.dana))}, ${R0.S.mode==='dca'?'mode DCA rata':'mode Rebalance'}`];
+  R0.K.forEach(c => {
+    const buys = c.items.filter(it => it.units > 0);
+    if (!buys.length) return;
+    L.push('', c.l + ':');
+    buys.forEach(it => {
+      if (it.kind === 'lot' || it.kind === 'etf' || it.kind === 'gram') L.push(`- ${it.n}: ${bbBeliText(it)} ≈ ${Rp(R(it.cost))}`);
+      else { const est = bbHarga(it, R0.kurs); L.push(`- ${it.n}: ${bbBeliText(it)}${est ? ` (${est})` : ''}`); }
+    });
+  });
+  const sk = [];
+  R0.K.forEach(c => { if (c.t <= 0) return; if (c.skip) sk.push(c.l); else c.items.filter(it => !it.on && !it.placeholder).forEach(it => sk.push(it.n)); });
+  L.push('');
+  if (sk.length) L.push(`Di-skip: ${sk.join(', ')}${R0.S.skipMode!=='alih' ? ` (jatah ditahan ${Rp(R(R0.held))})` : ' (jatah dialihkan)'}`);
+  L.push(`Terpakai ${Rp(R(R0.spent))}, sisa ${Rp(R(R0.left))}`);
+  return L.join('\n').replace(/</g,'&lt;');
+}
 
 const NAV_SETTING = {id:'setting', l:'Pengaturan', c:'#64748B'};
 
@@ -2390,7 +2812,7 @@ function sbItem(t) {
   return `<button class="sb-item${isActive?' active':''}${t.cls?' '+t.cls:''}" style="--c:${t.c};--t:${hexA(t.c,.12)};--t2:${hexA(t.c,.35)}" onclick="${click}" title="${t.l}"><span class="sb-ico">${icon(t.id)}</span><span class="sb-label">${t.l}</span></button>`;
 }
 
-const VIEWS = {dash:vDash, saham:vSaham, etf:vEtf, emas:vEmas, btc:vBtc, rdana:vRdana, obligasi:vObligasi, div:vDiv, dana:vDana, compound:vCompound, spt:vSpt, setting:vSetting};
+const VIEWS = {dash:vDash, saham:vSaham, etf:vEtf, emas:vEmas, btc:vBtc, rdana:vRdana, obligasi:vObligasi, div:vDiv, dana:vDana, compound:vCompound, spt:vSpt, setting:vSetting, beli:vBeli};
 
 // ── SIDEBAR STATE ─────────────────────────────────────────
 // Posisi buka/tutup sidebar diingat per browser (bukan disimpan ke Firestore)
