@@ -45,6 +45,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .form-group{margin-bottom:14px}
 .form-group label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
 .ex-box{max-width:560px}
+/* HOLD / SWING */
+.kode-cell b{display:block}
+td.kode-cell{padding-left:6px;padding-right:4px}
+.pos-pill{display:inline-block;margin-top:3px;border:1px solid transparent;border-radius:20px;padding:0 6px;font-size:9.5px;font-weight:600;line-height:17px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.pos-pill.hold{background:#EEF2FF;color:#4338CA;border-color:#C7D2FE}
+.pos-pill.swing{background:#FFF7ED;color:#C2410C;border-color:#FED7AA}
+.pos-pill.none{background:transparent;color:var(--text3);border:1px dashed var(--border2)}
+.pos-pill:hover{filter:brightness(.96)}
+.pos-chips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.pos-chip{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:7px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg2);cursor:pointer;font-family:inherit;color:var(--text);min-width:140px;text-align:left;transition:border-color .15s}
+.pos-chip:hover{border-color:var(--border2)}
+.pos-chip .pc-l{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
+.pos-chip .pc-l b{color:var(--text)}
+.pos-chip.hold .pc-l::before,.pos-chip.swing .pc-l::before,.pos-chip.none .pc-l::before{content:'';width:8px;height:8px;border-radius:50%;background:#4338CA}
+.pos-chip.swing .pc-l::before{background:#EA580C}
+.pos-chip.none .pc-l::before{background:transparent;border:1px dashed var(--text3);width:6px;height:6px}
+.pos-chip .pc-v{font-size:12.5px;font-weight:600}
+.pos-chip .pc-v span{font-size:11px;margin-left:4px}
+.pos-chip.on{border-color:var(--blue);box-shadow:0 0 0 2px rgba(24,95,165,.12)}
+.pos-empty{text-align:center;color:var(--text2);padding:18px 8px!important}
+@media(max-width:640px){.pos-chip{min-width:0;flex:1 1 calc(50% - 8px)}}
 /* BELI BULANAN */
 .bb-intro{font-size:13px;color:var(--text2);margin:-4px 0 14px;max-width:820px;line-height:1.6}
 .bb-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:16px 18px;margin-bottom:14px}
@@ -77,6 +98,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .bb-irow{border-top:1px dashed var(--border)}
 .bb-irow.off>span:not(:first-child){opacity:.5}
 .bb-items .r{text-align:right}
+.bb-mnote{font-size:10.5px;color:var(--red);font-weight:500;white-space:nowrap}
 .bb-ifoot{font-size:11.5px;color:var(--text2);padding-top:6px}
 .bb-badge{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--bg3);color:var(--text2);white-space:nowrap}
 .bb-badge.bad{background:var(--red-bg);color:var(--red)}
@@ -92,6 +114,37 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .bb-tbl .bb-ind{padding-left:30px}
 .bb-txt{width:100%;min-height:150px;font-family:ui-monospace,Menlo,monospace;font-size:12px;padding:10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);resize:vertical}
 .bb-empty{font-size:13px;color:var(--text2);padding:18px;text-align:center;background:var(--bg);border-radius:var(--radius)}
+.bb-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bb-act-gap{flex:1}
+.bb-flash{background:var(--green-bg);color:var(--green);border:1px solid #bbf7d0;border-radius:var(--radius);padding:9px 12px;font-size:13px;margin-bottom:10px}
+.bb-done{background:var(--blue-bg);color:#1e40af;border:1px solid #bfdbfe;border-radius:var(--radius);padding:9px 12px;font-size:12.5px;margin-bottom:12px;line-height:1.5}
+.bbc-box{max-width:640px}
+.bbc-row{border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px;transition:opacity .15s}
+.bbc-row.off{opacity:.45}
+.bbc-head{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:8px}
+.bbc-head input{width:16px;height:16px;accent-color:var(--blue);flex-shrink:0}
+.bbc-head .bb-muted{font-size:11.5px}
+.bbc-cost{margin-left:auto;font-weight:600;font-size:13px;white-space:nowrap}
+.bbc-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.bbc-f{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--text2);font-weight:500}
+.bbc-f.w{grid-column:span 2}
+.bbc-f input{padding:7px 9px;border:1px solid var(--border2);border-radius:6px;font-size:13px;color:var(--text);background:var(--bg2);font-family:inherit;width:100%}
+.bbc-f input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(24,95,165,.1)}
+.bbc-actions{position:sticky;bottom:-1.5rem;background:var(--bg2);margin-bottom:-1.5rem;padding-bottom:1.5rem;align-items:center;flex-wrap:wrap;z-index:1}
+.bbc-total{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-right:auto;font-size:13px}
+.bbc-total b{font-size:16px}
+.bb-hist{display:flex;flex-direction:column;gap:6px}
+.bb-hrow{border:1px solid var(--border);border-radius:var(--radius);background:var(--bg2)}
+.bb-hrow summary{display:flex;align-items:center;gap:8px 16px;flex-wrap:wrap;padding:9px 12px;cursor:pointer;font-size:13px;list-style:none}
+.bb-hrow summary::-webkit-details-marker{display:none}
+.bb-hrow summary::before{content:'▸';color:var(--text3);font-size:11px;transition:transform .15s}
+.bb-hrow[open] summary::before{transform:rotate(90deg)}
+.bb-hdate{font-weight:600;min-width:92px}
+.bb-hbody{border-top:1px solid var(--border);padding:6px 12px 10px}
+.bb-hitem{display:grid;grid-template-columns:minmax(150px,1.2fr) 1.4fr 120px;gap:8px;font-size:12.5px;padding:5px 0;border-bottom:1px dashed var(--border)}
+.bb-hitem .r{text-align:right}
+.bb-hfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:8px;font-size:12px}
+.bb-undo{color:var(--red)}
 @media(max-width:640px){
   .bb-panel{padding:14px}
   .bb-grid{grid-template-columns:1fr 1fr}
@@ -112,6 +165,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
   .bb-tbl .bb-crow td:first-child{white-space:nowrap;overflow:visible}
   .bb-tbl .bb-badge{white-space:normal}
   .bb-mob{display:inline}
+  .bb-hitem{grid-template-columns:1fr auto}
+  .bb-hitem>span:nth-child(2){grid-column:1/-1;grid-row:2;color:var(--text2)}
+  .bbc-f.w{grid-column:1/-1}
+  .bb-act-gap{display:none}
   .bb-tbl .bb-ind{padding-left:16px}
 }
 .alert-green{background:var(--green-bg);color:var(--green);border:1px solid #bbf7d0}
@@ -245,6 +302,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 
 /* TABLE */
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+@media(max-width:640px){.section-header{flex-wrap:wrap;gap:8px}.section-header>div{flex-wrap:wrap}}
 .section-title{font-size:15px;font-weight:600}
 .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius2);background:var(--bg2);margin-bottom:16px}
 table{width:100%;border-collapse:collapse;font-size:13px}
@@ -610,6 +668,51 @@ function cBtc() {
     return {...b, m, v, pl};
   });
 }
+// ── POSISI HOLD / SWING (Saham BEI & US) ─────────────────
+// Field 'posisi' = 'hold' | 'swing' | ''. Data lama tanpa field ini dibaca dari kolom Keterangan.
+const POSISI_OPTS = [{v:'',l:'— Belum ditandai'},{v:'hold',l:'Hold (jangka panjang)'},{v:'swing',l:'Swing (trading)'}];
+function posisiOf(x) {
+  if (x.posisi === 'hold' || x.posisi === 'swing' || x.posisi === '') return x.posisi;
+  const k = (x.ket||'').toLowerCase();
+  return k.includes('hold') ? 'hold' : k.includes('swing') ? 'swing' : '';
+}
+const isHold = x => posisiOf(x) === 'hold';
+const posLabel = x => ({hold:'Hold', swing:'Swing'})[posisiOf(x)] || '';
+function posPill(arr, i, x) {
+  const p = posisiOf(x);
+  const lbl = p === 'hold' ? 'Hold' : p === 'swing' ? 'Swing' : 'Tandai';
+  return `<button class="pos-pill ${p||'none'}" onclick="cyclePosisi('${arr}',${i})" title="Klik untuk ganti Hold / Swing">${lbl}</button>`;
+}
+function cyclePosisi(arr, i) {
+  const x = APP.data[arr][i], p = posisiOf(x);
+  x.posisi = p === 'hold' ? 'swing' : 'hold';
+  scheduleSave(); render();
+}
+APP.posFilter = (() => { try { return JSON.parse(localStorage.getItem('pt_pos_filter')) || {}; } catch(e) { return {}; } })();
+function setPosFilter(arr, v) {
+  APP.posFilter[arr] = v;
+  try { localStorage.setItem('pt_pos_filter', JSON.stringify(APP.posFilter)); } catch(e) {}
+  render();
+}
+// rows: hasil cSaham()/cEtf(); fM/fV: ambil modal & nilai (IDR) per baris
+function posChips(arr, rows, fM, fV) {
+  const cur = APP.posFilter[arr] || 'all';
+  const grp = [['all','Semua',()=>true],['hold','Hold',r=>posisiOf(r)==='hold'],['swing','Swing',r=>posisiOf(r)==='swing'],['','Belum ditandai',r=>posisiOf(r)==='']];
+  return `<div class="pos-chips">${grp.map(([v,l,fn]) => {
+    const rs = rows.filter(fn);
+    if (v === '' && !rs.length && cur !== '') return '';
+    const m = rs.reduce((a,r)=>a+fM(r),0), val = rs.reduce((a,r)=>a+fV(r),0), pl = val - m;
+    return `<button class="pos-chip ${v||'none'}${cur===v?' on':''}" onclick="setPosFilter('${arr}','${v}')">
+      <span class="pc-l">${l} <b>${rs.length}</b></span>
+      <span class="pc-v">${Rp(R(val))} <span class="${Cls(pl)}">${m ? Pct(pl/m) : ''}</span></span></button>`;
+  }).join('')}</div>`;
+}
+function posFiltered(arr, rows) {
+  const cur = APP.posFilter[arr] || 'all';
+  const withIdx = rows.map((r,i) => ({r, i}));
+  return cur === 'all' ? withIdx : withIdx.filter(o => posisiOf(o.r) === cur);
+}
+
 const tSaham = () => cSaham().reduce((a,r)=>a+r.v, 0);
 const tEtf   = () => cEtf().reduce((a,r)=>a+r.vi, 0);
 const tEmas  = () => cEmas().reduce((a,r)=>a+r.v, 0);
@@ -955,8 +1058,8 @@ function vDash() {
   <div class="table-wrap"><table>
     <thead><tr><th>Kode</th><th>Tipe</th><th>Lot/Unit</th><th>Modal</th><th>Nilai</th><th>P&L</th><th>%</th></tr></thead>
     <tbody>${(()=>{
-      const holdSaham = cSaham().filter(s=>(s.ket||'').toLowerCase().includes('hold')).map(s=>({kode:s.kode,tipe:'BEI',lotUnit:s.lot,m:s.m,v:s.v,pl:s.pl,pct:s.pct}));
-      const holdEtf = cEtf().filter(e=>(e.ket||'').toLowerCase().includes('hold')).map(e=>({kode:e.kode,tipe:'ETF',lotUnit:e.unit,m:e.mi,v:e.vi,pl:e.pl,pct:e.pct}));
+      const holdSaham = cSaham().filter(isHold).map(s=>({kode:s.kode,tipe:'BEI',lotUnit:s.lot,m:s.m,v:s.v,pl:s.pl,pct:s.pct}));
+      const holdEtf = cEtf().filter(isHold).map(e=>({kode:e.kode,tipe:'ETF',lotUnit:e.unit,m:e.mi,v:e.vi,pl:e.pl,pct:e.pct}));
       const combined = [...holdSaham, ...holdEtf].slice(0,6);
       if (combined.length === 0) {
         const fallback = cSaham().slice(0,6);
@@ -965,12 +1068,14 @@ function vDash() {
       return combined.map(r=>`<tr><td><b>${r.kode}</b></td><td><span class="badge ${r.tipe==='ETF'?'badge-green':'badge-blue'}">${r.tipe}</span></td><td>${Q(F(r.lotUnit,r.tipe==='ETF'?4:0))}</td><td>${Rp(R(r.m))}</td><td>${Rp(R(r.v))}</td><td class="${Cls(r.pl)}">${Rp(R(r.pl))}</td><td class="${Cls(r.pct)}">${Pct(r.pct)}</td></tr>`).join('');
     })()}</tbody>
   </table>
-  ${(cSaham().filter(s=>(s.ket||'').toLowerCase().includes('hold')).length + cEtf().filter(e=>(e.ket||'').toLowerCase().includes('hold')).length) === 0 && (cSaham().length > 0 || cEtf().length > 0) ? '<div style="font-size:11px;color:var(--text2);padding:6px 0">💡 Tip: isi keterangan "hold" di tab Saham BEI atau US untuk filter otomatis di sini (maks. 6)</div>' : ''}
+  ${(cSaham().filter(isHold).length + cEtf().filter(isHold).length) === 0 && (cSaham().length > 0 || cEtf().length > 0) ? '<div style="font-size:11px;color:var(--text2);padding:6px 0">💡 Tip: tandai <b>Hold</b> di tab Saham BEI atau US (klik label di bawah kode) supaya muncul di sini (maks. 6)</div>' : ''}
   </div>`;
 }
 
 function vSaham() {
   const rows=cSaham(), tM=rows.reduce((a,r)=>a+r.m,0), tV=rows.reduce((a,r)=>a+r.v,0), tPL=tV-tM;
+  const vis=posFiltered('saham', rows), fil=(APP.posFilter.saham||'all')!=='all';
+  const vM=vis.reduce((a,o)=>a+o.r.m,0), vV=vis.reduce((a,o)=>a+o.r.v,0), vPL=vV-vM;
   return `
   <div class="section-header"><span class="section-title">📈 Saham BEI</span>
     <div style="display:flex;gap:8px">
@@ -986,9 +1091,10 @@ function vSaham() {
     <div class="metric-card"><div class="metric-label">Nilai Kini</div><div class="metric-value" style="font-size:15px">${Rp(R(tV))}</div></div>
     <div class="metric-card"><div class="metric-label">P&L</div><div class="metric-value ${Cls(tPL)}" style="font-size:15px">${Rp(R(tPL))}</div></div>
   </div>
+  ${rows.length ? posChips('saham', rows, r=>r.m, r=>r.v) : ''}
   <div class="table-wrap"><table>
     <thead><tr><th>Tgl</th><th>Kode</th><th>Kategori</th><th>Lot</th><th>Hrg Beli</th><th>Modal</th><th>Hrg Kini</th><th>Nilai</th><th>P&L</th><th>%</th><th>Wajar (Bwh-Atas)</th><th>Status</th><th></th></tr></thead>
-    <tbody>${rows.map((s,i)=>{
+    <tbody>${vis.length ? '' : `<tr><td colspan="13" class="pos-empty">Belum ada saham di kelompok ini.</td></tr>`}${vis.map(({r:s,i})=>{
       const wb = s.wajarBawah||0, wa = s.wajarAtas||0;
       const beli = s.beli||0;
       const katObj = KATEGORI_OPTS.find(o=>o.v===(s.kategori||'menengah')) || {l:'—', bg:'#F1F3F5', fg:'#6b7280'};
@@ -1006,7 +1112,7 @@ function vSaham() {
         }
       }
       return `<tr>
-      <td style="font-size:11px">${s.tgl}</td><td><b>${s.kode}</b></td><td><span class="badge" title="${katObj.l}" style="font-size:10px;background:${katObj.bg};color:${katObj.fg}">${katObj.s||katObj.l}</span></td><td>${Q(s.lot)}</td><td>${F(s.beli)}</td><td style="font-size:11px">${Rp(R(s.m))}</td>
+      <td style="font-size:11px">${s.tgl}</td><td class="kode-cell"><b>${s.kode}</b>${posPill('saham',i,s)}</td><td><span class="badge" title="${katObj.l}" style="font-size:10px;background:${katObj.bg};color:${katObj.fg}">${katObj.s||katObj.l}</span></td><td>${Q(s.lot)}</td><td>${F(s.beli)}</td><td style="font-size:11px">${Rp(R(s.m))}</td>
       <td><input class="cell-input" type="number" value="${s.now}" onchange="upd('saham',${i},'now',+this.value)" style="width:62px"></td>
       <td style="font-size:11px">${Rp(R(s.v))}</td><td class="${Cls(s.pl)}" style="font-size:11px">${Rp(R(s.pl))}</td><td class="${Cls(s.pct)}" style="font-size:11px">${Pct(s.pct)}</td>
       <td>
@@ -1019,12 +1125,14 @@ function vSaham() {
       <td style="text-align:center">${statusEl}</td>
       <td><div class="row-actions"><button class="btn btn-icon-edit" title="Edit" onclick="openEdit('saham',${i})">✏️</button><button class="btn btn-icon" onclick="del('saham',${i})">🗑</button></div></td>
     </tr>`;}).join('')}</tbody>
-    <tfoot><tr class="tr-total"><td colspan="5">TOTAL</td><td style="font-size:11px">${Rp(R(tM))}</td><td></td><td style="font-size:11px">${Rp(R(tV))}</td><td class="${Cls(tPL)}" style="font-size:11px">${Rp(R(tPL))}</td><td class="${Cls(tPL)}" style="font-size:11px">${Pct(tM?tPL/tM:0)}</td><td colspan="3"></td></tr></tfoot>
+    <tfoot><tr class="tr-total"><td colspan="5">TOTAL${fil?' '+(APP.posFilter.saham==='hold'?'HOLD':APP.posFilter.saham==='swing'?'SWING':'BELUM DITANDAI'):''}</td><td style="font-size:11px">${Rp(R(vM))}</td><td></td><td style="font-size:11px">${Rp(R(vV))}</td><td class="${Cls(vPL)}" style="font-size:11px">${Rp(R(vPL))}</td><td class="${Cls(vPL)}" style="font-size:11px">${Pct(vM?vPL/vM:0)}</td><td colspan="3"></td></tr></tfoot>
   </table></div>`;
 }
 
 function vEtf() {
   const rows=cEtf(), k=APP.data.kurs, tM=rows.reduce((a,r)=>a+r.mi,0), tV=rows.reduce((a,r)=>a+r.vi,0), tPL=tV-tM;
+  const vis=posFiltered('etf', rows), fil=(APP.posFilter.etf||'all')!=='all';
+  const vM=vis.reduce((a,o)=>a+o.r.mi,0), vV=vis.reduce((a,o)=>a+o.r.vi,0), vPL=vV-vM;
   return `
   <div class="section-header"><span class="section-title">🌍 US (ETF & Saham)</span>
     <div style="display:flex;gap:8px">
@@ -1039,15 +1147,16 @@ function vEtf() {
     <div class="metric-card"><div class="metric-label">P&L (IDR)</div><div class="metric-value ${Cls(tPL)}" style="font-size:15px">${Rp(R(tPL))}</div></div>
   </div>
   <div class="alert alert-blue" style="margin-bottom:12px">Kurs aktif: <b>1 USD = Rp ${F(k)}</b> — ubah di Dashboard</div>
+  ${rows.length ? posChips('etf', rows, r=>r.mi, r=>r.vi) : ''}
   <div class="table-wrap"><table>
-    <thead><tr><th>Tanggal</th><th>ETF</th><th>Unit</th><th>Beli (USD)</th><th>Kini (USD)</th><th>Nilai (USD)</th><th>Nilai (IDR)</th><th>P&L (IDR)</th><th>%</th><th></th></tr></thead>
-    <tbody>${rows.map((e,i)=>`<tr>
-      <td>${e.tgl}</td><td><b>${e.kode}</b></td><td>${Q(F(e.unit,4))}</td><td>${Usd(e.beli)}</td>
+    <thead><tr><th>Tanggal</th><th>Kode</th><th>Unit</th><th>Beli (USD)</th><th>Kini (USD)</th><th>Nilai (USD)</th><th>Nilai (IDR)</th><th>P&L (IDR)</th><th>%</th><th></th></tr></thead>
+    <tbody>${vis.length ? '' : `<tr><td colspan="10" class="pos-empty">Belum ada aset di kelompok ini.</td></tr>`}${vis.map(({r:e,i})=>`<tr>
+      <td>${e.tgl}</td><td class="kode-cell"><b>${e.kode}</b>${posPill('etf',i,e)}</td><td>${Q(F(e.unit,4))}</td><td>${Usd(e.beli)}</td>
       <td><input class="cell-input" type="number" step="0.01" value="${e.now}" onchange="upd('etf',${i},'now',+this.value)"></td>
       <td>${Usd(e.vu,2)}</td><td>${Rp(R(e.vi))}</td><td class="${Cls(e.pl)}">${Rp(R(e.pl))}</td><td class="${Cls(e.pct)}">${Pct(e.pct)}</td>
       <td><div class="row-actions"><button class="btn btn-icon-edit" title="Edit" onclick="openEdit('etf',${i})">✏️</button><button class="btn btn-icon" onclick="del('etf',${i})">🗑</button></div></td>
     </tr>`).join('')}</tbody>
-    <tfoot><tr class="tr-total"><td colspan="5">TOTAL</td><td>${Usd(rows.reduce((a,r)=>a+r.vu,0),2)}</td><td>${Rp(R(tV))}</td><td class="${Cls(tPL)}">${Rp(R(tPL))}</td><td class="${Cls(tPL)}">${Pct(tM?tPL/tM:0)}</td><td></td></tr></tfoot>
+    <tfoot><tr class="tr-total"><td colspan="5">TOTAL${fil?' '+(APP.posFilter.etf==='hold'?'HOLD':APP.posFilter.etf==='swing'?'SWING':'BELUM DITANDAI'):''}</td><td>${Usd(vis.reduce((a,o)=>a+o.r.vu,0),2)}</td><td>${Rp(R(vV))}</td><td class="${Cls(vPL)}">${Rp(R(vPL))}</td><td class="${Cls(vPL)}">${Pct(vM?vPL/vM:0)}</td><td></td></tr></tfoot>
   </table></div>`;
 }
 
@@ -1745,8 +1854,8 @@ function vCompound() {
 // ── MODAL DEFINITIONS ─────────────────────────────────────
 const MODAL_DEF = {
   kurs:   {t:'Update Kurs USD/IDR', f:[{id:'kurs',l:'1 USD = Rp',type:'number'}]},
-  saham:  {t:'Tambah Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text',ph:'BBCA'},{id:'kategori',l:'Kategori Risiko',type:'select',opts:KATEGORI_OPTS},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'eps',l:'EPS TTM (Rp)',type:'number',ph:'0'},{id:'pbvRatio',l:'PBV Ratio (misal: 0.84)',type:'number',ph:'0',step:'0.01'},{id:'wajarBawah',l:'Wajar Bawah (otomatis)',type:'number'},{id:'wajarAtas',l:'Wajar Atas (otomatis)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
-  etf:    {t:'Tambah ETF', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode ETF',type:'text',ph:'QQQ'},{id:'unit',l:'Unit',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli (USD)',type:'number',step:'0.01'},{id:'now',l:'Harga Kini (USD)',type:'number',step:'0.01'},{id:'ket',l:'Keterangan (isi "hold" utk tampil di preview)',type:'text'}]},
+  saham:  {t:'Tambah Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text',ph:'BBCA'},{id:'kategori',l:'Kategori Risiko',type:'select',opts:KATEGORI_OPTS},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'eps',l:'EPS TTM (Rp)',type:'number',ph:'0'},{id:'pbvRatio',l:'PBV Ratio (misal: 0.84)',type:'number',ph:'0',step:'0.01'},{id:'wajarBawah',l:'Wajar Bawah (otomatis)',type:'number'},{id:'wajarAtas',l:'Wajar Atas (otomatis)',type:'number'},{id:'posisi',l:'Posisi',type:'select',opts:POSISI_OPTS,get:posisiOf},{id:'ket',l:'Keterangan',type:'text'}]},
+  etf:    {t:'Tambah US (ETF/Saham)', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode',type:'text',ph:'QQQ / VOO / AAPL'},{id:'unit',l:'Unit',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli (USD)',type:'number',step:'0.01'},{id:'now',l:'Harga Kini (USD)',type:'number',step:'0.01'},{id:'posisi',l:'Posisi',type:'select',opts:POSISI_OPTS,get:posisiOf},{id:'ket',l:'Keterangan',type:'text'}]},
   emas:   {t:'Tambah Emas', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'jenis',l:'Jenis',type:'text',ph:'digital / fisik'},{id:'lokasi',l:'Lokasi/Platform',type:'text',ph:'DANA / Pegadaian / dll'},{id:'gram',l:'Gram',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli/gr',type:'number'},{id:'now',l:'Harga Kini/gr',type:'number'}]},
   btc:    {t:'Tambah Crypto', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'jenis',l:'Jenis Crypto',type:'text',ph:'BTC / ETH / USDT / dll'},{id:'jumlah',l:'Jumlah',type:'number',step:'0.00000001'},{id:'beli',l:'Harga Beli (Rp)',type:'number'},{id:'now',l:'Harga Kini (Rp)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
   rdana:  {t:'Tambah Reksadana', f:[{id:'item',l:'Nama Reksadana',type:'text',ph:'RDPU Majoris / RDPU TRIM...'},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
@@ -1762,8 +1871,8 @@ function closeModal() { APP.modal=null; render(); }
 
 // ── EDIT MODAL ────────────────────────────────────────────
 const EDIT_DEF = {
-  saham:  {t:'Edit Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text'},{id:'kategori',l:'Kategori Risiko',type:'select',opts:KATEGORI_OPTS},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'eps',l:'EPS TTM (Rp)',type:'number'},{id:'pbvRatio',l:'PBV Ratio (misal: 0.84)',type:'number',step:'0.01'},{id:'wajarBawah',l:'Wajar Bawah (otomatis)',type:'number'},{id:'wajarAtas',l:'Wajar Atas (otomatis)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
-  etf:    {t:'Edit US (ETF/Saham)', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode ETF',type:'text'},{id:'unit',l:'Unit',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli (USD)',type:'number',step:'0.01'},{id:'now',l:'Harga Kini (USD)',type:'number',step:'0.01'},{id:'ket',l:'Keterangan (isi "hold" utk tampil di preview)',type:'text'}]},
+  saham:  {t:'Edit Saham BEI', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode Saham',type:'text'},{id:'kategori',l:'Kategori Risiko',type:'select',opts:KATEGORI_OPTS},{id:'lot',l:'Lot',type:'number'},{id:'beli',l:'Harga Beli',type:'number'},{id:'now',l:'Harga Sekarang',type:'number'},{id:'eps',l:'EPS TTM (Rp)',type:'number'},{id:'pbvRatio',l:'PBV Ratio (misal: 0.84)',type:'number',step:'0.01'},{id:'wajarBawah',l:'Wajar Bawah (otomatis)',type:'number'},{id:'wajarAtas',l:'Wajar Atas (otomatis)',type:'number'},{id:'posisi',l:'Posisi',type:'select',opts:POSISI_OPTS,get:posisiOf},{id:'ket',l:'Keterangan',type:'text'}]},
+  etf:    {t:'Edit US (ETF/Saham)', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'kode',l:'Kode',type:'text'},{id:'unit',l:'Unit',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli (USD)',type:'number',step:'0.01'},{id:'now',l:'Harga Kini (USD)',type:'number',step:'0.01'},{id:'posisi',l:'Posisi',type:'select',opts:POSISI_OPTS,get:posisiOf},{id:'ket',l:'Keterangan',type:'text'}]},
   emas:   {t:'Edit Emas', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'jenis',l:'Jenis',type:'text',ph:'digital / fisik'},{id:'lokasi',l:'Lokasi/Platform',type:'text'},{id:'gram',l:'Gram',type:'number',step:'0.0001'},{id:'beli',l:'Harga Beli/gr',type:'number'},{id:'now',l:'Harga Kini/gr',type:'number'}]},
   btc:    {t:'Edit Crypto', f:[{id:'tgl',l:'Tanggal',type:'date'},{id:'jenis',l:'Jenis Crypto',type:'text'},{id:'jumlah',l:'Jumlah',type:'number',step:'0.00000001'},{id:'beli',l:'Harga Beli (Rp)',type:'number'},{id:'now',l:'Harga Kini (Rp)',type:'number'},{id:'ket',l:'Keterangan',type:'text'}]},
   rdana:  {t:'Edit Reksadana', f:[{id:'item',l:'Nama Reksadana',type:'text'},{id:'masuk',l:'Modal Masuk',type:'number'},{id:'now',l:'Nilai Sekarang',type:'number'}]},
@@ -1806,7 +1915,7 @@ function vEditModal() {
   <div class="modal-box">
     <div class="modal-title">${m.t}</div>
     <div class="form-grid">${m.f.map(f=>f.type==='select'
-      ? `<div class="form-group"><label>${f.l}</label><select id="ef_${f.id}">${f.opts.map(o=>`<option value="${o.v}" ${row[f.id]===o.v?'selected':''}>${o.l}</option>`).join('')}</select></div>`
+      ? `<div class="form-group"><label>${f.l}</label><select id="ef_${f.id}">${f.opts.map(o=>`<option value="${o.v}" ${(f.get?f.get(row):row[f.id])===o.v?'selected':''}>${o.l}</option>`).join('')}</select></div>`
       : `<div class="form-group"><label>${f.l}</label><input id="ef_${f.id}" type="${f.type}" placeholder="${f.ph||''}" ${f.step?'step='+f.step:''} value="${row[f.id]!==undefined?row[f.id]:''}"></div>`
     ).join('')}</div>
     <div class="modal-actions">
@@ -2151,14 +2260,14 @@ const EXPORT_SECTIONS = [
   {id:'saham', l:'Saham BEI', g:'Aset', n:()=>(APP.data.saham||[]).length, rows:()=>{
     const r = cSaham(), kat = v => (KATEGORI_OPTS.find(o=>o.v===v)||{}).l || '';
     const tM = sumBy(r,x=>x.m), tV = sumBy(r,x=>x.v);
-    return [['Tanggal','Kode','Kategori','Lot','Harga Beli','Modal','Harga Kini','Nilai','P&L','% P&L','Wajar Bawah','Wajar Atas','Keterangan'],
-      ...r.map(x=>[x.tgl,x.kode,kat(x.kategori),x.lot,x.beli,R(x.m),x.now,R(x.v),R(x.pl),pct2(x.pl,x.m),x.wajarBawah||'',x.wajarAtas||'',x.ket||'']),
+    return [['Tanggal','Kode','Kategori','Lot','Harga Beli','Modal','Harga Kini','Nilai','P&L','% P&L','Wajar Bawah','Wajar Atas','Posisi','Keterangan'],
+      ...r.map(x=>[x.tgl,x.kode,kat(x.kategori),x.lot,x.beli,R(x.m),x.now,R(x.v),R(x.pl),pct2(x.pl,x.m),x.wajarBawah||'',x.wajarAtas||'',posLabel(x),x.ket||'']),
       ['TOTAL','','','','',R(tM),'',R(tV),R(tV-tM),pct2(tV-tM,tM)]];
   }},
   {id:'etf', l:'US (ETF & Saham)', g:'Aset', n:()=>(APP.data.etf||[]).length, rows:()=>{
     const r = cEtf(), tM = sumBy(r,x=>x.mi), tV = sumBy(r,x=>x.vi);
-    return [['Tanggal','Kode','Unit','Beli (USD)','Kini (USD)','Modal (IDR)','Nilai (USD)','Nilai (IDR)','P&L (IDR)','% P&L','Keterangan'],
-      ...r.map(x=>[x.tgl,x.kode,x.unit,x.beli,x.now,R(x.mi),x.vu.toFixed(2),R(x.vi),R(x.pl),pct2(x.pl,x.mi),x.ket||'']),
+    return [['Tanggal','Kode','Unit','Beli (USD)','Kini (USD)','Modal (IDR)','Nilai (USD)','Nilai (IDR)','P&L (IDR)','% P&L','Posisi','Keterangan'],
+      ...r.map(x=>[x.tgl,x.kode,x.unit,x.beli,x.now,R(x.mi),x.vu.toFixed(2),R(x.vi),R(x.pl),pct2(x.pl,x.mi),posLabel(x),x.ket||'']),
       ['TOTAL','','','','',R(tM),sumBy(r,x=>x.vu).toFixed(2),R(tV),R(tV-tM),pct2(tV-tM,tM)]];
   }},
   {id:'emas', l:'Emas', g:'Aset', n:()=>(APP.data.emas||[]).length, rows:()=>{
@@ -2353,9 +2462,13 @@ const NAV = [
     {id:'div',      l:'Dividen',      c:'#059669'},
   ]},
   {g:'Perencanaan', items:[
-    {id:'beli',     l:'Beli Bulanan', c:'#0D9488'},
     {id:'dana',     l:'Dana & Goals', c:'#DB2777'},
+  ]},
+  {g:'Kalkulator Aset', items:[
+    {id:'beli',     l:'Beli Bulanan', c:'#0D9488'},
     {id:'compound', l:'Compounding',  c:'#EA580C'},
+  ]},
+  {g:'Laporan', items:[
     {id:'spt',      l:'Rekap Harta',  c:'#475569'},
   ]},
 ];
@@ -2387,6 +2500,8 @@ function bbState() {
   if (!S.target) S.target = {};  // per kelas; kosong = titik tengah Target Alokasi
   if (!S.porsi) S.porsi = {};    // per kode, % di dalam kelas; kosong = dibagi rata
   if (!S.skip) S.skip = {};      // per kode, atau 'kelas:<k>'
+  if (!S.mahal) S.mahal = 'lewati'; // saham ⚠️ Mahal: 'lewati' | 'kurangi' | 'beli'
+  if (!S.paksa) S.paksa = {};    // per kode: tetap dibeli walau Mahal (mode lewati)
   return S;
 }
 function bbMid(k) {
@@ -2401,7 +2516,8 @@ function bbTarget(k) {
 
 // Daftar kode per kelas, diambil dari holding
 function bbItems() {
-  const isHold = x => (x.ket||'').toLowerCase().includes('hold');
+  // dipakai: kode Hold; kalau belum ada yang ditandai Hold, semua kode kecuali Swing
+  const pick = rows => { const h = rows.filter(isHold); return h.length ? h : rows.filter(x => posisiOf(x) !== 'swing'); };
   const group = (arr, keyOf, make) => {
     const m = new Map();
     arr.forEach(x => { const k = keyOf(x); if (!m.has(k)) m.set(k, make(x)); m.get(k).rows.push(x); });
@@ -2409,8 +2525,8 @@ function bbItems() {
   };
   const out = {};
 
-  const sh = cSaham(), shHold = sh.filter(isHold);
-  out.saham = {holdOnly: shHold.length > 0, hasAny: sh.length > 0, list: group(shHold.length ? shHold : sh, x => (x.kode||'').toUpperCase(), x => ({
+  const sh = cSaham();
+  out.saham = {holdOnly: sh.some(isHold), hasAny: sh.length > 0, list: group(pick(sh), x => (x.kode||'').toUpperCase(), x => ({
     key:'saham:'+(x.kode||'').toUpperCase(), n:(x.kode||'').toUpperCase(), rows:[], kind:'lot'}))};
   out.saham.list.forEach(it => {
     it.v = it.rows.reduce((a,r)=>a+r.v,0);
@@ -2419,8 +2535,8 @@ function bbItems() {
     if (w && it.p) it.wajar = it.p < w.wajarBawah ? 'diskon' : it.p > w.wajarAtas ? 'mahal' : 'wajar';
   });
 
-  const et = cEtf(), etHold = et.filter(isHold);
-  out.etf = {holdOnly: etHold.length > 0, hasAny: et.length > 0, list: group(etHold.length ? etHold : et, x => (x.kode||'').toUpperCase(), x => ({
+  const et = cEtf();
+  out.etf = {holdOnly: et.some(isHold), hasAny: et.length > 0, list: group(pick(et), x => (x.kode||'').toUpperCase(), x => ({
     key:'etf:'+(x.kode||'').toUpperCase(), n:(x.kode||'').toUpperCase(), rows:[], kind:'etf'}))};
   out.etf.list.forEach(it => { it.v = it.rows.reduce((a,r)=>a+r.vi,0); it.p = it.rows[it.rows.length-1].now || 0; });
 
@@ -2482,14 +2598,20 @@ function bbCalc() {
       else if (it.kind === 'gram') unit = it.p || 0;
       else if (it.kind === 'sbn') unit = 1000000;
       else { unit = 1000; free = true; }   // beli per Rp 1.000
-      return {...it, fee, unit, free, dec, on: !c.skip && !S.skip[it.key]};
+      // aturan saham Mahal (harga kini di atas rentang wajar)
+      const mahal = it.wajar === 'mahal';
+      const autoSkip = mahal && S.mahal === 'lewati' && !S.paksa[it.key] && !S.skip[it.key];
+      const half = mahal && S.mahal === 'kurangi';
+      return {...it, fee, unit, free, dec, mahal, autoSkip, half, on: !c.skip && !S.skip[it.key] && !autoSkip};
     });
     // porsi di dalam kelas (default rata)
     const n = c.items.length;
     c.items.forEach(it => { it.porsi = S.porsi[it.key] != null ? +S.porsi[it.key] : 100/n; });
     const sp = c.items.reduce((s,it)=>s+Math.max(0,it.porsi),0);
     c.sumPorsi = sp;
-    c.items.forEach(it => { it.w = sp > 0 ? Math.max(0,it.porsi)/sp : 0; });
+    const pf = it => Math.max(0,it.porsi) * (it.half ? 0.5 : 1);   // porsi saham Mahal dipotong ½ (mode kurangi)
+    const spf = c.items.reduce((s,it)=>s+pf(it),0);
+    c.items.forEach(it => { it.w = spf > 0 ? pf(it)/spf : 0; });
     c.on = !c.skip && c.items.some(it => it.on);
   });
 
@@ -2556,6 +2678,7 @@ function bbSetPorsi(k, key, el) {
   scheduleSave(); render();
 }
 function bbBagiRata(k) { const S = bbState(); bbItems()[k].list.forEach(it => delete S.porsi[it.key]); scheduleSave(); render(); }
+function bbPaksa(key, v) { const S = bbState(); if (v) S.paksa[key] = true; else delete S.paksa[key]; scheduleSave(); render(); }
 function bbToggle(key) { const S = bbState(); if (S.skip[key]) delete S.skip[key]; else S.skip[key] = true; scheduleSave(); render(); }
 function bbCopy() {
   const t = document.getElementById('bb-txt'), m = document.getElementById('bb-cpmsg');
@@ -2588,6 +2711,17 @@ function vBeli() {
   const tog = (key, on, label) => `<button class="bb-tg ${on?'on':'off'}" onclick="bbToggle('${bbAttr(key)}')" title="${bbAttr(label)}">${on?'Aktif':'Skip'}</button>`;
   const wajarBadge = w => !w ? '' : w==='mahal' ? `<span class="bb-badge bad" title="Harga kini di atas rentang wajar">⚠️ Mahal</span>` : w==='diskon' ? `<span class="bb-badge good" title="Harga kini di bawah rentang wajar">✅ Diskon</span>` : `<span class="bb-badge" title="Harga kini dalam rentang wajar">⚖️ Wajar</span>`;
   const nilaiAll = R0.cur;
+  const itemTog = it => {
+    if (it.placeholder) return '';
+    if (S.skip[it.key]) return tog(it.key, false, it.n);
+    if (it.autoSkip) return `<button class="bb-tg off" onclick="bbPaksa('${bbAttr(it.key)}',true)" title="Harga di atas rentang wajar, dilewati otomatis. Klik untuk tetap beli.">Skip</button>`;
+    if (it.mahal && S.mahal === 'lewati' && S.paksa[it.key]) return `<button class="bb-tg on" onclick="bbPaksa('${bbAttr(it.key)}',false)" title="Tetap dibeli walau Mahal. Klik untuk kembali dilewati otomatis.">Aktif</button>`;
+    return tog(it.key, true, it.n);
+  };
+  const mahalNote = it => !it.mahal || S.skip[it.key] ? ''
+    : it.autoSkip ? ` <span class="bb-mnote">dilewati otomatis</span>`
+    : it.half ? ` <span class="bb-mnote">porsi ×½</span>`
+    : (S.mahal === 'lewati' && S.paksa[it.key]) ? ` <span class="bb-mnote">tetap dibeli</span>` : '';
 
   // ── blok target & kode per kelas
   const kelasBlocks = K.map(c => {
@@ -2597,14 +2731,14 @@ function vBeli() {
     const now = nilaiAll > 0 ? c.v/nilaiAll : 0;
     const dipakai = c.t > 0;
     const hint = (c.k==='saham'||c.k==='etf') && c.info.hasAny
-      ? (c.info.holdOnly ? `Hanya kode berketerangan <b>hold</b>.` : `Belum ada kode berketerangan <b>hold</b>, jadi semua kode dipakai. Isi keterangan "hold" di tab ${c.l} untuk memilih.`)
+      ? (c.info.holdOnly ? `Hanya kode bertanda <b>Hold</b>, yang Swing tidak ikut.` : `Belum ada kode bertanda <b>Hold</b>, jadi semua kode selain Swing dipakai. Tandai Hold di tab ${c.l} untuk memilih.`)
       : '';
     const rows = !dipakai ? '' : `
       <div class="bb-items">
         <div class="bb-ihead"><span></span><span>Kode</span><span class="r">Nilai sekarang</span><span class="r">Harga</span><span class="r">Porsi di kelas</span></div>
         ${c.items.map(it => `<div class="bb-irow${it.on?'':' off'}">
-          <span class="bb-i-tg">${it.placeholder ? '' : tog(it.key, !S.skip[it.key], it.n)}</span>
-          <span class="bb-i-n"><b>${it.n}</b> ${wajarBadge(it.wajar)}</span>
+          <span class="bb-i-tg">${itemTog(it)}</span>
+          <span class="bb-i-n"><b>${it.n}</b> ${wajarBadge(it.wajar)}${mahalNote(it)}</span>
           <span class="r bb-i-v">${Rp(R(it.v))}</span>
           <span class="r bb-muted bb-i-p">${it.kind==='lot'?Rp(it.p)+'/lbr':it.kind==='etf'?Usd(it.p):it.kind==='gram'||it.est==='gram'?(it.p?Rp(it.p)+'/gr':'–'):it.est==='koin'?(it.p?Rp(it.p):'–'):it.kind==='sbn'?'Rp 1 jt/unit':'–'}</span>
           <span class="r bb-i-po">${c.items.length>1 ? `<input class="cell-input bb-num" type="number" min="0" step="1" value="${+it.porsi.toFixed(1)}" onchange="bbSetPorsi('${c.k}','${bbAttr(it.key)}',this)"> %` : '<span class="bb-muted">100%</span>'}</span>
@@ -2626,6 +2760,7 @@ function vBeli() {
   // ── hasil
   const statusText = (c, it) => {
     if (c.skip) return `<span class="bb-badge warn">Kelas di-skip</span>`;
+    if (it.autoSkip) return `<span class="bb-badge bad">Mahal, dilewati</span>`;
     if (!it.on) return `<span class="bb-badge warn">Di-skip</span>`;
     if (c.alloc <= 0) return mode1(c);
     if (!it.units) return `<span class="bb-badge warn">${it.alloc>0?'Belum cukup untuk 1 '+(it.kind==='lot'?'lot':it.kind==='gram'?'gram':it.kind==='sbn'?'unit':'lembar'):'Sudah sesuai porsi'}</span>`;
@@ -2633,6 +2768,7 @@ function vBeli() {
   };
   const mode1 = c => `<span class="bb-badge warn">${S.mode!=='dca' && c.v > R0.total*c.tw ? 'Di atas target, dilewati' : 'Tidak dapat jatah'}</span>`;
   const after = R0.after;
+  const hasBuys = K.some(c => c.items.some(it => it.on && it.units > 0));
   const hasil = R0.dana <= 0 ? `<div class="bb-empty">Isi <b>Dana bulan ini</b> di atas untuk melihat daftar belanja.</div>` : `
     <div class="bb-tiles">
       <div><span>Total setelah beli</span><b>${Rp(R(after))}</b></div>
@@ -2657,7 +2793,15 @@ function vBeli() {
     </table></div>
     <div class="form-group" style="margin-top:14px"><label>Ringkasan (bisa disalin)</label>
       <textarea id="bb-txt" class="bb-txt" readonly>${bbSummary(R0)}</textarea></div>
-    <div style="display:flex;gap:10px;align-items:center"><button class="btn btn-primary btn-sm" onclick="bbCopy()">📋 Salin ringkasan</button><span id="bb-cpmsg" class="bb-muted bb-small"></span></div>`;
+    <div class="bb-actions">
+      <button class="btn btn-sm" onclick="bbCopy()">📋 Salin ringkasan</button><span id="bb-cpmsg" class="bb-muted bb-small"></span>
+      <span class="bb-act-gap"></span>
+      ${APP.privacy ? `<span class="bb-muted bb-small">Matikan <b>Sembunyikan nominal</b> untuk mencatat pembelian.</span>` : ''}
+      <button class="btn btn-success btn-sm" onclick="bbOpenConfirm()" ${APP.privacy || !hasBuys ? 'disabled' : ''}>✅ Tandai sudah dibeli</button>
+    </div>`;
+  const flash = APP.bbFlash; APP.bbFlash = null;
+  const bulanIni = bbToday().slice(0,7), sudah = (APP.data.riwayatBeli||[]).find(e => (e.tgl||'').slice(0,7) === bulanIni);
+  const bannerSudah = sudah ? `<div class="bb-done">✅ Pembelian ${new Date().toLocaleDateString('id-ID',{month:'long',year:'numeric'})} sudah dicatat tanggal ${bbTgl(sudah.tgl)} (terpakai ${Rp(R(sudah.spent))}). Daftar di bawah dihitung ulang dari holding terbaru.</div>` : '';
 
   return `
   <div class="section-header"><span class="section-title">🛒 Beli Bulanan</span></div>
@@ -2667,6 +2811,7 @@ function vBeli() {
     <div class="bb-grid">
       <div class="form-group bb-wide"><label>Dana bulan ini (Rp)</label><input type="${APP.privacy?'password':'number'}" inputmode="numeric" autocomplete="off" min="0" step="100000" value="${S.dana||''}" placeholder="contoh 5000000" onchange="bbSetNum('dana',this)"></div>
       <div class="form-group bb-wide"><label>Jatah aset yang di-skip</label><select onchange="bbSet('skipMode',this.value)"><option value="kas" ${S.skipMode!=='alih'?'selected':''}>Tahan jadi kas</option><option value="alih" ${S.skipMode==='alih'?'selected':''}>Alihkan ke aset aktif</option></select></div>
+      <div class="form-group bb-wide"><label>Saham ⚠️ Mahal</label><select onchange="bbSet('mahal',this.value)"><option value="lewati" ${S.mahal==='lewati'?'selected':''}>Lewati otomatis</option><option value="kurangi" ${S.mahal==='kurangi'?'selected':''}>Kurangi porsi ½</option><option value="beli" ${S.mahal==='beli'?'selected':''}>Tetap dibeli</option></select></div>
       <div class="form-group"><label>Fee beli BEI (%)</label><input type="number" min="0" step="0.01" value="${S.feeBei}" onchange="bbSetNum('feeBei',this)"></div>
       <div class="form-group"><label>Fee beli US (%)</label><input type="number" min="0" step="0.01" value="${S.feeUs}" onchange="bbSetNum('feeUs',this)"></div>
       <div class="form-group"><label>ETF US</label><select onchange="bbSet('frac',this.value)"><option value="1" ${S.frac==='1'?'selected':''}>Bisa fraksional</option><option value="0" ${S.frac!=='1'?'selected':''}>Per lembar</option></select></div>
@@ -2683,13 +2828,17 @@ function vBeli() {
       <span class="${sumOk?'bb-muted':'bb-warn'}">Total target beli ${F(R0.sumT,1)}%${sumOk?'':' · harus 100%, sementara dihitung proporsional'}</span>
       <button class="link-btn" onclick="bbResetTarget()">Isi dari titik tengah Target Alokasi</button></div>
     ${kelasBlocks}
-    <div class="bb-note">Aset yang di-skip tetap dihitung di total portofolio, hanya tidak dibeli bulan ini. Label Mahal/Wajar/Diskon membandingkan harga kini dengan rentang Harga Wajar di tab Saham BEI.</div>
+    <div class="bb-note">Aset yang di-skip tetap dihitung di total portofolio, hanya tidak dibeli bulan ini. Label Mahal/Wajar/Diskon membandingkan harga kini dengan rentang Harga Wajar di tab Saham BEI. ${S.mahal==='lewati' ? 'Saham Mahal dilewati otomatis dan jatahnya mengikuti pilihan <b>Jatah aset yang di-skip</b>; klik tombol Skip di kodenya kalau tetap mau beli.' : S.mahal==='kurangi' ? 'Porsi saham Mahal dipotong setengah, selisihnya pindah ke kode lain di kelas yang sama.' : 'Saham Mahal tetap dibeli seperti biasa.'}</div>
   </div>
 
   <div class="bb-panel">
     <div class="bb-phead"><b>Daftar belanja</b><span class="bb-badge">${S.mode==='dca'?'Mode DCA rata':'Mode Rebalance'}</span></div>
+    ${flash ? `<div class="bb-flash">${flash}</div>` : ''}
+    ${bannerSudah}
     ${hasil}
-  </div>`;
+  </div>
+
+  ${vBbRiwayat()}`;
 }
 
 function bbSummary(R0) {
@@ -2705,11 +2854,221 @@ function bbSummary(R0) {
     });
   });
   const sk = [];
-  R0.K.forEach(c => { if (c.t <= 0) return; if (c.skip) sk.push(c.l); else c.items.filter(it => !it.on && !it.placeholder).forEach(it => sk.push(it.n)); });
+  R0.K.forEach(c => { if (c.t <= 0) return; if (c.skip) sk.push(c.l); else c.items.filter(it => !it.on && !it.placeholder).forEach(it => sk.push(it.n + (it.autoSkip ? ' (Mahal)' : ''))); });
   L.push('');
   if (sk.length) L.push(`Di-skip: ${sk.join(', ')}${R0.S.skipMode!=='alih' ? ` (jatah ditahan ${Rp(R(R0.held))})` : ' (jatah dialihkan)'}`);
   L.push(`Terpakai ${Rp(R(R0.spent))}, sisa ${Rp(R(R0.left))}`);
   return L.join('\n').replace(/</g,'&lt;');
+}
+
+// ── BELI BULANAN (Tahap 2): tandai sudah dibeli + riwayat ─
+// Pembelian yang dikonfirmasi ditambahkan sebagai baris holding baru (ditandai field 'bb' = id riwayat),
+// reksadana ditambahkan ke produk yang sudah ada. Riwayat tersimpan di APP.data.riwayatBeli dan bisa dibatalkan.
+const bbToday = () => ymd(new Date());
+const bbTgl = t => { const d = new Date((t||'') + 'T00:00:00'); return isNaN(d) ? (t||'-') : d.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}); };
+const bbLastRow = (arr, fn) => { const a = (APP.data[arr]||[]).filter(fn); return a.length ? a[a.length-1] : null; };
+const bbNum = id => { const el = document.getElementById(id); return el ? (parseFloat(el.value) || 0) : 0; };
+const bbStr = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+const bbBase = key => key.slice(key.indexOf(':') + 1);
+
+function bbOpenConfirm() {
+  if (APP.privacy) return;
+  const R0 = bbCalc(), rows = [];
+  R0.K.forEach(c => c.items.forEach(it => {
+    if (!it.on || !(it.units > 0)) return;
+    rows.push({k:c.k, kl:c.l, key:it.key, n:it.n, kind:it.kind, p:it.p||0, placeholder:!!it.placeholder, units:it.units, cost:it.cost});
+  }));
+  if (!rows.length) return;
+  APP.bbConfirm = {rows};
+  render();
+  bbcTotal();
+}
+function bbCloseConfirm() { APP.bbConfirm = null; render(); }
+
+// biaya satu baris di modal, dari isian saat ini
+function bbcRowCost(r, i) {
+  const S = bbState(), kurs = APP.data.kurs || 17800, g = f => bbNum(`bbc_${i}_${f}`);
+  if (r.k === 'saham') return g('lot') * 100 * g('harga') * (1 + (S.feeBei||0)/100);
+  if (r.k === 'etf')   return g('unit') * g('harga') * kurs * (1 + (S.feeUs||0)/100);
+  if (r.kind === 'gram') return g('gram') * g('harga');
+  if (r.kind === 'sbn')  return g('unit') * 1000000;
+  return g('rp');
+}
+function bbcTotal() {
+  const C = APP.bbConfirm; if (!C) return;
+  let tot = 0;
+  C.rows.forEach((r, i) => {
+    const on = document.getElementById(`bbc_${i}_on`), c = bbcRowCost(r, i), el = document.getElementById(`bbc_${i}_cost`);
+    if (el) el.textContent = c > 0 ? Rp(R(c)) : '';
+    const row = on && on.closest('.bbc-row'); if (row) row.classList.toggle('off', !on.checked);
+    if (on && on.checked) tot += c;
+  });
+  const t = document.getElementById('bbc-total'); if (t) t.textContent = Rp(R(tot));
+}
+
+function vBbConfirm() {
+  const C = APP.bbConfirm; if (!C) return '';
+  const S = bbState();
+  const fld = (i, f, l, v, o={}) => {
+    const num = !o.type || o.type === 'number';
+    return `<label class="bbc-f${o.w?' w':''}"><span>${l}</span><input id="bbc_${i}_${f}" type="${o.type||'number'}" ${num?`step="${o.step||'any'}" min="0" inputmode="decimal"`:''} value="${v===''||v==null?'':v}" placeholder="${o.ph||''}" oninput="bbcTotal()"></label>`;
+  };
+  const rowsHtml = C.rows.map((r, i) => {
+    const est = d => r.p ? +(r.units / r.p).toFixed(d) : '';
+    let f;
+    if (r.placeholder) {
+      if (r.k === 'saham')      f = fld(i,'kode','Kode','',{type:'text',ph:'BBCA'}) + fld(i,'lot','Lot','',{step:'1'}) + fld(i,'harga','Harga/lembar','');
+      else if (r.k === 'etf')   f = fld(i,'kode','Kode','',{type:'text',ph:'VOO'}) + fld(i,'unit','Lembar','',{step:'0.0001'}) + fld(i,'harga','Harga USD','',{step:'0.01'});
+      else if (r.k === 'emas')  f = fld(i,'lokasi','Platform','',{type:'text',ph:'Pegadaian'}) + fld(i,'rp','Rupiah',R(r.units)) + fld(i,'gram','Gram didapat','',{step:'0.0001'});
+      else if (r.k === 'btc')   f = fld(i,'jenis','Jenis','',{type:'text',ph:'BTC'}) + fld(i,'rp','Rupiah',R(r.units)) + fld(i,'koin','Jumlah koin','',{step:'0.00000001'});
+      else                      f = fld(i,'nama','Nama reksadana','',{type:'text',ph:'nama produk',w:1}) + fld(i,'rp','Rupiah',R(r.units));
+    }
+    else if (r.kind === 'lot')  f = fld(i,'lot','Lot',r.units,{step:'1'}) + fld(i,'harga','Harga/lembar',r.p);
+    else if (r.kind === 'etf')  f = fld(i,'unit','Lembar',r.units,{step:'0.0001'}) + fld(i,'harga','Harga USD',r.p,{step:'0.01'});
+    else if (r.kind === 'gram') f = fld(i,'gram','Gram',r.units) + fld(i,'harga','Harga/gram',r.p);
+    else if (r.kind === 'sbn')  f = fld(i,'unit','Unit (Rp 1 jt)',r.units,{step:'1'}) + fld(i,'seri','Seri','',{type:'text',ph:'ORI027'}) + fld(i,'kupon','Kupon %/th','',{step:'0.01'}) + fld(i,'jt','Jatuh tempo','',{type:'date'});
+    else if (r.k === 'emas')    f = fld(i,'rp','Rupiah',R(r.units)) + fld(i,'gram','Gram didapat',est(4),{step:'0.0001'});
+    else if (r.k === 'btc')     f = fld(i,'rp','Rupiah',R(r.units)) + fld(i,'koin','Jumlah koin',est(8),{step:'0.00000001'});
+    else                        f = fld(i,'rp','Rupiah',R(r.units));
+    return `<div class="bbc-row">
+      <label class="bbc-head"><input type="checkbox" id="bbc_${i}_on" checked onchange="bbcTotal()"><span class="bb-muted">${r.kl}</span><b>${r.placeholder?'Produk baru':r.n}</b><span class="bbc-cost" id="bbc_${i}_cost"></span></label>
+      <div class="bbc-fields">${f}</div></div>`;
+  }).join('');
+  return `<div class="modal-overlay" onclick="if(event.target===this)bbCloseConfirm()">
+  <div class="modal-box bbc-box">
+    <div class="modal-title" style="margin-bottom:4px">Tandai sudah dibeli</div>
+    <div class="bb-muted" style="font-size:12.5px;margin-bottom:12px;line-height:1.5">Sesuaikan dengan yang benar-benar dibeli (jumlah dan harga dari aplikasi broker). Hapus centang untuk yang tidak jadi dibeli. Setiap pembelian ditambahkan sebagai baris baru di tab asetnya; reksadana ditambahkan ke produk yang sama.</div>
+    <div class="form-group" style="max-width:190px"><label>Tanggal beli</label><input type="date" id="bbc_tgl" value="${bbToday()}"></div>
+    ${rowsHtml}
+    <div id="bbc-err" class="alert alert-red" style="display:none;margin-top:10px"></div>
+    <div class="modal-actions bbc-actions">
+      <div class="bbc-total"><span class="bb-muted bb-small">Total dibeli</span><b id="bbc-total"></b><span class="bb-muted bb-small">dari dana ${Rp(R(S.dana))}</span></div>
+      <button class="btn" onclick="bbCloseConfirm()">Batal</button>
+      <button class="btn btn-primary" onclick="bbConfirmSave()">✅ Simpan ke holding</button>
+    </div>
+  </div></div>`;
+}
+
+function bbConfirmSave() {
+  const C = APP.bbConfirm; if (!C) return;
+  const S = bbState(), R0 = bbCalc(), kurs = APP.data.kurs || 17800;
+  const feeB = 1 + (S.feeBei||0)/100, feeU = 1 + (S.feeUs||0)/100;
+  const tgl = bbStr('bbc_tgl') || bbToday(), id = 'bb' + Date.now();
+  const items = [], ops = [], errs = [], rdAdds = [];
+  const push = (arr, row) => ops.push(() => { if (!APP.data[arr]) APP.data[arr] = []; APP.data[arr].push(row); });
+
+  C.rows.forEach((r, i) => {
+    const on = document.getElementById(`bbc_${i}_on`); if (!on || !on.checked) return;
+    const g = f => bbNum(`bbc_${i}_${f}`), t = f => bbStr(`bbc_${i}_${f}`), base = bbBase(r.key);
+    const label = r.placeholder ? `${r.kl} (produk baru)` : r.n;
+    if (r.k === 'saham') {
+      const kode = (r.placeholder ? t('kode') : base).toUpperCase(), lot = Math.round(g('lot')), harga = g('harga');
+      if (!kode || lot <= 0 || harga <= 0) return errs.push(`${label}: isi ${r.placeholder?'kode, ':''}lot dan harga.`);
+      const tp = bbLastRow('saham', x => (x.kode||'').toUpperCase() === kode);
+      const row = {tgl, kode, kategori: tp ? (tp.kategori||'menengah') : 'menengah', lot, beli: harga, now: tp && tp.now ? tp.now : harga,
+        wajarBawah: tp ? (tp.wajarBawah||0) : 0, wajarAtas: tp ? (tp.wajarAtas||0) : 0, posisi: tp ? posisiOf(tp) : 'hold', ket: '', bb: id};
+      if (tp && tp.eps != null) row.eps = tp.eps;
+      if (tp && tp.pbvRatio != null) row.pbvRatio = tp.pbvRatio;
+      push('saham', row);
+      items.push({k:'saham', n:kode, kind:'lot', qty:lot, harga, extra:0, cost: lot*100*harga*feeB});
+    } else if (r.k === 'etf') {
+      const kode = (r.placeholder ? t('kode') : base).toUpperCase(), unit = +g('unit').toFixed(4), harga = g('harga');
+      if (!kode || unit <= 0 || harga <= 0) return errs.push(`${label}: isi ${r.placeholder?'kode, ':''}jumlah lembar dan harga.`);
+      const tp = bbLastRow('etf', x => (x.kode||'').toUpperCase() === kode);
+      push('etf', {tgl, kode, unit, beli: harga, now: tp && tp.now ? tp.now : harga, posisi: tp ? posisiOf(tp) : 'hold', ket: '', bb: id});
+      items.push({k:'etf', n:kode, kind:'etf', qty:unit, harga, extra:0, cost: unit*harga*kurs*feeU});
+    } else if (r.k === 'emas') {
+      const [lok0, jen0] = base.split('|');
+      if (r.kind === 'gram') {
+        const gram = +g('gram').toFixed(4), harga = g('harga');
+        if (gram <= 0 || harga <= 0) return errs.push(`${label}: isi gram dan harga per gram.`);
+        const tp = bbLastRow('emas', x => (x.lokasi||'Emas') === lok0 && (x.jenis||'digital') === jen0);
+        push('emas', {tgl, jenis: jen0 || 'fisik', lokasi: tp ? tp.lokasi : lok0, gram, beli: harga, now: tp && tp.now ? tp.now : harga, bb: id});
+        items.push({k:'emas', n:lok0, kind:'gram', qty:gram, harga, extra:0, cost: gram*harga});
+      } else {
+        const lokasi = r.placeholder ? t('lokasi') : lok0, jenis = r.placeholder ? 'digital' : (jen0 || 'digital');
+        const rp = Math.round(g('rp')), gram = +g('gram').toFixed(4);
+        if (!lokasi || rp <= 0 || gram <= 0) return errs.push(`${label}: isi ${r.placeholder?'platform, ':''}rupiah dan gram yang didapat.`);
+        const beli = Math.round(rp / gram);
+        const tp = bbLastRow('emas', x => (x.lokasi||'Emas') === lokasi && (x.jenis||'digital') === jenis);
+        push('emas', {tgl, jenis, lokasi, gram, beli, now: tp && tp.now ? tp.now : beli, bb: id});
+        items.push({k:'emas', n:lokasi, kind:'rpgram', qty:rp, harga:beli, extra:gram, cost: rp});
+      }
+    } else if (r.k === 'btc') {
+      const jenis = (r.placeholder ? t('jenis') : base).toUpperCase(), rp = Math.round(g('rp')), koin = +g('koin').toFixed(8);
+      if (!jenis || rp <= 0 || koin <= 0) return errs.push(`${label}: isi ${r.placeholder?'jenis, ':''}rupiah dan jumlah koin.`);
+      const beli = Math.round(rp / koin);
+      const tp = bbLastRow('btc', x => (x.jenis||'BTC').toUpperCase() === jenis);
+      push('btc', {tgl, jenis: tp ? (tp.jenis||jenis) : jenis, jumlah: koin, beli, now: tp && tp.now ? tp.now : beli, ket: '', bb: id});
+      items.push({k:'btc', n:jenis, kind:'rpkoin', qty:rp, harga:beli, extra:koin, cost: rp});
+    } else if (r.k === 'rdana') {
+      const nama = r.placeholder ? t('nama') : base, rp = Math.round(g('rp'));
+      if (!nama || rp <= 0) return errs.push(`${label}: isi ${r.placeholder?'nama reksadana dan ':''}rupiah.`);
+      ops.push(() => {
+        if (!APP.data.rdana) APP.data.rdana = [];
+        const ex = APP.data.rdana.find(x => (x.item||'').trim().toLowerCase() === nama.toLowerCase());
+        if (ex) { const now0 = ex.now || ex.masuk || 0; ex.masuk = (ex.masuk||0) + rp; ex.now = now0 + rp; rdAdds.push({item: ex.item, add: rp}); }
+        else APP.data.rdana.push({item: nama, masuk: rp, now: rp, bb: id});
+      });
+      items.push({k:'rdana', n:nama, kind:'rp', qty:rp, harga:0, extra:0, cost: rp});
+    } else if (r.k === 'obligasi') {
+      const unit = Math.round(g('unit')), seri = t('seri').toUpperCase(), kupon = g('kupon'), jt = t('jt');
+      if (unit <= 0 || !seri) return errs.push(`Obligasi: isi jumlah unit dan nama seri.`);
+      push('obligasi', {tgl, nama: seri, jenis: (seri.match(/^[A-Z]+/) || ['SBN'])[0], unit, hargaPct: 100, kupon, jatuhTempo: jt, bb: id});
+      items.push({k:'obligasi', n:seri, kind:'sbn', qty:unit, harga:1000000, extra:0, cost: unit*1000000});
+    }
+  });
+
+  const errEl = document.getElementById('bbc-err');
+  if (!errs.length && !items.length) errs.push('Centang minimal satu pembelian.');
+  if (errs.length) { if (errEl) { errEl.innerHTML = errs.join('<br>'); errEl.style.display = 'block'; } return; }
+
+  ops.forEach(f => f());
+  const spent = items.reduce((a,x) => a + x.cost, 0);
+  const entry = {id, tgl, dibuat: new Date().toISOString(), dana: R(R0.dana), mode: S.mode === 'dca' ? 'dca' : 'rebal',
+    spent: R(spent), held: R(R0.held), items: items.map(x => ({...x, cost: R(x.cost)})), rd: rdAdds};
+  APP.data.riwayatBeli = [entry, ...(APP.data.riwayatBeli || [])];
+  APP.bbConfirm = null;
+  APP.bbFlash = `✅ ${items.length} pembelian dicatat dan ditambahkan ke holding. Bisa dibatalkan dari Riwayat di bawah.`;
+  scheduleSave();
+  render();
+}
+
+function bbUndo(id) {
+  const H = APP.data.riwayatBeli || [], e = H.find(x => x.id === id);
+  if (!e) return;
+  if (!confirm('Batalkan pencatatan ini? Baris holding yang ditambahkan dari pencatatan ini akan dihapus, dan tambahan modal reksadananya dikurangi lagi.')) return;
+  ['saham','etf','emas','btc','obligasi','rdana'].forEach(a => { if (APP.data[a]) APP.data[a] = APP.data[a].filter(x => x.bb !== id); });
+  (e.rd || []).forEach(d => {
+    const ex = (APP.data.rdana || []).find(x => x.item === d.item);
+    if (ex) { const now0 = ex.now || ex.masuk || 0; ex.masuk = Math.max(0, (ex.masuk||0) - d.add); ex.now = Math.max(0, now0 - d.add); }
+  });
+  APP.data.riwayatBeli = H.filter(x => x.id !== id);
+  APP.bbFlash = '↩︎ Pencatatan dibatalkan.';
+  scheduleSave();
+  render();
+}
+
+function bbHistText(x) {
+  if (x.kind === 'lot')    return `${Q(F(x.qty))} lot @ ${Rp(x.harga)}`;
+  if (x.kind === 'etf')    return `${Q(F(x.qty, 4))} lembar @ ${Usd(x.harga)}`;
+  if (x.kind === 'gram')   return `${Q(F(x.qty, 4))} gram @ ${Rp(x.harga)}`;
+  if (x.kind === 'rpgram') return `${Rp(x.qty)} · ${Q(F(x.extra, 4))} gram`;
+  if (x.kind === 'rpkoin') return `${Rp(x.qty)} · ${Q(F(x.extra, 8))} ${x.n}`;
+  if (x.kind === 'sbn')    return `${Q(F(x.qty))} unit`;
+  return Rp(x.qty);
+}
+function vBbRiwayat() {
+  const H = APP.data.riwayatBeli || [];
+  const kl = k => (BB_KELAS.find(c => c.k === k) || {}).l || k;
+  const body = !H.length
+    ? `<div class="bb-empty">Belum ada. Setelah membeli sesuai daftar, klik <b>Tandai sudah dibeli</b> supaya holding bertambah otomatis dan tercatat di sini.</div>`
+    : `<div class="bb-hist">${H.map(e => `<details class="bb-hrow">
+        <summary><span class="bb-hdate">${bbTgl(e.tgl)}</span><span class="bb-muted">Dana ${Rp(R(e.dana))}</span><span>Terpakai <b>${Rp(R(e.spent))}</b></span><span class="bb-muted bb-small">${e.items.length} aset · ${e.mode==='dca'?'DCA rata':'Rebalance'}</span></summary>
+        <div class="bb-hbody">${e.items.map(x => `<div class="bb-hitem"><span><span class="bb-muted">${kl(x.k)}</span> · <b>${x.n}</b></span><span>${bbHistText(x)}</span><span class="r">${Rp(R(x.cost))}</span></div>`).join('')}
+          <div class="bb-hfoot"><span class="bb-muted">${e.held > 0 ? `Ditahan kas ${Rp(R(e.held))}` : ''}</span><button class="link-btn bb-undo" onclick="bbUndo('${e.id}')">Batalkan pencatatan ini</button></div>
+        </div></details>`).join('')}</div>`;
+  return `<div class="bb-panel"><div class="bb-phead"><b>Riwayat beli bulanan</b>${H.length ? `<span class="bb-muted bb-small">${H.length} pencatatan</span>` : ''}</div>${body}</div>`;
 }
 
 const NAV_SETTING = {id:'setting', l:'Pengaturan', c:'#64748B'};
@@ -2857,20 +3216,20 @@ function getDemoData() {
   return {
     kurs: 17800, umur: 35,
     saham: [
-      {tgl:ago(420), kode:'BBCA', kategori:'blue',      lot:15, beli:6450,  now:6700,  wajarBawah:6200, wajarAtas:7800,  ket:'hold'},
-      {tgl:ago(380), kode:'BMRI', kategori:'blue',      lot:20, beli:4380,  now:4420,  wajarBawah:4590, wajarAtas:6900,  ket:''},
-      {tgl:ago(300), kode:'BBRI', kategori:'blue',      lot:25, beli:3520,  now:3390,  wajarBawah:2900, wajarAtas:4400,  ket:'hold'},
-      {tgl:ago(260), kode:'TLKM', kategori:'blue',      lot:18, beli:2750,  now:2610,  wajarBawah:2500, wajarAtas:3400,  ket:''},
-      {tgl:ago(240), kode:'ASII', kategori:'blue',      lot:10, beli:4650,  now:4900,  wajarBawah:4400, wajarAtas:5800,  ket:''},
-      {tgl:ago(200), kode:'ICBP', kategori:'menengah',  lot:4,  beli:10200, now:10850, wajarBawah:9800, wajarAtas:12500, ket:''},
-      {tgl:ago(150), kode:'ADRO', kategori:'komoditas', lot:12, beli:2300,  now:2720,  wajarBawah:2000, wajarAtas:3200,  ket:''},
-      {tgl:ago(90),  kode:'ANTM', kategori:'komoditas', lot:15, beli:1850,  now:1720,  wajarBawah:1500, wajarAtas:2300,  ket:''},
+      {tgl:ago(420), kode:'BBCA', kategori:'blue',      lot:15, beli:6450,  now:6700,  wajarBawah:6200, wajarAtas:7800,  posisi:'hold',  ket:''},
+      {tgl:ago(380), kode:'BMRI', kategori:'blue',      lot:20, beli:4380,  now:4420,  wajarBawah:4590, wajarAtas:6900,  posisi:'hold',  ket:''},
+      {tgl:ago(300), kode:'BBRI', kategori:'blue',      lot:25, beli:3520,  now:3390,  wajarBawah:2900, wajarAtas:4400,  posisi:'hold',  ket:''},
+      {tgl:ago(260), kode:'TLKM', kategori:'blue',      lot:18, beli:2750,  now:2610,  wajarBawah:2500, wajarAtas:3400,  posisi:'hold',  ket:''},
+      {tgl:ago(240), kode:'ASII', kategori:'blue',      lot:10, beli:4650,  now:4900,  wajarBawah:4400, wajarAtas:5800,  posisi:'swing', ket:''},
+      {tgl:ago(200), kode:'ICBP', kategori:'menengah',  lot:4,  beli:10200, now:10850, wajarBawah:9800, wajarAtas:12500, posisi:'hold',  ket:''},
+      {tgl:ago(150), kode:'ADRO', kategori:'komoditas', lot:12, beli:2300,  now:2720,  wajarBawah:2000, wajarAtas:3200,  posisi:'swing', ket:''},
+      {tgl:ago(90),  kode:'ANTM', kategori:'komoditas', lot:15, beli:1850,  now:1720,  wajarBawah:1500, wajarAtas:2300,  posisi:'swing', ket:''},
     ],
     etf: [
-      {tgl:ago(400), kode:'VTI', unit:3.0,  beli:345.20, now:379.73, ket:'hold'},
-      {tgl:ago(330), kode:'QQQ', unit:1.1,  beli:640.50, now:706.84, ket:'hold'},
-      {tgl:ago(280), kode:'VEA', unit:10.0, beli:66.10,  now:73.06,  ket:''},
-      {tgl:ago(180), kode:'VWO', unit:8.0,  beli:57.40,  now:60.79,  ket:''},
+      {tgl:ago(400), kode:'VTI', unit:3.0,  beli:345.20, now:379.73, posisi:'hold', ket:''},
+      {tgl:ago(330), kode:'QQQ', unit:1.1,  beli:640.50, now:706.84, posisi:'hold', ket:''},
+      {tgl:ago(280), kode:'VEA', unit:10.0, beli:66.10,  now:73.06,  posisi:'hold', ket:''},
+      {tgl:ago(180), kode:'VWO', unit:8.0,  beli:57.40,  now:60.79,  posisi:'swing', ket:''},
     ],
     emas: [
       {tgl:ago(500), jenis:'fisik',   lokasi:'Antam',     gram:3,   beli:1500000, now:2400000},
@@ -2982,7 +3341,8 @@ function render() {
   </div>
   ${vModal()}
   ${vExportModal()}
-  ${vEditModal()}`;
+  ${vEditModal()}
+  ${vBbConfirm()}`;
   const newSb = document.querySelector('.sb-scroll');
   if (newSb) newSb.scrollTop = sbTop;
   if (APP.exportOpen) exportRefresh();
